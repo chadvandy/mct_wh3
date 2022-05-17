@@ -1,0 +1,899 @@
+<?xml version="1.0"?>
+<layout
+	version="137"
+	comment=""
+	precache_condition="">
+    <hierarchy>
+		<root this="F54B49EB-F756-4450-ACF44C0D6FBF589F">
+            <dropdown_mct this="BA0680A5-EB8C-4DBD-AB36583A2ACEE37A">
+                <selected_context_display this="C93EAE00-1889-4DEA-9387CE213A05008E"/>
+                <popup_menu this="06AAC067-1075-4FC4-8FB2B8A5BBAA534C">
+					<listview this="BA756D60-0368-407C-BE3389A2B9DA0EC6">
+						<list_clip this="57526F50-8266-4707-B45EEA081AD9D6A7">
+							<list_box this="88B31222-BC5B-4327-A58767F144C91A30">
+								<template_dropdown_entry this="1AA83CA0-108E-45D9-8ADA94E20B5FA1D9">
+									<label_context_name this="C9199F6E-4C91-494D-9D4EF6794266616D"/>
+								</template_dropdown_entry>
+							</list_box>
+						</list_clip>
+						<vslider this="4DCE8F33-8C40-479E-A6045DB4B4D3BB4A">
+							<frame_top this="841943C4-E923-41F8-BC9EDD02DDC0887E"/>
+							<frame_bottom this="BFDB837C-D9DC-4E03-B51D339A8606FB2B"/>
+							<handle this="55CCB643-6BFC-4AC5-84DF6EF5DA54112E"/>
+							<top this="9933DFD4-6DA1-4366-A6E71F2D4C855F6F"/>
+							<bottom this="40EA60FA-721F-41E6-96D8391BE01CD536"/>
+						</vslider>
+					</listview>
+                </popup_menu>
+            <dropdown_mct/>
+        </root>
+    </hierarchy>
+    <components>
+		<root
+			this="F54B49EB-F756-4450-ACF44C0D6FBF589F"
+			id="root"
+			tooltipslocalised="true"
+			uniqueguid="F54B49EB-F756-4450-ACF44C0D6FBF589F"
+			currentstate="F3129710-F150-48F0-88355E65D4A10182"
+			defaultstate="F3129710-F150-48F0-88355E65D4A10182">
+			<componentimages>
+				<component_image
+					this="1466D0C4-C8A9-462D-96EECBD2E12A4050"
+					uniqueguid="1466D0C4-C8A9-462D-96EECBD2E12A4050"/>
+			</componentimages>
+			<states>
+				<newstate
+					this="F3129710-F150-48F0-88355E65D4A10182"
+					name="NewState"
+					width="1600"
+					height="900"
+					texthbehaviour="Never split"
+					font_m_size="12"
+					font_m_colour="#FFF8D7FF"
+					font_m_leading="3"
+					fontcat_name="fe_text"
+					interactive="true"
+					uniqueguid="F3129710-F150-48F0-88355E65D4A10182">
+					<imagemetrics>
+						<image
+							this="93F42BB8-DD21-4558-B33C6C07D0459B27"
+							uniqueguid="93F42BB8-DD21-4558-B33C6C07D0459B27"
+							componentimage="1466D0C4-C8A9-462D-96EECBD2E12A4050"
+							width="1920"
+							height="1080"
+							colour="#8B8B8BFF"/>
+					</imagemetrics>
+				</newstate>
+			</states>
+		</root>
+		<dropdown_mct
+			this="BA0680A5-EB8C-4DBD-AB36583A2ACEE37A"
+			id="dropdown_mct"
+			template_id="dropdown_context_up"
+			part_of_template="true"
+			uniqueguid="BA0680A5-EB8C-4DBD-AB36583A2ACEE37A"
+			dimensions="280.00,34.00"
+			priority="50"
+			sound_category="UI_GBL_TMP_DropDown">
+			<state_uniqueguids>
+				<state_uniqueguid
+					name="active"
+					uniqueguid="DFE880F8-CF28-49EC-BCAF3512169C2661"/>
+				<state_uniqueguid
+					name="down"
+					uniqueguid="5FB53CD2-785C-4C8E-BF8C5D2D37C15963"/>
+				<state_uniqueguid
+					name="down_off"
+					uniqueguid="DE574898-50A7-4917-BE0D800549764C36"/>
+				<state_uniqueguid
+					name="hover"
+					uniqueguid="7E1226E6-7D8F-4BF6-A6E613F32EAB0307"/>
+				<state_uniqueguid
+					name="inactive"
+					uniqueguid="6AB102C1-05E3-4B7A-8F3A5E89D3C994CA"/>
+				<state_uniqueguid
+					name="selected"
+					uniqueguid="3CCA4921-3FA8-4B69-A6394D62D3B62370"/>
+				<state_uniqueguid
+					name="selected_down"
+					uniqueguid="5982B2F5-AFE6-4EA3-988B9A0DE3DDE6D0"/>
+				<state_uniqueguid
+					name="selected_down_off"
+					uniqueguid="02A84FFD-E223-4B36-B776106DD4156C74"/>
+				<state_uniqueguid
+					name="selected_hover"
+					uniqueguid="B2404064-764A-403B-9D7DD446E924B791"/>
+				<state_uniqueguid
+					name="selected_inactive"
+					uniqueguid="CECF31E1-A142-4C96-B04338C44F2FFB52"/>
+			</state_uniqueguids>
+			<component_image_uniqueguids>
+				<component_image_uniqueguid
+					name="ui\skins\default\button_dropdown_up_selected_inactive.png"
+					uniqueguid="5F314C81-0952-4B85-A6DE2772DC314760"/>
+				<component_image_uniqueguid
+					name="ui\skins\default\button_dropdown_up_pressed.png"
+					uniqueguid="B9ADA9E8-FB27-48D1-93472ABED439A0D0"/>
+				<component_image_uniqueguid
+					name="ui\skins\default\button_dropdown_up_selected_hover.png"
+					uniqueguid="AFF919F6-3CC1-45FC-9FC8BEFF4951CBD1"/>
+				<component_image_uniqueguid
+					name="ui\skins\default\button_dropdown_up_hover.png"
+					uniqueguid="B1D55559-B51F-4B17-90F8CF5BE7EB7BE0"/>
+				<component_image_uniqueguid
+					name="ui\skins\default\button_dropdown_up_active.png"
+					uniqueguid="245E8CBF-44E3-4212-BE9980789580AEC7"/>
+				<component_image_uniqueguid
+					name="ui\skins\default\button_dropdown_up_inactive.png"
+					uniqueguid="7719E7B8-3066-4B34-BB2CC9AFB917793C"/>
+				<component_image_uniqueguid
+					name="ui\skins\default\button_dropdown_up_selected.png"
+					uniqueguid="249B3B1E-2DBE-4A57-A0F0F4F0B60051F3"/>
+				<component_image_uniqueguid
+					name="ui\skins\default\button_dropdown_up_selected_pressed.png"
+					uniqueguid="22B587F3-2EE1-4CDC-8D4CCD9FD265D43A"/>
+				<component_image_uniqueguid
+					name="ui\skins\default\button_dropdown_up_selected_underlay.png"
+					uniqueguid="8D40A5FB-284F-4918-B626B6693C1117F4"/>
+				<component_image_uniqueguid
+					name="ui\skins\default\button_dropdown_up_underlay.png"
+					uniqueguid="5C6DC3EE-7EF0-4408-A73AD37142F1806F"/>
+			</component_image_uniqueguids>
+			<callbacks_with_context>
+				<callback_with_context
+					callback_id="ContextDropdownMenu"
+					context_object_id="CcoScriptObject">
+					<child_m_user_properties>
+						<property
+							name="min_height"
+							value="80"/>
+					</child_m_user_properties>
+				</callback_with_context>
+				<!-- <callback_with_context 
+					callback_id="ContextCommandLeftClick"
+
+				/> -->
+				<!-- <callback_with_context
+					callback_id="ContextPropagator"
+					context_function_id="GetIf(IsOfType(TargettingContext, &quot;CcoCampaignDiplomacyManipulationInteraction&quot;), TargettingContext.ObjectiveFactionContext)">
+					<child_m_user_properties>
+						<property
+							name="event0"
+							value="TargettingInterfaceChanged"/>
+						<property
+							name="event1"
+							value="TargettingInterfaceTargetSet"/>
+						<property
+							name="event2"
+							value="DiplomacyManipulationExecuted"/>
+						<property
+							name="only_target"
+							value=""/>
+						<property
+							name="react_only_to_events"
+							value=""/>
+					</child_m_user_properties>
+				</callback_with_context> -->
+				<!-- <callback_with_context
+					callback_id="ContextVisibilitySetter"
+					context_function_id="IsOfType(TargettingContext, &quot;CcoCampaignDiplomacyManipulationInteraction&quot;) &amp;&amp;  TargettingContext.UsesObjectiveFaction &amp;&amp; TargettingContext.ValidObjectiveFactionList.IsEmpty == false &amp;&amp; TargettingContext.ShouldDisplayFactionDropdown">
+					<child_m_user_properties>
+						<property
+							name="event0"
+							value="TargettingInterfaceChanged"/>
+						<property
+							name="event1"
+							value="TargettingInterfaceTargetSet"/>
+						<property
+							name="event2"
+							value="DiplomacyManipulationExecuted"/>
+					</child_m_user_properties>
+				</callback_with_context> -->
+				<!-- <callback_with_context
+					callback_id="ContextCommandLeftClick"
+					context_function_id="TargettingContext.SetIsSourceFactionFlag(false)"/> -->
+			</callbacks_with_context>
+			<user_properties>
+				<property
+					name="disable_override"
+					value="resizable"/>
+			</user_properties>
+			<localised_texts>
+				<localised_text/>
+				<localised_text
+					state="active"
+					is_text_localised="false"/>
+				<localised_text
+					state="down"
+					is_text_localised="false"/>
+				<localised_text
+					state="down_off"
+					is_text_localised="false"/>
+				<localised_text
+					state="hover"
+					is_text_localised="false"/>
+				<localised_text
+					state="inactive"
+					is_text_localised="false"/>
+				<localised_text
+					state="selected"
+					is_text_localised="false"/>
+				<localised_text
+					state="selected_down"
+					is_text_localised="false"/>
+				<localised_text
+					state="selected_down_off"
+					is_text_localised="false"/>
+				<localised_text
+					state="selected_hover"
+					is_text_localised="false"/>
+				<localised_text
+					state="selected_inactive"
+					is_text_localised="false"/>
+			</localised_texts>
+			<override_images>
+				<element value="ui\skins\default\button_dropdown_up_selected_inactive.png"/>
+				<element value="ui\skins\default\button_dropdown_up_pressed.png"/>
+				<element value="ui\skins\default\button_dropdown_up_selected_hover.png"/>
+				<element value="ui\skins\default\button_dropdown_up_hover.png"/>
+				<element value="ui\skins\default\button_dropdown_up_active.png"/>
+				<element value="ui\skins\default\button_dropdown_up_inactive.png"/>
+				<element value="ui\skins\default\button_dropdown_up_selected.png"/>
+				<element value="ui\skins\default\button_dropdown_up_selected_pressed.png"/>
+				<element value="ui\skins\default\button_dropdown_up_selected_underlay.png"/>
+				<element value="ui\skins\default\button_dropdown_up_underlay.png"/>
+			</override_images>
+		</dropdown_mct>
+		<selected_context_display
+			this="C93EAE00-1889-4DEA-9387CE213A05008E"
+			id="selected_context_display"
+			part_of_template="true"
+			uniqueguid="C93EAE00-1889-4DEA-9387CE213A05008E"
+			dimensions="280.00,23.00"
+			dock_point="Center Left"
+			priority="65"
+			comment="Just fill in the context object and context function to display what information you want about the selected context from the dropdown.  Feel free to also add any other children you want like icons, etc that you want to display related to the selected context!">
+			<state_uniqueguids>
+				<state_uniqueguid
+					name="NewState"
+					uniqueguid="156DD345-027F-46BB-80371309B8EFFD89"/>
+			</state_uniqueguids>
+			<callbacks_with_context>
+				<callback_with_context
+					callback_id="ContextTextLabel"
+					/>
+					<!-- context_object_id="CcoCampaignFaction"
+					context_function_id="NameWithIcon" -->
+			</callbacks_with_context>
+			<user_properties>
+				<property
+					name="disable_override"
+					value="position"/>
+			</user_properties>
+			<localised_texts>
+				<localised_text/>
+				<localised_text
+					state="NewState"
+					text="[ph] Selected context"
+					text_label="selected_context_display_NewState_Text_57001f"
+					is_text_localised="false"/>
+			</localised_texts>
+		</selected_context_display>
+		<popup_menu
+			this="06AAC067-1075-4FC4-8FB2B8A5BBAA534C"
+			id="popup_menu"
+			part_of_template="true"
+			uniqueguid="06AAC067-1075-4FC4-8FB2B8A5BBAA534C"
+			dimensions="280.00,300.00"
+			dock_point="Top Center External"
+			is_visible="false"
+			priority="60">
+			<state_uniqueguids>
+				<state_uniqueguid
+					name="NewState"
+					uniqueguid="232EEFCF-1864-4E7B-9C67542371767AD7"/>
+			</state_uniqueguids>
+			<user_properties>
+				<property
+					name="disable_override"
+					value="position"/>
+			</user_properties>
+			<localised_texts>
+				<localised_text/>
+				<localised_text
+					state="NewState"
+					is_text_localised="false"/>
+			</localised_texts>
+		</popup_menu>
+		<listview
+			this="BA756D60-0368-407C-BE3389A2B9DA0EC6"
+			id="listview"
+			part_of_template="true"
+			uniqueguid="BA756D60-0368-407C-BE3389A2B9DA0EC6"
+			dimensions="278.00,300.00"
+			dock_point="Top Center"
+			offset="0.00,4.00"
+			priority="60">
+			<state_uniqueguids>
+				<state_uniqueguid
+					name="NewState"
+					uniqueguid="45FC5C28-6441-4C96-83CBC982E9FF3D23"/>
+			</state_uniqueguids>
+			<component_image_uniqueguids>
+				<component_image_uniqueguid
+					name="ui\skins\default\button_dropdown_panel.png"
+					uniqueguid="AD6094EF-6B46-4556-B474BE26407D0939"/>
+			</component_image_uniqueguids>
+			<callbacks_with_context>
+				<callback_with_context callback_id="Listview"/>
+			</callbacks_with_context>
+			<localised_texts>
+				<localised_text/>
+				<localised_text
+					state="NewState"
+					is_text_localised="false"/>
+			</localised_texts>
+			<override_images>
+				<element value="ui\skins\default\button_dropdown_panel.png"/>
+			</override_images>
+		</listview>
+		<list_clip
+			this="57526F50-8266-4707-B45EEA081AD9D6A7"
+			id="list_clip"
+			part_of_template="true"
+			uniqueguid="57526F50-8266-4707-B45EEA081AD9D6A7"
+			dimensions="248.00,289.00"
+			dock_point="Center Left"
+			offset="1.00,-1.00"
+			priority="60">
+			<state_uniqueguids>
+				<state_uniqueguid
+					name="NewState"
+					uniqueguid="F3682C45-A5B2-47AF-A2EC56EA9019DDCC"/>
+			</state_uniqueguids>
+			<user_properties>
+				<!-- <property
+					name="disable_override0"
+					value="instance"/> -->
+				<property
+					name="disable_override"
+					value="position"/>
+			</user_properties>
+			<localised_texts>
+				<localised_text/>
+				<localised_text
+					state="NewState"
+					is_text_localised="false"/>
+			</localised_texts>
+		</list_clip>
+		<list_box
+			this="88B31222-BC5B-4327-A58767F144C91A30"
+			id="list_box"
+			part_of_template="true"
+			uniqueguid="88B31222-BC5B-4327-A58767F144C91A30"
+			dimensions="208.00,33.00"
+			dock_point="Top Left"
+			priority="60"
+			comment="Fill in the context object and context function in order to populate the available list of options for the dropdown menu">
+			<state_uniqueguids>
+				<state_uniqueguid
+					name="NewState"
+					uniqueguid="52FB0EF5-7BBC-4A1B-954BAFF2710565B5"/>
+			</state_uniqueguids>
+			<callbacks_with_context>
+				<callback_with_context
+					callback_id="List"
+				/>
+					<!-- context_object_id="CcoStaticObject"
+					context_function_id="GetIfElse(IsOfType(TargettingContext, &quot;CcoCampaignRitualInteraction&quot;) &amp;&amp;  TargettingContext.RitualContext.RitualContext.Key ==  &quot;wh3_main_ritual_tze_cotw_reveal_shroud&quot;, PlayersFaction.FactionsKnownList.Filter(SettlementList.Size &gt; 0), PlayersFaction.FactionsKnownList).Filter((x) =&gt; StoredContextFromParent(&quot;CcoCampaignRitual&quot;).IsTargetValid(x)).Sort(Name, true)" -->
+					<!-- <child_m_user_properties>
+						<property
+							name="event0"
+							value="TargettingInterfaceChanged"/>
+						<property
+							name="event1"
+							value="RitualStarted"/>
+						<property
+							name="object_store_events"
+							value=""/>
+						<property
+							name="refresh_if_not_visible"
+							value=""/>
+					</child_m_user_properties> -->
+				<!-- </callback_with_context> -->
+				<!-- <callback_with_context
+					callback_id="ContextPropagator"
+					context_object_id="CcoContextSelection"
+					context_function_id="SelectedObjectList.FirstContext">
+					<child_m_user_properties>
+						<property
+							name="clear_on_empty"
+							value=""/>
+						<property
+							name="context_to_clear"
+							value="CcoCampaignRitual"/>
+						<property
+							name="only_target"
+							value=""/>
+					</child_m_user_properties>
+				</callback_with_context> -->
+				<!-- <callback_with_context
+					callback_id="ContextObjectStore"
+					context_object_id="CcoCampaignRitual"/> -->
+			</callbacks_with_context>
+			<user_properties>
+				<property
+					name="disable_override"
+					value="position"/>
+				<!-- <property
+					name="disable_override0"
+					value="instance"/> -->
+			</user_properties>
+			<localised_texts>
+				<localised_text/>
+				<localised_text
+					state="NewState"
+					is_text_localised="false"/>
+			</localised_texts>
+		</list_box>
+		<template_dropdown_entry
+			this="1AA83CA0-108E-45D9-8ADA94E20B5FA1D9"
+			id="template_dropdown_entry"
+			part_of_template="true"
+			uniqueguid="1AA83CA0-108E-45D9-8ADA94E20B5FA1D9"
+			dimensions="204.00,29.00"
+			priority="60"
+			sound_category="UI_GBL_TMP_DropDown_List"
+			comment="Fill in context object type with what type need to store for diplay purposes and for passing along. Also feel free to change ContextCommandLeftClick to an initialiser or whatever else you want to handle when selecting an entry.  Also feel free to add any other children such as icons want to display for each entry, etc">
+			<state_uniqueguids>
+				<state_uniqueguid
+					name="active"
+					uniqueguid="0A36CC51-011F-4E12-85D2314B58DD2AEC"/>
+				<state_uniqueguid
+					name="hover"
+					uniqueguid="628E2B14-5E73-496E-9CB170F3844E8686"/>
+				<state_uniqueguid
+					name="inactive"
+					uniqueguid="A375B007-0E6E-45AE-8091DA51ADD0391D"/>
+				<state_uniqueguid
+					name="selected"
+					uniqueguid="79ED3819-6538-45A2-AB46B86F400425A5"/>
+				<state_uniqueguid
+					name="selected_hover"
+					uniqueguid="CCB87288-3013-4169-998781EB2CF8FA85"/>
+			</state_uniqueguids>
+			<component_image_uniqueguids>
+				<component_image_uniqueguid
+					name="ui\skins\default\button_dropdown_highlight.png"
+					uniqueguid="38AE2408-FB7C-49DE-8B19246A85D68629"/>
+				<component_image_uniqueguid
+					name="ui\skins\default\unit_card_selected_cropped.png"
+					uniqueguid="27D84EE0-A144-47A5-9C0E0396457619B9"/>
+			</component_image_uniqueguids>
+			<callbacks_with_context>
+				<callback_with_context
+					callback_id="ContextDropdownMenuItem"
+					/>
+					<!-- context_object_id="CcoCampaignFaction" -->
+				<callback_with_context
+					callback_id="ContextCommandLeftClick"
+					/>
+					<!-- context_object_id="CcoCampaignFaction"
+					context_function_id="TargettingContext.SetTarget(this)" -->
+				<!-- <callback_with_context
+					callback_id="ContextObjectStore"
+					context_object_id="CcoCampaignFaction"/> -->
+			</callbacks_with_context>
+			<user_properties>
+				<property
+					name="override_sound"
+					value=""/>
+			</user_properties>
+			<localised_texts>
+				<localised_text/>
+				<localised_text
+					state="active"
+					is_text_localised="false"/>
+				<localised_text
+					state="hover"
+					is_text_localised="false"/>
+				<localised_text
+					state="inactive"
+					is_text_localised="false"/>
+				<localised_text
+					state="selected"
+					is_text_localised="false"/>
+				<localised_text
+					state="selected_hover"
+					is_text_localised="false"/>
+			</localised_texts>
+			<override_images>
+				<element value="ui\skins\default\button_dropdown_highlight.png"/>
+				<element value="ui\skins\default\unit_card_selected_cropped.png"/>
+			</override_images>
+		</template_dropdown_entry>
+		<label_context_name
+			this="C9199F6E-4C91-494D-9D4EF6794266616D"
+			id="label_context_name"
+			part_of_template="true"
+			uniqueguid="C9199F6E-4C91-494D-9D4EF6794266616D"
+			dimensions="229.00,29.00"
+			dock_point="Center Left"
+			priority="60"
+			comment="Fill in context object and function to match objects dealing with so can display object. Also feel free to add any other children such as icons want to display for each entry, etc">
+			<state_uniqueguids>
+				<state_uniqueguid
+					name="active"
+					uniqueguid="46C26EB3-6B84-4C66-B96F8A7DDE6958E6"/>
+				<state_uniqueguid
+					name="inactive"
+					uniqueguid="15EF6C32-15BF-484F-A02E06303ACF242D"/>
+			</state_uniqueguids>
+			<callbacks_with_context>
+				<callback_with_context
+					callback_id="ContextTextLabel"
+					/>
+					<!-- context_object_id="CcoCampaignFaction"
+					context_function_id="NameWithIcon" -->
+			</callbacks_with_context>
+			<user_properties>
+				<property
+					name="disable_override"
+					value="position"/>
+			</user_properties>
+			<localised_texts>
+				<localised_text/>
+				<localised_text
+					state="active"
+					text="[ph] Context name"
+					text_label="label_context_name_NewState_Text_120054"
+					is_text_localised="false"/>
+				<localised_text
+					state="inactive"
+					text="[ph] Context name"
+					text_label="label_context_name_NewState_Text_120054"
+					is_text_localised="false"/>
+			</localised_texts>
+		</label_context_name>
+		<vslider
+			this="4DCE8F33-8C40-479E-A6045DB4B4D3BB4A"
+			id="vslider"
+			part_of_template="true"
+			uniqueguid="4DCE8F33-8C40-479E-A6045DB4B4D3BB4A"
+			dimensions="20.00,240.00"
+			dock_point="Center Right"
+			offset="-6.00,0.00"
+			priority="60">
+			<state_uniqueguids>
+				<state_uniqueguid
+					name="active"
+					uniqueguid="7A7A2EC7-C059-4166-AC344E3685BAE723"/>
+				<state_uniqueguid
+					name="inactive"
+					uniqueguid="F3B9F158-543A-42FC-86E4AEC45EA9B02D"/>
+			</state_uniqueguids>
+			<component_image_uniqueguids>
+				<component_image_uniqueguid
+					name="ui\skins\default\slider_vertical_mid.png"
+					uniqueguid="2CE1017B-E744-4BEB-A2E4A21CF985F830"/>
+			</component_image_uniqueguids>
+			<callbacks_with_context>
+				<callback_with_context callback_id="VSlider"/>
+			</callbacks_with_context>
+			<user_properties>
+				<property
+					name="Notify"
+					value=""/>
+				<property
+					name="Value"
+					value="0"/>
+				<property
+					name="disable_override"
+					value="position"/>
+				<property
+					name="maxValue"
+					value="100"/>
+				<property
+					name="minValue"
+					value="0"/>
+			</user_properties>
+			<localised_texts>
+				<localised_text/>
+				<localised_text
+					state="active"
+					is_text_localised="false"/>
+				<localised_text
+					state="inactive"
+					is_text_localised="false"/>
+			</localised_texts>
+			<override_images>
+				<element value="ui\skins\default\slider_vertical_mid.png"/>
+			</override_images>
+		</vslider>
+		<frame_top
+			this="841943C4-E923-41F8-BC9EDD02DDC0887E"
+			id="frame_top"
+			part_of_template="true"
+			uniqueguid="841943C4-E923-41F8-BC9EDD02DDC0887E"
+			dimensions="20.00,24.00"
+			dock_point="Top Center"
+			offset="1.00,-24.00"
+			priority="60">
+			<state_uniqueguids>
+				<state_uniqueguid
+					name="NewState"
+					uniqueguid="8567FDBE-6CB4-4607-8EEECBB0B1CEC590"/>
+			</state_uniqueguids>
+			<component_image_uniqueguids>
+				<component_image_uniqueguid
+					name="ui\skins\default\slider_vertical_top.png"
+					uniqueguid="D321008F-F943-48E3-89AA0DB19C1EAFF9"/>
+			</component_image_uniqueguids>
+			<user_properties>
+				<property
+					name="disable_override"
+					value="position"/>
+				<property
+					name="disable_override0"
+					value="resizable"/>
+			</user_properties>
+			<localised_texts>
+				<localised_text/>
+				<localised_text
+					state="NewState"
+					is_text_localised="false"/>
+			</localised_texts>
+			<override_images>
+				<element value="ui\skins\default\slider_vertical_top.png"/>
+			</override_images>
+		</frame_top>
+		<frame_bottom
+			this="BFDB837C-D9DC-4E03-B51D339A8606FB2B"
+			id="frame_bottom"
+			part_of_template="true"
+			uniqueguid="BFDB837C-D9DC-4E03-B51D339A8606FB2B"
+			dimensions="19.00,24.00"
+			dock_point="Bottom Center"
+			offset="0.00,24.00"
+			priority="60">
+			<state_uniqueguids>
+				<state_uniqueguid
+					name="NewState"
+					uniqueguid="5D9C86CD-0E1A-4E42-8B578FE61B45B742"/>
+			</state_uniqueguids>
+			<component_image_uniqueguids>
+				<component_image_uniqueguid
+					name="ui\skins\default\slider_vertical_bottom.png"
+					uniqueguid="C4206357-D0A5-46E8-919EED839F6F73A8"/>
+			</component_image_uniqueguids>
+			<user_properties>
+				<property
+					name="disable_override"
+					value="position"/>
+				<property
+					name="disable_override0"
+					value="resizable"/>
+			</user_properties>
+			<localised_texts>
+				<localised_text/>
+				<localised_text
+					state="NewState"
+					is_text_localised="false"/>
+			</localised_texts>
+			<override_images>
+				<element value="ui\skins\default\slider_vertical_bottom.png"/>
+			</override_images>
+		</frame_bottom>
+		<handle
+			this="55CCB643-6BFC-4AC5-84DF6EF5DA54112E"
+			id="handle"
+			part_of_template="true"
+			uniqueguid="55CCB643-6BFC-4AC5-84DF6EF5DA54112E"
+			dimensions="18.00,39.00"
+			offset="2.00,0.00"
+			priority="60"
+			sound_category="UI_GBL_TMP_Slider_Handle">
+			<state_uniqueguids>
+				<state_uniqueguid
+					name="active"
+					uniqueguid="CD461E0F-13AF-4683-A1EA56F5AB885D39"/>
+				<state_uniqueguid
+					name="down_off"
+					uniqueguid="1EA1D869-5AA5-415D-8216DD4AF0578308"/>
+				<state_uniqueguid
+					name="hover"
+					uniqueguid="5D79C431-4A2D-4CF0-9C4F77BCC6EB76F6"/>
+				<state_uniqueguid
+					name="inactive"
+					uniqueguid="7190F28F-8845-4E76-AC78CB9F49FCE522"/>
+			</state_uniqueguids>
+			<component_image_uniqueguids>
+				<component_image_uniqueguid
+					name="ui\skins\default\slider_vertical_handle.png"
+					uniqueguid="9FDAF505-9810-4C77-A2D0FA0A0235DDDF"/>
+				<component_image_uniqueguid
+					name="ui\skins\default\slider_vertical_handle_underlay.png"
+					uniqueguid="687DB020-1DBB-43C1-88242A6998010115"/>
+			</component_image_uniqueguids>
+			<callbacks_with_context>
+				<callback_with_context callback_id="VSliderHandle"/>
+			</callbacks_with_context>
+			<user_properties>
+				<property
+					name="min_size"
+					value="39"/>
+			</user_properties>
+			<localised_texts>
+				<localised_text/>
+				<localised_text
+					state="active"
+					is_text_localised="false"/>
+				<localised_text
+					state="down_off"
+					is_text_localised="false"/>
+				<localised_text
+					state="hover"
+					is_text_localised="false"/>
+				<localised_text
+					state="inactive"
+					is_text_localised="false"/>
+			</localised_texts>
+			<override_images>
+				<element value="ui\skins\default\slider_vertical_handle.png"/>
+				<element value="ui\skins\default\slider_vertical_handle_underlay.png"/>
+			</override_images>
+		</handle>
+		<top
+			this="9933DFD4-6DA1-4366-A6E71F2D4C855F6F"
+			id="top"
+			part_of_template="true"
+			uniqueguid="9933DFD4-6DA1-4366-A6E71F2D4C855F6F"
+			dimensions="15.00,22.00"
+			dock_point="Top Center"
+			offset="1.00,-23.00"
+			priority="60"
+			sound_category="UI_GBL_TMP_Slider_Arrows">
+			<state_uniqueguids>
+				<state_uniqueguid
+					name="active"
+					uniqueguid="3A993A34-CF1A-4FB3-94EB1EE79BEB7330"/>
+				<state_uniqueguid
+					name="down"
+					uniqueguid="31295C4F-9D2B-4A1E-8C5B034EB463E2C4"/>
+				<state_uniqueguid
+					name="down_off"
+					uniqueguid="8231DD76-A36F-46B6-B54BC1D34485C0FF"/>
+				<state_uniqueguid
+					name="hover"
+					uniqueguid="D7626E5F-09A5-4870-AAE1DBA5A22C9A7F"/>
+				<state_uniqueguid
+					name="inactive"
+					uniqueguid="C68EDC32-9BDB-4168-85B6005B715A4503"/>
+			</state_uniqueguids>
+			<component_image_uniqueguids>
+				<component_image_uniqueguid
+					name="ui\skins\default\slider_vertical_top_active.png"
+					uniqueguid="F810B7F7-42F5-4222-BD35C7F5B5717C0A"/>
+				<component_image_uniqueguid
+					name="ui\skins\default\slider_vertical_top_pressed.png"
+					uniqueguid="A0CD9576-842E-47A3-9ADD0CFA3B0B0601"/>
+				<component_image_uniqueguid
+					name="ui\skins\default\slider_vertical_top_hover.png"
+					uniqueguid="D3DD666F-DEE8-4081-BF4AEC3EB7A5781A"/>
+			</component_image_uniqueguids>
+			<callbacks_with_context>
+				<callback_with_context callback_id="SliderDecrementButton"/>
+			</callbacks_with_context>
+			<user_properties>
+				<property
+					name="disable_override"
+					value="position"/>
+				<property
+					name="disable_override0"
+					value="resizable"/>
+				<property
+					name="stepSize"
+					value="10"/>
+			</user_properties>
+			<localised_texts>
+				<localised_text/>
+				<localised_text
+					state="active"
+					is_text_localised="false"/>
+				<localised_text
+					state="down"
+					is_text_localised="false"/>
+				<localised_text
+					state="down_off"
+					is_text_localised="false"/>
+				<localised_text
+					state="hover"
+					is_text_localised="false"/>
+				<localised_text
+					state="inactive"
+					is_text_localised="false"/>
+			</localised_texts>
+			<override_images>
+				<element value="ui\skins\default\slider_vertical_top_active.png"/>
+				<element value="ui\skins\default\slider_vertical_top_pressed.png"/>
+				<element value="ui\skins\default\slider_vertical_top_hover.png"/>
+			</override_images>
+		</top>
+		<bottom
+			this="40EA60FA-721F-41E6-96D8391BE01CD536"
+			id="bottom"
+			part_of_template="true"
+			uniqueguid="40EA60FA-721F-41E6-96D8391BE01CD536"
+			dimensions="15.00,22.00"
+			dock_point="Bottom Center"
+			offset="1.00,21.00"
+			priority="60"
+			sound_category="UI_GBL_TMP_Slider_Arrows">
+			<state_uniqueguids>
+				<state_uniqueguid
+					name="active"
+					uniqueguid="F279974E-3BDB-4D07-BB38780DCC8E4EAC"/>
+				<state_uniqueguid
+					name="down"
+					uniqueguid="51820D6C-5952-4695-BB6D087DD7437865"/>
+				<state_uniqueguid
+					name="down_off"
+					uniqueguid="77A85D9F-57FA-4517-95AF3DCEFE31D02D"/>
+				<state_uniqueguid
+					name="hover"
+					uniqueguid="5D246DAC-0E1D-462A-BF4F7C2B80FD99C0"/>
+				<state_uniqueguid
+					name="inactive"
+					uniqueguid="07998788-5E3E-4CF2-A552FE3235E2B925"/>
+			</state_uniqueguids>
+			<component_image_uniqueguids>
+				<component_image_uniqueguid
+					name="ui\skins\default\slider_vertical_bottom_active.png"
+					uniqueguid="7C2D1341-B09D-4398-A09F88C8BA3B71D0"/>
+				<component_image_uniqueguid
+					name="ui\skins\default\slider_vertical_bottom_pressed.png"
+					uniqueguid="D6950B9E-E974-469D-A167624EB786E46E"/>
+				<component_image_uniqueguid
+					name="ui\skins\default\slider_vertical_bottom_hover.png"
+					uniqueguid="CC759569-F48C-4A03-BBCD6FC46F342F04"/>
+			</component_image_uniqueguids>
+			<callbacks_with_context>
+				<callback_with_context callback_id="SliderIncrementButton"/>
+			</callbacks_with_context>
+			<user_properties>
+				<property
+					name="disable_override"
+					value="position"/>
+				<property
+					name="disable_override0"
+					value="resizable"/>
+				<property
+					name="stepSize"
+					value="10"/>
+			</user_properties>
+			<localised_texts>
+				<localised_text/>
+				<localised_text
+					state="active"
+					is_text_localised="false"/>
+				<localised_text
+					state="down"
+					is_text_localised="false"/>
+				<localised_text
+					state="down_off"
+					is_text_localised="false"/>
+				<localised_text
+					state="hover"
+					is_text_localised="false"/>
+				<localised_text
+					state="inactive"
+					is_text_localised="false"/>
+			</localised_texts>
+			<override_images>
+				<element value="ui\skins\default\slider_vertical_bottom_active.png"/>
+				<element value="ui\skins\default\slider_vertical_bottom_pressed.png"/>
+				<element value="ui\skins\default\slider_vertical_bottom_hover.png"/>
+			</override_images>
+		</bottom>
+    </components>
+</layout>

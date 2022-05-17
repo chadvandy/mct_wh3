@@ -1,0 +1,146 @@
+---@class UIC_Address:userdata A pointer to the UIC.
+
+---@param address UIC_Address
+---@return UIC
+function UIComponent(address) end
+
+---@class UIC
+---@field NumAnimations fun(self:UIC):number Returns the number of animations the uicomponent contains.
+---@field Highlight fun(self:UIC,boolean,boolean,number):nil Highlights or unhighlights the uicomponent to the player with a flashing ring. 
+---@field GetCurrentStateImageDimensions fun(self:UIC,number):number,number Returns the width and height of a specified image associated with the current state of the uicomponent.
+---@field SetDockOffset fun(self:UIC,number,number):nil Sets a docking offset for this component, which offsets where the component is drawn from the docking point set.
+---@field Divorce fun(self:UIC,UIC_Address):nil Once divorced, the child uicomponent is not destroyed but goes into an orphan list, from where it may later be adopted by another uicomponent. Orphaned uicomponents are not rendered.
+---@field SetState fun(self:UIC,string):boolean Sets the state of the uicomponent to the specified state name.
+---@field NumImages fun(self:UIC):nil Returns the number of images associated with the subject uicomponent.
+---@field SimulateMouseMove fun(self:UIC,number,number):nil Simulates a mouse-move event on the uicomponent. Relative co-ordinates at which the mouse move event is simulated on the component may optionally be specified. Both arguments must be supplied to specify a position.
+---@field CurrentState fun(self:UIC):string Returns the name of the current state of the uicomponent.
+---@field CopyComponent fun(self:UIC,string):UIC_Address Creates a copy of this uicomponent with the supplied name. The component is created as a sibling of the copied component, so they both share the same parent.
+---@field SetCanResizeCurrentStateImageWidth fun(self:UIC,number,boolean):nil Sets whether the width can be resized of the specified image associated with the current state of the uicomponent.
+---@field RemoveTopMost fun(self:UIC):nil De-registers this uicomponent from being drawn topmost.
+---@field SetCanResizeHeight fun(self:UIC,boolean):nil Allows or disallows the height of this uicomponent to be changed by code or script.
+---@field HasInterface fun(self:UIC):boolean Returns whether this uicomponent provides any interface functions.
+---@field DestroyChildren fun(self:UIC):nil Destroys all children of this uicomponent.
+---@field GetDockOffset fun(self:UIC):number,number Returns the docking offset set for this component, which offsets where the component is drawn from the docking point set.
+---@field StartPulseHighlight fun(self:UIC,number,string):nil Activates a pulsing highlight effect on a particular state of the subject uicomponent. This is useful for unobtrusively highlighting components with an area such as buttons and panels, but doesn't work so well for highlighting text. The script function pulse_uicomponent wraps this function.
+---@field SetTextHAlign fun(self:UIC,string):nil Sets the horizontal text alignment setting of the current state to the supplied alignment. Valid string alignment values are "left", "centre" and "right".
+---@field AddScriptEventReporter fun(self:UIC):nil Adds a ScriptEventReporter callback to the component to allow it to notify the script of more 'spammy' events such as ComponentMouseOn, ComponentMouseOff, an ComponentAnimationFinished
+---@field Parent fun(self:UIC):UIC_Address Returns a link to the parent of the uicomponent. This is provided as a component address that must be cast to be a usable uicomponent script object using the UIComponent function.
+---@field GetCurrentStateImageTiled fun(self:UIC,number):boolean Returns whether the specified image associated with the current state of the uicomponent is tiled or not.
+---@field CurrentAnimationId fun(self:UIC):string Returns the string name of the animation currently playing on this uicomponent. If no animation is currently playing then a blank string is returned.
+---@field IsValid fun(self:UIC):boolean Returns true if this UIComponent handle is valid (internal component ptr has NOT been deleted)
+---@field TextShaderTechniqueSet fun(self:UIC,variable,boolean):nil Sets the active shader technique on just the text of the uicomponent, applying a custom graphical shader effect. The shader may be specified as a string key or a number. Valid shader keys are given in the table at the top of this section.
+---@field Layout fun(self:UIC):nil Calls the layout function for the uicomponent, forcing it to refresh its display.
+---@field Position fun(self:UIC):number,number Returns the position of the top-left corner of the uicomponent, from the top-left corner of the game window/screen.
+---@field CanResizeCurrentStateImageHeight fun(self:UIC,number):boolean Returns whether the height can be resized of the specified image associated with the current state of the uicomponent.
+---@field GetStateText fun(self:UIC):string,string Returns the text on the current state of the uicomponent along with its dimensions. This text will be localised.
+---@field SetTooltipText fun(self:UIC,string,string,boolean):nil Sets the tooltip text of the current state of this uicomponent. An optional flag directs the function to apply this tooltip text to all states of the uicomponent. The text specified must already be localised - effect:get_localised_string can be used to retrieve localised text from anywhere in the database.
+---@field Opacity fun(self:UIC):number Returns the current opacity of the uicomponent. The returned value will be a number from 0-255.
+---@field GetCurrentStateImageMargins fun(self:UIC,number):number,number,number,number Returns the margin values for the specified image associated with the current state of the uicomponent. The margins affect how the image resizes, allowing a border around the image to stay a static size while the centre portion of the image scales.
+---@field Resize fun(self:UIC,number,number,boolean):nil Resizes the uicomponent. The uicomponent may be need to set to be resizeable before calling this - this can be done with uicomponent:SetCanResizeHeight and uicomponent:SetCanResizeWidth.
+---@field Destroy fun(self:UIC):nil Destroys this uicomponent.
+---@field SetDockingPoint fun(self:UIC,number):nil Sets the docking point of the uicomponent to the specified value. Valid values are given in the table at the top of this section.
+---@field SetMoveable fun(self:UIC,boolean):nil Sets this uicomponent to be moveable or not.
+---@field GetTooltipText fun(self:UIC):string,string Returns the tooltip text of the current state of the uicomponent as a localised string.
+---@field SetTextVAlign fun(self:UIC,string):nil Sets the vertical text alignment setting of the current state to the supplied alignment. Valid string alignment values are "top", "centre" and "bottom".
+---@field ShaderTechniqueGet fun(self:UIC):string Returns the key of the shader currently active on the uicomponent.
+---@field Bounds fun(self:UIC):number,number Returns the maximum width and height of this uicomponent, including any of its children.
+---@field FindByGuid fun(self:UIC,string):UIC_Address Finds a component via its guid (globally unique identifier). A 16 digit hex code that is guranteed to be unique across the game. No good for finding dynamic things, but useful for finding things that exist in layouts.
+---@field GetCurrentStateImageFlip fun(self:UIC,number):boolean Returns the x-flipped value for the specified image associated with the current state of the uicomponent. If set, this flips the image horizontally.
+---@field CanResizeCurrentStateImageWidth fun(self:UIC,number):boolean Returns whether the width can be resized of the specified image associated with the current state of the uicomponent.
+---@field Adopt fun(self:UIC,UIC_Address,number):nil An insertion index may optionally be supplied, which determines where in this uicomponent's list of children this new child will be inserted. This can determine the display order in certain circumstances. By default, the new child is added to the end of the list.
+---@field WidthOfTextLine fun(self:UIC,string):number Returns the width of a text line on the current uicomponent.
+---@field GetCurrentStateImageWidth fun(self:UIC,number):number Returns the width of a specified image associated with the current state of the uicomponent.
+---@field SetImagePath fun(self:UIC,string,number,boolean):nil The uicomponent:GetImagePath and uicomponent:NumImages functions can be used to query images related to a uicomponent.
+---@field SequentialFind fun(self:UIC,...):UIC_Address Finds and returns a child of this uicomponent by a series of string names and numeric indexes. The function will step through each argument, attempting to find the uicomponent specified, and using that as the parent from which to find the next. A numeric index argument finds an immediate child of the current search subject, whereas a string name initiates a recursive search through all children/descendants of this uicomponent.
+---@field TextDimensionsForText fun(self:UIC,string):number,number,number Returns the dimensions of the some supplied text, were it to be displayed on the uicomponent in its current state.
+---@field TriggerShortcut fun(self:UIC,string):nil Triggers a keyboard shortcut on the uicomponent, by name. Keyboard shortcuts are listed in data\text\default_keys.xml.
+---@field GetTextHAlign fun(self:UIC):string Returns the horizontal text alignment setting of the current state as a string. Valid alignment values are "left", "centre" and "right".
+---@field NumAnimationFrames fun(self:UIC,string):number Returns the number of frames in an animation of the specified name. If no animation with the supplied name could be found on the uicomponent then -1 is returned.
+---@field SetCurrentStateImageXFlip fun(self:UIC,number,boolean):nil Sets the x-flipped value for the specified image associated with the current state of the uicomponent. If set, this flips the image horizontally.
+---@field TextShaderVarsGet fun(self:UIC):number,number,number,number Returns the variables of the text shader currently active on the uicomponent.
+---@field SetStateText fun(self:UIC,string,string):nil Sets the text on the current state of the uicomponent to the supplied text. Localised text must be specified - common.get_localised_string can be used to look this up from anywhere in the database.
+---@field SetCurrentStateImageMargins fun(self:UIC,number,number,number,number,number):nil Sets the margin values for the specified image associated with the current state of the uicomponent. This affects how the image resizes, allowing a border around the image to stay a static size while the centre portion of the image scales.
+---@field Find fun(self:UIC,variable,boolean):UIC_Address If the search target was not found then nil is returned. If it was found then it is returned as a component address, which must be cast to a uicomponent script object using the UIComponent function. The find_uicomponent function provided by the script libraries does this automatically, so it's recommended to use that function in place of this function.
+---@field MoveTo fun(self:UIC,number,number):nil Sets the uicomponent to a new screen position, measured from the top-left corner of the game window/screen.
+---@field SetCurrentStateImageOpacity fun(self:UIC,number,number):nil Sets the opacity of a specified image associated with the current state of the uicomponent.
+---@field SimulateDblLClick fun(self:UIC,number,number):nil Simulates a double-left-click on the uicomponent. Relative co-ordinates at which the click is simulated on the component may optionally be specified. Both arguments must be supplied to specify a position.
+---@field GetCurrentStateImageHeight fun(self:UIC,number):number Returns the height of a specified image associated with the current state of the uicomponent.
+---@field Dimensions fun(self:UIC):number,number Returns the width and height of the uicomponent in pixels.
+---@field Visible fun(self:UIC,boolean):boolean Returns the visibility flag of this uicomponent. An optional argument also performs the test on all parent uicomponents up to the root, which will detect whether this uicomponent is visible but a parent is not.
+---@field ChildCount fun(self:UIC):number Returns the number of immediate children this uicomponent has. These children can be individually retrieved by using uicomponent:Find and supplying a numeric value.
+---@field TextDimensions fun(self:UIC):number,number,number Returns the dimensions of the text displayed on the uicomponent in its current state, if any.
+---@field IsDragged fun(self:UIC):boolean Returns whether this uicomponent is currently being dragged around the screen by the player left-clicking and dragging.
+---@field SetImageRotation fun(self:UIC,number,number,number,number):nil Performs a rotation of an image associated with the uicomponent. The image is specified by a 0-based numeric index of the images associated with this uicomponent. An optional pivot point can be specified, which sets a new pivot centre for the specified image.
+---@field GetCurrentStateImageDockOffset fun(self:UIC,number):number,number Returns the docking offset set for the specified image associated with the current state of the uicomponent.
+---@field NumCurrentStateImages fun(self:UIC):number Returns the number of images associated with the current state of this uicomponent.
+---@field DockingPoint fun(self:UIC):number Returns the docking point of this uicomponent. Valid returned values are given in the table at the top of this section.
+---@field GetContextObject fun(self:UIC,string):table Gets the context object (cco lua type) for the supplied type that is stored on the component
+---@field Id fun(self:UIC):string Returns the string name of this uicomponent.
+---@field TriggerAnimation fun(self:UIC,string):nil Starts an animation on the uicomponent by name. Available animations on a given uicomponent can be seen in the ui editor.
+---@field SetContextObject fun(self:UIC,cco):nil Sets a context object on a component, to initialise any ContextCallbacks to show information for the supplied cco
+---@field PropagateOpacity fun(self:UIC,number,apply):nil Sets the opacity of this uicomponent and propagates the change to all its children. The opacity value should be specified as a number between 0 (transparent) and 255 (fully opaque). An optional flag also applies the opacity setting to all states of each uicomponent, as opposed to just the current state.
+---@field SimulateKeyUp fun(self:UIC,string):nil Simulates a keypress-up on the uicomponent. A string key id must be specified from the list documented at the top of this section.
+---@field SetCanResizeWidth fun(self:UIC,boolean):nil Allows or disallows the width of this uicomponent to be changed by code or script.
+---@field GetProperty fun(self:UIC,string):any Returns the value of the specified uicomponent property. The names of properties on any given uicomponent may be looked up in the ui editor.
+---@field GetImageDimensions fun(self:UIC,number):number,number Returns the width and height in pixels of an image associated with the subject uicomponent. The image is specified by a 0-based index.
+---@field SetVisible fun(self:UIC,boolean):nil Sets the visibility state of this uicomponent.
+---@field GetCurrentStateImageIndex fun(self:UIC,number):number Returns the index of an image's association with this uicomponent, based on the index of that image's association with the current state. All indexes are 0-based.
+---@field GetCurrentStateImageDockingPoint fun(self:UIC,number):number Gets the docking point of the specified image associated with the current state of the uicomponent. The value is returned as a number. Valid number values are given in the table in the Docking section of this documentation.
+---@field SetProperty fun(self:UIC,string,variable):nil Returns the value of the specified uicomponent property. The names of properties on any given uicomponent may be looked up in the ui editor.
+---@field SimulateKey fun(self:UIC,string):nil Simulates a keypress on the uicomponent. A string key id must be specified from the list documented at the top of this section.
+---@field FindByScriptTag fun(self:UIC,string):UIC_Address Finds a component that has been tagged in a layout with the ScriptTag callback using the value of the Context Function id as the unique id to match against. It is a more robust mechanism of searching that sequential find as it is independant from layout order so is less likely to break from layout changes.
+---@field InterfaceFunction fun(self:UIC,string,...):nil Calls an interface function on the uicomponent, by string name. Interface functions are provided by some uicomponents to allow the script to activate specific functionality related to the uicomponent. Along with the string name of the interface function, multiple arguments to pass to that function may be specified.
+---@field StealShortcutKey fun(self:UIC,boolean,string):boolean Keyboard shortcuts are listed in data\text\default_keys.xml.
+---@field Height fun(self:UIC):number Returns the current height of the uicomponent in pixels.
+---@field IsMouseOverChildren fun(self:UIC):boolean Returns whether or not the mouse cursor is currently over this uicomponent or any of its children.
+---@field SetOpacity fun(self:UIC,number,apply):nil Sets the opacity of the uicomponent. This should be specified as a number between 0 (transparent) and 255 (fully opaque). An optional flag also applies the opacity setting to all states of the uicomponent, as opposed to just the current state.
+---@field IsDisabled fun(self:UIC):boolean Returns whether this uicomponent is disabled or not. Disabled uicomponents do not respond to mouse clicks but still respond to the mouse cursor being placed over them.
+---@field GetAnimationNames fun(self:UIC):table Returns a table containing the names of each animation contained by the uicomponent. The table is indexed by number, but the ordering of animation names within the table is not guaranteed between different calls to this function.
+---@field GetContextObjectId fun(self:UIC,string):nil Gets the context object id for the supplied type that is stored on the component, to allow you to perform queries/commands on the context with (get_context_value/call_context_command).
+---@field SetDisabled fun(self:UIC,boolean):nil Sets this uicomponent to be disabled or not. Disabled uicomponents do not respond to mouse clicks but still respond to the mouse cursor being placed over them.
+---@field Priority fun(self:UIC):number Returns the priority of this uicomponent.
+---@field PropagatePriority fun(self:UIC,number):number Sets the component priority of this uicomponent and all its children to the supplied value. The old priority of the uicomponent is returned.
+---@field AnimationExists fun(self:UIC,string):boolean Returns whether the uicomponent contains an animation with the supplied name.
+---@field SetCurrentStateImageTiled fun(self:UIC,number,boolean):nil Sets whether the specified image associated with the current state of the uicomponent is tiled or not.
+---@field Width fun(self:UIC):number Returns the current width of the uicomponent in pixels.
+---@field SimulateKeyDown fun(self:UIC,string):nil Simulates a keypress-down on the uicomponent. A string key id must be specified from the list documented at the top of this section.
+---@field SimulateMouseOff fun(self:UIC):nil Simulates a mouse-off event on the uicomponent.
+---@field LockPriority fun(self:UIC,number):nil uicomponent:UnLockPriority must be called after calling this function to restore normal ui functionality.
+---@field SimulateMouseOn fun(self:UIC):nil Simulates a mouse-on event on the uicomponent. You MUST call SimulateMouseOff when done otherwise mouse on will be stuck on. Also note that you might have to wait a tick before expected functionality occurs (say a panel opening on mousing over this component), as some callbacks work by checking for mouseover each update tick and dont use OnMouseOn
+---@field SimulateDblRClick fun(self:UIC,number,number):nil Simulates a double-left-click on the uicomponent. Relative co-ordinates at which the click is simulated on the component may optionally be specified. Both arguments must be supplied to specify a position.
+---@field TextXOffset fun(self:UIC):number,number Returns the text x offset values of the current state. This is the padding around the left and right side of any text displayed on the current state of the uicomponent. Offset values greater than 0 enforce a border around the edge of the text so that it does not run right up to the edge of the displayed component.
+---@field SimulateRClick fun(self:UIC,number,number):nil Simulates a right-click on the uicomponent. Relative co-ordinates at which the click is simulated on the component may optionally be specified. Both arguments must be supplied to specify a position.
+---@field SimulateLClick fun(self:UIC,number,number):nil Simulates a left-click on the uicomponent. Relative co-ordinates at which the click is simulated on the component may optionally be specified. Both arguments must be supplied to specify a position.
+---@field SetCanResizeCurrentStateImageHeight fun(self:UIC,number,boolean):nil Sets whether the height can be resized of the specified image associated with the current state of the uicomponent.
+---@field SetTextXOffset fun(self:UIC,number,number):nil Sets the text x offset values of the current state. This is the padding around the left and right side of any text displayed on the current state of the uicomponent. Offset values greater than 0 enforce a border around the edge of the text so that it does not run right up to the edge of the displayed component.
+---@field StopPulseHighlight fun(self:UIC,string):nil Deactivates a pulsing highlight effect on a particular state of the subject uicomponent that was previously started with uicomponent:StartPulseHighlight.
+---@field SetTextYOffset fun(self:UIC,number,number):nil Sets the text y offset values of the current state. This is the padding around the top and bottom of any text displayed on the current state of the uicomponent. Offset values greater than 0 enforce a border around the edge of the text so that it does not run right up to the edge of the displayed component.
+---@field TextYOffset fun(self:UIC):number,number Returns the text y offset values of the current state. This is the padding around the top and bottom of any text displayed on the current state of the uicomponent. Offset values greater than 0 enforce a border around the edge of the text so that it does not run right up to the edge of the displayed component.
+---@field FullScreenHighlight fun(self:UIC,string,boolean):nil Activates a fullscreen highlight around the subject uicomponent. This places a nearly opaque layer over the screen except for a window over the subject uicomponent, leaving it prominently displayed. Text may optionally be specified that gets displayed over the opaque layer.
+---@field SetInteractive fun(self:UIC,boolean):nil Sets this uicomponent to be interactive or not. Non-interactive uicomponents do not respond to any mouse events.
+---@field GetImagePath fun(self:UIC,number):nil Returns the path of an image associated with the subject uicomponent. The image is specified by a 0-based index.
+---@field GetCurrentStateImageOpacity fun(self:UIC,number):number Returns the opacity of a specified image associated with the current state of the uicomponent. The returned value will be between 0 and 255.
+---@field ResizeTextResizingComponentToInitialSize fun(self:UIC,number,number):nil This function provides a method of working around this, temporarily disabling the text-resizing behaviour so that the desired resize can be applied.
+---@field TextShaderVarsSet fun(self:UIC,number,number,number,number,boolean):nil Sets variables on the text shader technique currently active on the uicomponent. What values can be set and what they do is specific to each shader - see the documented list at the top of this section. Up to four shader values can be specified, each one being a number.
+---@field CallbackId fun(self:UIC):string Returns the callback id of this uicomponent.
+---@field ShaderVarsGet fun(self:UIC):number,number,number,number Returns the variables of the shader currently active on the uicomponent.
+---@field GetTextVAlign fun(self:UIC):string Returns the vertical text alignment setting of the current state as a string. Valid alignment values are "top", "centre" and "bottom".
+---@field ResizeCurrentStateImage fun(self:UIC,number,number,number):nil Sets the width and height of a specified image associated with the current state of the uicomponent.
+---@field ShaderVarsSet fun(self:UIC,number,number,number,number,boolean,boolean):nil Sets variables on the shader technique currently active on the uicomponent. What values can be set and what they do is specific to each shader - see the documented list at the top of this section. Up to four shader values can be specified, each one being a number.
+---@field GetStateByIndex fun(self:UIC,number):string Returns the name of the state at the specified index.
+---@field CreateComponent fun(self:UIC,string,string):UIC_Address Creates a new uicomponent as the child of this uicomponent. A name for the new uicomponent must be supplied, as well as a filepath to a layout file containing a template for the new uicomponent. The address of the new uicomponent is returned - this must be cast to be a uicomponent using the UIComponent function.
+---@field ShaderTechniqueSet fun(self:UIC,variable,boolean,boolean):nil Sets the active shader technique on the uicomponent, applying a custom graphical shader effect. The shader may be specified as a string key or a number. Valid shader keys are given in the table at the top of this section.
+---@field SetCurrentStateImageDockingPoint fun(self:UIC,number,number):nil Sets the docking point of the specified image associated with the current state of the uicomponent. Valid values are given in the table in the Docking section of this documentation.
+---@field RegisterTopMost fun(self:UIC):nil Registers this uicomponent to be drawn topmost. Topmost uicomponents are drawn outside of the normal hierarchy on the top of all other uicomponents. This setting is useful for uicomponents such as tooltips that must always be drawn over the top of other visible parts of the UI.
+---@field PropagateVisibility fun(self:UIC,boolean):nil Sets the visibility state of this uicomponent and all its children.
+---@field UnLockPriority fun(self:UIC):nil Deactivates a priority lock on the uicomponent.
+---@field GetAnimationFrameProperty fun(self:UIC,string,number,string):nil Gets an animation frame property. Different interpolation types return different numbers of arguments. See UiEd animation menu.
+---@field SetAnimationFrameProperty fun(self:UIC,string,number,string,number,number,number,number):nil Sets an animation frame property. Different interpolation types require different numbers of arguments. See UiEd animation menu.
+---@field IsMoveable fun(self:UIC):boolean Returns whether this uicomponent is moveable or not.
+---@field IsInteractive fun(self:UIC):boolean Returns whether this uicomponent is interactive or not. Non-interactive uicomponents do not respond to any mouse events.
+---@field Address fun(self:UIC):UIC_Address Returns the address of this uicomponent, which is used for certain other functions on this interface such as uicomponent:Adopt.
+---@field NumStates fun(self:UIC):number Returns the number of states this uicomponent contains.
+---@field StealInputFocus fun(self:UIC,boolean):nil Instructs this uicomponent to steal all keyboard input. All keypresses are therefore redirected to this uicomponent which will handle them. If input focus is stolen by a uicomponent then standard keyboard behaviour will be overridden until it is released with a second call to this function.
+---@field SetCurrentStateImageDockOffset fun(self:UIC,number,number,number):nil Sets the docking offset of the specified image associated with the current state of the uicomponent.
+---@field SetCurrentStateImageYFlip fun(self:UIC,number,boolean):nil Sets the y-flipped value for the specified image associated with the current state of the uicomponent. If set, this flips the image vertically.
+local UIC = {}

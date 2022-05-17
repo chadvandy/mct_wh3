@@ -1,0 +1,1 @@
+--- TODO a visual layout within MCT, so you can do stuff like "3 equal columns" or "a double-wide column on the left and an image on the right" or whatever, inserting spots for options or text or wiki or whatever you want

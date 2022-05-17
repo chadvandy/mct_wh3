@@ -1,0 +1,4 @@
+child_id	ui_tooltip	icon_path	state_name	is_visible
+#ui_tooltip_components_tables;2;db/ui_tooltip_components_tables/mct_tooltips				
+title	mct_profiles_tooltip			true
+text	mct_profiles_tooltip			true

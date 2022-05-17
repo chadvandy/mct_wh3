@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<layout
+    version="137"
+    comment="This is an overwrite file for the frontend menu panel"
+    precache_condition="">
+    <hierarchy>
+		<root this="3952562E-E343-4A78-A9AB6DAD8BA3572A">
+            <holder this="4052134E-99A2-4BC0-A3B2721806954094"/>
+        </root>
+    </hierarchy>
+    <components>
+		<root
+			this="3952562E-E343-4A78-A9AB6DAD8BA3572A"
+			id="root"
+			tooltipslocalised="true"
+			uniqueguid="3952562E-E343-4A78-A9AB6DAD8BA3572A"
+			currentstate="9C9313D2-8184-4361-97059D4200354DA4"
+			defaultstate="9C9313D2-8184-4361-97059D4200354DA4">
+			<componentimages>
+				<component_image
+					this="5D1081FD-3976-4419-924ABAC235972677"
+					uniqueguid="5D1081FD-3976-4419-924ABAC235972677"/>
+			</componentimages>
+			<states>
+				<newstate
+					this="9C9313D2-8184-4361-97059D4200354DA4"
+					name="NewState"
+					width="1600"
+					height="900"
+					interactive="true"
+					uniqueguid="9C9313D2-8184-4361-97059D4200354DA4">
+					<imagemetrics>
+						<image
+							this="BB15F6B9-992B-48A3-9DAA3CBAD637CD3D"
+							uniqueguid="BB15F6B9-992B-48A3-9DAA3CBAD637CD3D"
+							componentimage="5D1081FD-3976-4419-924ABAC235972677"
+							width="1600"
+							height="900"
+							colour="#282828FF"/>
+					</imagemetrics>
+				</newstate>
+			</states>
+		</root>
+        <holder
+			this="4052134E-99A2-4BC0-A3B2721806954094"
+			id="holder"
+			offset="-142.00,80.00"
+			docking="Center"
+			dock_offset="0.00,118.00"
+			component_anchor_point="0.50,0.50"
+			priority="100"
+			tooltipslocalised="true"
+			uniqueguid="4052134E-99A2-4BC0-A3B2721806954094"
+			currentstate="DAEA90D9-8B5C-46E9-A8D958F4B1D76249"
+			defaultstate="DAEA90D9-8B5C-46E9-A8D958F4B1D76249">
+			<callbackwithcontextlist>
+				<callback_with_context callback_id="ButtonGroup">
+					<child_m_user_properties>
+						<property
+							name="Single Selection"
+							value="1"/>
+					</child_m_user_properties>
+				</callback_with_context>
+			</callbackwithcontextlist>
+			<states>
+				<default
+					this="DAEA90D9-8B5C-46E9-A8D958F4B1D76249"
+					name="default"
+					width="754"
+					height="500"
+					texthbehaviour="Never split"
+					uniqueguid="DAEA90D9-8B5C-46E9-A8D958F4B1D76249"/>
+			</states>
+			<LayoutEngine
+				type="List"
+				spacing="8.00,8.00"
+				itemsperrow="4"
+				sizetocontent="true"
+				horizontal_alignment="Center">
+				<columnwidths>
+					<column width="400"/>
+				</columnwidths>
+			</LayoutEngine>
+		</holder>
+    </components>
+</layout>
