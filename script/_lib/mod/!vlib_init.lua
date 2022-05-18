@@ -1,12 +1,140 @@
---- TODO the file to define some global functions like load_module[s] and other thingies
+--- Create a new class object!
+---@type fun(className:string,attr:table) : Class
+new_class = require "script.vlib.includes.30-log"
 
---- TODO create a global object just VLib with functions like VLib.Log() VLib.NewLog() VLib.LoadModule etc etc, have all of it within this file
+---@class VLib : Class
+local defaults = {
+    ---@type table<string, VLib.Log>
+    logs = {
+        lib = nil,
+    },
+}
+
+---@class VLib
+VLib = new_class("VLib", defaults)
+
+---@class VLib.Log : Class
+local log_defaults = {
+    prefix = "[lib]",
+    show_time = true,
+
+    current_tab = 0,
+
+    lines = {},
+    
+    file_name = "",
+
+    ---@type file*
+    file = nil,
+}
+
+---@class VLib.Log
+---@field __new fun():VLib.Log
+local Log = new_class("VLib_Log", log_defaults)
+
+--- Create a new Log Object.
+---@param key string
+---@param file_name string
+---@param prefix string
+function Log.new(key, file_name, prefix)
+    local o = Log:__new()
+    o:init(key, file_name, prefix)
+
+    return o
+end
+
+function Log:init(key, file_name, prefix)
+    self.key = key
+    self.file_name = file_name or "logging.txt"
+    self.prefix = prefix or "[lib]"
+
+    --- TODO some test to see if this file was made in this session
+    local file = io.open("out/" .. self.file_name, "w+")
+    self.file = file
+end
+
+function Log:__call(...)
+    self:log(...)
+end
+
+function Log:get_tabs()
+    local t = ""
+    for i = 1,self.current_tab do
+        t = t .. "\t"
+    end
+
+    return t
+end
+
+function Log:log(t, ...)
+    if ... then
+        t = string.format(t, ...)
+    end
+
+    t = string.format("\n%s %s%s", self.prefix, self:get_tabs(), t)
+
+    self.lines[#self.lines+1] = t
+
+    self.file:write(t)
+end
+
+
+--- Change the tab amount for this log.
+---@param change number? The amount to change the tabs by (ie. -1, 1). Defaults to 1 if left blank.
+function Log:tab(change)
+    if not is_number(change) then change = 1 end
+    self.current_tab = self.current_tab + change
+end
+
+--- Set the absolute amount for the tab.
+---@param tab_amount number? The number of tabs to force, ie. if 4 is used then 4 tabs will be printed. Defaults to 0.
+function Log:tab_abs(tab_amount)
+    if not is_number(tab_amount) then tab_amount = 0 end
+    self.current_tab = tab_amount
+end
+
+function VLib.init()
+    --- TODO print
+    VLib.logs.lib = VLib.NewLog("lib", "!vandy_lib_log.txt")
+
+    VLib.LoadModule("extensions", "script/vlib/")
+    VLib.LoadModule("helpers", "script/vlib/")
+    VLib.LoadModule("uic", "script/vlib/")
+end
+
+--- Create a new Log Object.
+---@param key string
+---@param file_name string?
+---@param prefix string?
+function VLib.NewLog(key, file_name, prefix)
+    if VLib.logs[key] then
+        return VLib.logs[key]
+    end
+
+    --- TODO errcheck the types
+    local o = Log.new(key, file_name, prefix)
+    VLib.logs[key] = o
+
+    return o
+end 
+
+function VLib.Log()
+
+end
+
+function VLib.Warn()
+
+end
+
+function VLib.Error()
+
+end
 
 --- Load a single file, and return its contents.
 ---@param module_name string The name of the file, without the ".lua" extension
 ---@param path string The path to the file, from .pack.
 ---@return any
-function load_module(module_name, path)
+function VLib.LoadModule(module_name, path)
     local full_path = path .. module_name .. ".lua"
     vlogf("Loading module w/ full path %q", full_path)
     local file, load_error = loadfile(full_path)
@@ -40,10 +168,12 @@ end
 --- Load every file, and return the Lua module, from within the folder specified, using the pattern specified.
 ---@param path string The path you're checking. Local to data, so if you're checking for any file within the script folder, use "script/" as the path.
 ---@param search_override string The file you're checking for. I believe it requires a wildcard somewhere, "*", but I haven't messed with it enough. Use "*" for any file, or "*.lua" for any lua file, or "*/main.lua" for any file within a subsequent folder with the name main.lua.
-function load_modules(path, search_override, func_for_each)
+---@param func_for_each fun(filename:string, module:function)? Code to run for each module loaded.
+function VLib.LoadModules(path, search_override, func_for_each)
     if not search_override then search_override = "*.lua" end
     -- vlogf("Checking %s for all main.lua files!", path)
 
+    ---@diagnostic disable-next-line # stupid API error on my end.
     local file_str = common.filesystem_lookup(path, search_override)
     -- vlogf("Checking all module folders for main.lua, found: %s", file_str)
     
@@ -71,7 +201,7 @@ function load_modules(path, search_override, func_for_each)
             filename = string.sub(filename, 1, string.len(filename) -4)
         end
 
-        local module = load_module(filename, string.gsub(filename_for_out, filename..".lua", ""))
+        local module = VLib.LoadModule(filename, string.gsub(filename_for_out, filename..".lua", ""))
         if is_function(func_for_each) then
             func_for_each(filename_for_out, module)
         end
@@ -141,10 +271,4 @@ function verrf(text, ...)
     vlogf("ERROR: " .. text, ...)
 end
 
---- Create a new class object!
----@type fun(className:string,attr:table) : Class
-new_class = load_module("30-log", "script/vlib/includes/")
-
-load_module("extensions", "script/vlib/")
-load_module("helpers", "script/vlib/")
-load_module("uic", "script/vlib/")
+VLib.init()

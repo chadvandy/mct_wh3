@@ -12,6 +12,9 @@ local mct_defaults = {
     _selected_mod = nil,
 }
 
+local load_module = VLib.LoadModule
+local load_modules = VLib.LoadModules
+
 ---@type ModConfigurationTool
 local mct = new_class("ModConfigurationTool", mct_defaults)
 
@@ -19,6 +22,34 @@ local mct = new_class("ModConfigurationTool", mct_defaults)
 function mct:init()
     self:load_modules()
     self:load_mods()
+
+    if not core:is_campaign() then
+        -- trigger load_and_start after all mod scripts are loaded!
+        core:add_listener(
+            "MCT_Init",
+            "ScriptEventAllModsLoaded",
+            true,
+            function(context)
+                local ok, err = pcall(function()
+                mct:load_and_start()
+                end) if not ok then vlogf(err) end
+            end,
+            false
+        )
+    else
+        vlog("LISTENING FOR LOAD GAME")
+        
+        cm:add_loading_game_callback(function(context)
+            vlog("LOADING GAME CALBACK")
+            if not cm.game_interface:model():is_multiplayer() then
+                mct:load_and_start(context, false)
+            else
+                mct:load_and_start(context, true)
+            end
+
+            vlog("Done the loading game callback!")
+        end)
+    end
 end
 
 --- Load up all the included modules for MCT - UI, Options, Settings, etc.
@@ -65,6 +96,7 @@ function mct:mp_prep()
 
 end
 
+--- TODO trigger this lol
 --- TODO clean this the fuck up
 function mct:load_and_start(loading_game_context, is_mp)
     self._initialized = true
@@ -172,7 +204,7 @@ function mct:load_mods()
         function(filepath, module)
             vlogf("Loading mod %s!", filepath)
 
-            module()
+            -- module()
             --- TODO needed?
             -- local all_mods = self:get_mods_from_file(filepath)
 

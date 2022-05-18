@@ -814,7 +814,7 @@ end
 ---- Setter for this option's text, which displays next to the dropdown box/checkbox.
 --- MCT will automatically read for text if there's a loc key with the format `mct_[mct_mod_key]_[mct_option_key]_text`.
 ---@param text string The text string for this option. You can either supply hard text - ie., "My Cool Option" - or a loc key - ie., "`ui_text_replacements_my_cool_option`".
----@param is_localised boolean  True if a loc key was supplied for the text parameter.
+---@param is_localised boolean?  True if a loc key was supplied for the text parameter.
 function mct_option:set_text(text, is_localised)
     if not is_string(text) then
         err("set_text() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the text supplied is not a string! Returning false.")
@@ -829,7 +829,7 @@ end
 ---- Setter for this option's tooltip, which displays when hovering over the option or the text.
 --- MCT will automatically read for text if there's a loc key with the format `mct_[mct_mod_key]_[mct_option_key]_tooltip`.
 ---@param text string The tootlip string for this option. You can either supply hard text - ie., "My Cool Option's Tooltip" - or a loc key - ie., "`ui_text_replacements_my_cool_option_tt`".
----@param is_localised boolean True if a loc key was supplied for the text parameter.
+---@param is_localised boolean? True if a loc key was supplied for the text parameter.
 function mct_option:set_tooltip_text(text, is_localised)
     if not is_string(text) then
         err("set_tooltip_text() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the tooltip_text supplied is not a string! Returning false.")

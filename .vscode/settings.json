@@ -8,4 +8,8 @@
         // ".vscode/def.lua",
         "S:/modding/tw_autogen/output/wh3/",
     ],
+    "Lua.diagnostics.disable": [
+        "lowercase-global",
+        "need-check-nil"
+    ],
 }

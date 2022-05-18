@@ -544,7 +544,7 @@ function ui_obj:populate_profiles_dropdown_box()
 
     -- self:set_actions_states()
 
-    local dropdown_option_template = "ui/vandy_lib/dropdown_option"
+    -- local dropdown_option_template = "ui/vandy_lib/dropdown_option"
 
     local profiles_dropdown = find_uicomponent(actions_panel, "mct_profiles_dropdown")
 
@@ -555,7 +555,9 @@ function ui_obj:populate_profiles_dropdown_box()
 
     _SetStateText(selected_tx, "")
     
-    popup_list:DestroyChildren()
+    -- local example_row = find_uicomponent(popup_list, "row_example")
+    -- example_row:SetVisible(false)
+    -- popup_list:DestroyChildren()
 
     local all_profiles = mct.settings:get_all_profile_keys()
     local ordered_profiles = all_profiles
@@ -585,8 +587,8 @@ function ui_obj:populate_profiles_dropdown_box()
             local profile_key = ordered_profiles[i]
             local profile = mct.settings:get_profile(profile_key)
 
-            local new_entry = core:get_or_create_component(profile_key, dropdown_option_template, popup_list)
-
+            local new_entry = core:get_or_create_component(profile_key, "ui/vandy_lib/dropdown_option", popup_list)
+            new_entry:SetVisible(true)
             
             _SetTooltipText(new_entry, profile.__description or "", true)
 
@@ -795,6 +797,8 @@ function ui_obj:create_actions_panel()
 
     -- create "Profiles" dropdown
     local profiles_dropdown = core:get_or_create_component("mct_profiles_dropdown", "ui/templates/dropdown_button", actions_panel)
+
+    print_all_uicomponent_children(profiles_dropdown, true)
     --local profiles_dropdown_text = find_uicomponent(profiles_dropdown, "dy_selected_txt")
 
     profiles_dropdown:SetVisible(true)
@@ -805,9 +809,9 @@ function ui_obj:create_actions_panel()
     popup_menu:PropagatePriority(1000)
     popup_menu:SetVisible(false)
 
-    local popup_list = find_uicomponent(popup_menu, "popup_list")
+    -- local popup_list = find_uicomponent(popup_menu, "popup_list")
 
-    delete_component(find_uicomponent(popup_list, "row_example"))
+    -- delete_component(find_uicomponent(popup_list, "row_example"))
 
     -- "Edit" button
     local profiles_edit = core:get_or_create_component("mct_profiles_edit", "ui/templates/square_small_tab_toggle", profiles_dropdown)
@@ -1768,8 +1772,8 @@ function ui_obj:populate_panel_on_mod_selected()
     local mod_title_txt = self.mod_title_txt
 
     -- set up the mod details - name of selected mod, display author, and whatever blurb of text they want
-    local mod_author = core:get_or_create_component("mod_author", "ui/vandy_lib/text/la_gioconda/center", mod_details_panel)
-    local mod_description = core:get_or_create_component("mod_description", "ui/vandy_lib/text/la_gioconda/center", mod_details_panel)
+    local mod_author = core:get_or_create_component("mod_author", "ui/vandy_lib/text/dev_ui", mod_details_panel)
+    local mod_description = core:get_or_create_component("mod_description", "ui/vandy_lib/text/dev_ui", mod_details_panel)
     --local special_button = core:get_or_create_component("special_button", "ui/mct/special_button", mod_details_panel)
 
     local title, author, desc = selected_mod:get_localised_texts()
@@ -1834,7 +1838,7 @@ function ui_obj:create_sections_and_contents(mod_obj)
             section_obj._dummy_rows = {}
 
             -- first, create the section header
-            local section_header = core:get_or_create_component("mct_section_"..section_key, "ui/vandy_lib/expandable_row_header", mod_settings_box)
+            local section_header = core:get_or_create_component("mct_section_"..section_key, "ui/vandy_lib/row_header", mod_settings_box)
             --local open = true
 
             section_obj._header = section_header
@@ -1983,7 +1987,7 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
     end
 
 
-    local dummy_row = core:get_or_create_component("settings_row_"..section_key.."_"..tostring(y), "ui/mct/script_dummy", mod_settings_box)
+    local dummy_row = core:get_or_create_component("settings_row_"..section_key.."_"..tostring(y), "ui/campaign ui/script_dummy", mod_settings_box)
 
     -- TODO make sliders the entire row so text and all work fine
     -- TODO above isn't really needed, huh?
@@ -2006,7 +2010,7 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
     -- column 1 docks center left, column 2 docks center, column 3 docks center right
     local pos_to_dock = {[1]=4, [2]=5, [3]=6}
 
-    local column = core:get_or_create_component("settings_column_"..tostring(x), "ui/mct/script_dummy", dummy_row)
+    local column = core:get_or_create_component("settings_column_"..tostring(x), "ui/campaign ui/script_dummy", dummy_row)
 
     -- set the column dimensions & position
     do
@@ -2025,7 +2029,7 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
     if option_obj == "MCT_BLANK" then
         -- no need to do anything, skip
     else
-        local dummy_option = core:get_or_create_component(option_obj:get_key(), "ui/mct/script_dummy", column)
+        local dummy_option = core:get_or_create_component(option_obj:get_key(), "ui/campaign ui/script_dummy", column)
 
         do
             -- set to be flush with the column dummy
@@ -2044,12 +2048,12 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             -- give priority over column
             dummy_option:PropagatePriority(column:Priority() +1)
 
-            local dummy_border = core:get_or_create_component("border", "ui/vandy_lib/custom_image_tiled", dummy_option)
+            local dummy_border = core:get_or_create_component("border", "ui/vandy_lib/image", dummy_option)
             dummy_border:SetCanResizeHeight(true) dummy_border:SetCanResizeWidth(true)
             dummy_border:Resize(w, h)
             dummy_border:SetCanResizeHeight(false) dummy_border:SetCanResizeWidth(false)
 
-            dummy_border:SetState("custom_state_2")
+            dummy_border:SetState("tiled")
 
             local border_path = option_obj:get_border_image_path()
             local border_visible = option_obj:get_border_visibility()
@@ -2065,7 +2069,7 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             option_obj:set_uic_with_key("border", dummy_border, true)
 
             -- make some text to display deets about the option
-            local option_text = core:get_or_create_component("text", "ui/vandy_lib/text/la_gioconda/unaligned", dummy_option)
+            local option_text = core:get_or_create_component("text", "ui/vandy_lib/text/dev_ui", dummy_option)
             _SetVisible(option_text, true)
             option_text:SetDockingPoint(4)
             option_text:SetDockOffset(15, 0)

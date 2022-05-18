@@ -27,12 +27,14 @@ end
 ---@return string
 function skin_image(t)
     if not is_string(t) then return "ui/skins/default/icon_wh_main_lore_vampire.png" end
-    local pre = "ui/skins/default/" 
-    local post = ".png" 
+    local pre = "ui/skins/default/"
+    local post = ".png"
 
-    if t:find(".png$") then
+    if t:match(".png$") then
         post = ""
     end
+
+    vlogf("Skinning image %s into %s", t, pre .. t .. post)
 
     return pre .. t .. post
 end
