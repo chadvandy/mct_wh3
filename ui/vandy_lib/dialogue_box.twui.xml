@@ -610,14 +610,14 @@
 					</imagemetrics>
 				</newstate>
 			</states>
-			<LayoutEngine
+			<!-- <LayoutEngine
 				type="List"
                 spacing="10.00,10.00"
 				horizontal_alignment="Center">
 				<columnwidths>
 					<column width="418"/>
 				</columnwidths>
-			</LayoutEngine>
+			</LayoutEngine> -->
 		</dialogue_box>
 		<both_group
 			this="1AFE725F-B574-4A9E-B9F12BA543992EF4"
