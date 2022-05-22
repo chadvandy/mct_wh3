@@ -1,0 +1,61 @@
+--- TODO add MCT to the Esc menu
+
+-- core:add_listener(
+--     "MCT_EscMenu",
+--     "PanelOpenedCampaign",
+--     function(context)
+--         return context.string == "esc_menu"
+--     end,
+--     function(context)
+--         --- TODO add the button where it go
+--         local holder = find_uicomponent("esc_menu", "main", "menu_left", "frame_options")
+--         local exists = find_uicomponent(holder, "button_mct")
+--         if is_uicomponent(exists) then
+--             return
+--         end
+
+--         local other = find_uicomponent(holder, "button_audio")
+--         local w,h = other:Dimensions()
+--         local mct = core:get_or_create_component("button_mct", "ui/templates/fe_small_square_button", holder)
+--         mct:SetCanResizeHeight(true)
+--         mct:SetCanResizeWidth(true)
+--         mct:Resize(w, h)
+--         --- TODO text/tooltip/img
+--     end,
+--     true
+-- )
+
+ModLog("This script is being run!")
+
+
+--- UI initalization
+core:add_listener(
+    "MctButton",
+    "ComponentLClickUp",
+    function(context)
+        return context.string == "button_mct"
+    end,
+    function(context)
+        core:get_tm():real_callback(function()
+            get_mct():open_panel()
+        end, 5, "mct_button")
+    end,
+    true
+)
+
+--- Battle scripts are triggered after UI is already created
+-- core:add_ui_created_callback(function()
+    vlog("******\nUI CREATED!\n******")
+    core:get_tm():repeat_real_callback(function()
+        vlog("Testing if menu_bar -> buttongroup is a uic")
+        local p = find_uicomponent("menu_bar", "buttongroup")
+    
+        if is_uicomponent(p) then
+            core:get_tm():remove_real_callback("mct_button_test")
+
+            local mct_button = core:get_or_create_component("button_mct", "ui/templates/round_small_button", p)
+
+            get_mct().ui:ui_created()
+        end
+    end, 100, "mct_button_test")
+-- end)
