@@ -1,6 +1,6 @@
 --- Create a new class object!
 ---@type fun(className:string,attr:table) : Class
-new_class = require "script.vlib.includes.30-log"
+local new_class = require "script.vlib.includes.30-log"
 
 ---@class VLib : Class
 local defaults = {
@@ -49,7 +49,7 @@ function Log:init(key, file_name, prefix)
     self.prefix = prefix or "[lib]"
 
     --- TODO some test to see if this file was made in this session
-    local file = io.open("out/" .. self.file_name, "w+")
+    local file = io.open(self.file_name, "w+")
     self.file = file
 end
 
@@ -67,6 +67,7 @@ function Log:get_tabs()
 end
 
 function Log:log(t, ...)
+    --- TODO prevent errors if the string fails to format (ie. you pass a %s but no varargs)
     if ... then
         t = string.format(t, ...)
     end
@@ -93,13 +94,40 @@ function Log:tab_abs(tab_amount)
     self.current_tab = tab_amount
 end
 
+function VLib.FlushLogs()
+    for _,log in pairs(VLib.logs) do
+        log.file:flush()
+    end
+end
+
 function VLib.init()
     --- TODO print
     VLib.logs.lib = VLib.NewLog("lib", "!vandy_lib_log.txt")
 
+    local function start_flush()
+        core:get_tm():repeat_real_callback(function()
+            VLib.FlushLogs()
+        end, 100, "vlib_logging")
+    end 
+
+    if core:is_campaign() then
+        cm:add_first_tick_callback(start_flush)
+    else
+        start_flush()
+    end
+
     VLib.LoadModule("extensions", "script/vlib/")
     VLib.LoadModule("helpers", "script/vlib/")
     VLib.LoadModule("uic", "script/vlib/")
+end
+
+--- Create a new Class object, which can be used to simulate OOP systems.
+---@param key string The name of the Class object.
+---@param params table? An optional table of defaults to assign to the Class and every Instance of it.
+---@return Class
+function VLib.NewClass(key, params)
+    if not params then params = {} end
+    return new_class(key, params)
 end
 
 --- Create a new Log Object.
@@ -116,18 +144,32 @@ function VLib.NewLog(key, file_name, prefix)
     VLib.logs[key] = o
 
     return o
-end 
-
-function VLib.Log()
-
 end
 
-function VLib.Warn()
+--- Get the @LogObj with this name.
+---@param name string? The name of the log object when created. Leave blank to get the default one.
+---@return VLib.Log
+function VLib.GetLog(name)
+    if not is_string(name) then name = "lib" end
+    local t = VLib.logs[name]
+    if t then
+        return t
+    end
 
+    VLib.Warn("Tried to get a Log with the name %s but none was found. Returning the default log object.", name)
 end
 
-function VLib.Error()
+function VLib.Log(t, ...)
+    VLib.logs.lib:log(t, ...)
+end
 
+function VLib.Warn(t, ...)
+    VLib.logs.lib:log("WARNING!\n" .. t, ...)
+end
+
+function VLib.Error(t, ...)
+    VLib.logs.lib:log("ERROR!\n" .. t, ...)
+    VLib.logs.lib:log(debug.traceback(1))
 end
 
 --- Load a single file, and return its contents.
@@ -208,67 +250,31 @@ function VLib.LoadModules(path, search_override, func_for_each)
     end
 end
 
---- TODO do tab stuff and stuff
---- TODO make my logging stuff a global class that you can do like, vlog:new() to, create a new filepath, prefixes, other options, whatever
-local logging = {
-    path = "!vandy_lib_log.txt",
-    init = false,
-    line_break = "********************",
-    is_checking = false,
-    print_immediately = true,
-
-    i=0,
-    t=0,
-
-    ---@type file* The file in question
-    file = nil,
-}
-
-logging.file = io.open(logging.path, "w+")
-
--- --- TODO does this fuck up writing?
--- core:get_tm():repeat_real_callback(function()
---     logging.file:flush()
--- end, 100, "testing")
-
-local function get_file()
-    -- if not logging.file then
-        logging.file = io.open(logging.path, "a+")
-    -- end
-
-    return logging.file
-end
-
 function get_vlog(prefix)
     if not is_string(prefix) then prefix = "[lib]" end
 
     return --- Return log,logf,err,errf
-        function(text) vlog(prefix .. " " .. text) end,
-        function(text, ...) vlogf(prefix .. " " .. text, ...) end,
-        function(text) verr(prefix .. " " .. text) end,
-        function(text, ...) verrf(prefix .. " " .. text, ...) end
+        function(text) VLib.Log(prefix .. " " .. text) end,
+        function(text, ...) VLib.Log(prefix .. " " .. text, ...) end,
+        function(text) VLib.Error(prefix .. " " .. text) end,
+        function(text, ...) VLib.Error(prefix .. " " .. text, ...) end
 end
 
---- TODO os.time() or something?
 function vlog(text)
-    local file = get_file()
-    file:write("\n" .. text)
-    file:flush()
-    file:close()
+    VLib.Log(text)
 end
 
 function vlogf(text, ...)
-    local t = string.format(text, ...)
-    vlog(t)
+    VLib.Log(text, ...)
 end
 
 function verr(text)
-    vlog("ERROR: " .. text)
-    vlog(debug.traceback(1))
+    VLib.Error(text)
 end
 
 function verrf(text, ...)
-    vlogf("ERROR: " .. text, ...)
+    VLib.Error(text, ...)
 end
+
 
 VLib.init()

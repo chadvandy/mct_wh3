@@ -6,7 +6,7 @@ core:add_listener(
         return context.string == "button_mct"
     end,
     function(context)
-        core:get_static_object("timer_manager"):real_callback(function()
+        core:get_tm():real_callback(function()
             get_mct():open_panel()
         end, 5, "mct_button")
     end,

@@ -142,7 +142,7 @@ local mct_mod_defaults = {
 
 ---@class MCT.Mod : Class
 ---@field __new fun():MCT.Mod
-local mct_mod = new_class("MCT_Mod", mct_mod_defaults)
+local mct_mod = VLib.NewClass("MCT_Mod", mct_mod_defaults)
 
 --- For internal use, called by the MCT Manager. Creates a new mct_mod object.
 ---@param key string The key for the new mct_mod. Has to be unique!
@@ -767,7 +767,7 @@ function mct_mod:get_title()
         return title
     end
 
-    title = vlib_format_text(self._title)
+    title = VLib.FormatText(self._title)
     -- if title.is_localised then
     --     local test = effect.get_localised_string(title.text)
     --     if test ~= "" then
@@ -790,7 +790,7 @@ function mct_mod:get_author()
         --return
     --end
 
-    return vlib_format_text(self._author) --or "No author assigned"
+    return VLib.FormatText(self._author) --or "No author assigned"
 end
 
 --- Grabs the description text. First checks for a loc-key `mct_[mct_mod_key]_description`, then checks to see if anything was set using @{mct_mod:set_description}. If not, "No description assigned" is returned.
@@ -801,7 +801,7 @@ function mct_mod:get_description()
         return description
     end
 
-    description = vlib_format_text(self._description)
+    description = VLib.FormatText(self._description)
     -- if description.is_localised then
     --     local test = effect.get_localised_string(description.text)
     --     if test ~= "" then
@@ -858,15 +858,26 @@ function mct_mod:get_option_by_key(option_key)
         return false
     end
 
+    if not self._options[option_key] then
+        VLib.Warn("Trying `%s:get_option_by_key(%s)`, but no option exists with that key!", self:get_key(), option_key)
+        return false
+    end
+
     return self._options[option_key]
 end
 
 --- Creates a new @{mct_option} with the specified key, of the desired type.
 --- Use this! It calls an internal function, @{mct_option.new}, but wraps it with error checking and the like.
+---@overload fun(self:MCT.Mod, self:MCT.Mod, option_key:string, option_type:"checkbox"):MCT.Option.Checkbox
+---@overload fun(self:MCT.Mod, option_key:string, option_type:"dropdown"):MCT.Option.Dropdown
+---@overload fun(self:MCT.Mod, option_key:string, option_type:"slider"):MCT.Option.Slider
+---@overload fun(self:MCT.Mod, option_key:string, option_type:"text_input"):MCT.Option.TextInput
+---@overload fun(self:MCT.Mod, option_key:string, option_type:"dummy"):MCT.Option.Dummy
 ---@param option_key string The unique identifier for the new mct_option.
----@param option_type string The type for the new mct_option.
+---@param option_type MCT.OptionType The type for the new mct_option.
 ---@return MCT.Option
 function mct_mod:add_new_option(option_key, option_type)
+    logf("Creating a new option %s to mod %s", option_key, self:get_key())
     -- check first to see if an option with this key already exists; if it does, return that one!
     local test = self:get_option_by_key(option_key)
     if mct:is_mct_option(test) then
@@ -874,7 +885,7 @@ function mct_mod:add_new_option(option_key, option_type)
         return test
     end
 
-    --log("Adding option with key ["..option_key.."] to mod ["..self:get_key().."].")
+    log("Adding option with key ["..option_key.."] to mod ["..self:get_key().."].")
     if not is_string(option_key) then
         err("Trying `add_new_option()` for mod ["..self:get_key().."] but option key provided ["..tostring(option_key).."] is not a string! Returning false.")
         return false
@@ -894,12 +905,19 @@ function mct_mod:add_new_option(option_key, option_type)
         return false
     end
 
-    local new_option = mct._MCT_OPTION.new(self:get_key(), option_key, option_type)
+    logf("Here we goooo")
 
-    -- set a default value of unticked if it's a checkbox
-    if option_type == "checkbox" then
-        new_option:set_default_value(false)
-    end
+    local new_option
+    local ok, err = pcall(function()
+
+        logf("Creating option %s for mod %s", option_key, self:get_key())
+    local option_class = mct:get_option_type(option_type)
+    logf("Option class gotten for type %s", option_type)
+    new_option = option_class:new(self, option_key)
+
+    logf("Creating new option obj")
+
+    logf("Saving %s._options['%s']", self:get_key(), option_key)
 
     self._options[option_key] = new_option
     self._options_by_type[option_type][#self._options_by_type[option_type]+1] = option_key
@@ -911,6 +929,7 @@ function mct_mod:add_new_option(option_key, option_type)
         core:trigger_custom_event("MctNewOptionCreated", {["mct"] = mct, ["mod"] = self, ["option"] = new_option})
     --end
 
+    end) if not ok then errf(err) end
 
     return new_option
 end

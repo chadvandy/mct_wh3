@@ -16,7 +16,7 @@ local load_module = VLib.LoadModule
 local load_modules = VLib.LoadModules
 
 ---@type ModConfigurationTool
-local mct = new_class("ModConfigurationTool", mct_defaults)
+local mct = VLib.NewClass("ModConfigurationTool", mct_defaults)
 
 --- Initial creation and loading of MCT, and all the individual MCT Mods.
 function mct:init()
@@ -67,28 +67,57 @@ function mct:load_modules()
     self.ui = load_module("main", ui_path)
 
     -- TODO auto-load all types
+    ---@type table<string, MCT.Option>
     self._MCT_TYPES = { }
-    
-    ---@type template_type
-    self._MCT_TYPES.template = load_module("zzz_template", options_path)
-    ---@type mct_slider
-    self._MCT_TYPES.slider = load_module("slider", options_path)
-    ---@type mct_dropdown
-    self._MCT_TYPES.dropdown = load_module("dropdown", options_path)
-    ---@type mct_checkbox
-    self._MCT_TYPES.checkbox = load_module("checkbox", options_path)
-    ---@type mct_text_input
-    self._MCT_TYPES.text_input = load_module("text_input", options_path)
+
+    ---@alias MCT.OptionType 'slider'|'dropdown'|'checkbox'|'text_input'
 
     ---@type MCT.Option
     self._MCT_OPTION = load_module("option", obj_path)
+    
+    ---@type MCT.Option.Dummy
+    self._MCT_TYPES.dummy = load_module("dummy", options_path)
+
+    ---@type MCT.Option.Slider
+    self._MCT_TYPES.slider = load_module("slider", options_path)
+
+    ---@type MCT.Option.Dropdown
+    self._MCT_TYPES.dropdown = load_module("dropdown", options_path)
+
+    ---@type MCT.Option.Checkbox
+    self._MCT_TYPES.checkbox = load_module("checkbox", options_path)
+
+    ---@type MCT.Option.TextInput
+    self._MCT_TYPES.text_input = load_module("text_input", options_path)
 
     ---@type MCT.Mod
     self._MCT_MOD = load_module("mod", obj_path)
 
     ---@type MCT.Section
     self._MCT_SECTION = load_module("section", obj_path) -- TODO move to UI?
+end
 
+--- TODO get the option type
+
+---comment
+---@overload fun(key:"checkbox"):MCT.Option.Checkbox
+---@overload fun(key:"text_input"):MCT.Option.TextInput
+---@overload fun(key:"slider"):MCT.Option.Slider
+---@overload fun(key:"dropdown"):MCT.Option.Dropdown
+---@overload fun(key:"dummy"):MCT.Option.Dummy
+---@param key string
+---@return MCT.Option
+function mct:get_option_type(key)
+    if not is_string(key) then
+        --- errmsg
+    end
+
+    if not self._MCT_TYPES[key] then
+        --- errmsg
+        return nil
+    end
+
+    return self._MCT_TYPES[key]
 end
 
 --- TODO kill?
@@ -445,3 +474,7 @@ function get_mct()
 end
 
 mct:init()
+
+core:add_ui_created_callback(function()
+    mct.ui:ui_created()
+end)

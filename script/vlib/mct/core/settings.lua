@@ -86,7 +86,7 @@ local settings_defaults = {
 }
 
 ---@class MCT.Settings
-local Settings = new_class("MCT.Settings", settings_defaults)
+local Settings = VLib.NewClass("MCT.Settings", settings_defaults)
 
 function Profile:get_settings_for_mod(mod_key)
 
@@ -440,6 +440,7 @@ end
 ---@return boolean PendingSettingChanges Whether there's pending changes in the currently selected profile (ie. changing a single setting within Profile A).
 ---@return boolean PendingProfileChanges Whether there's a pending change in currently selected profile (ie. changing from Profile A -> B)
 function Settings:has_pending_changes()
+    logf("Checking Settings:has_pending_changes()")
     return (next(self.__changed_settings) ~= nil)
 end
 
@@ -504,6 +505,9 @@ function Settings:set_changed_setting(mod_key, option_key, new_value, is_popup_o
     else
         self.__changed_settings[mod_key][option_key]["old_value"] = old
         self.__changed_settings[mod_key][option_key]["new_value"] = new_value
+
+        logf("%s.%s old = %s", mod_key, option_key, tostring(old))
+        logf("%s.%s new = %s", mod_key, option_key, tostring(new_value))
     end
 end
 

@@ -54,9 +54,9 @@
             uniqueguid="F3416CFD-8BC7-4276-86996FD67D7F6A75"
             currentstate="11332A11-F73D-4235-879ACEB07B57E6E9"
             defaultstate="11332A11-F73D-4235-879ACEB07B57E6E9">
-            <callbackwithcontextlist>
+            <!-- <callbackwithcontextlist>
                 <callback_with_context callback_id="ExpandingListHeader"/>
-            </callbackwithcontextlist>
+            </callbackwithcontextlist> -->
             <componentimages>
                 <component_image
                     this="C51FBF3B-63EB-4581-94D921DDF12ADC05"

@@ -1,7 +1,10 @@
+--- the abstract class for all individual option types (checkbox, dropdown, etc).
+--- this holds all global information that's valuable to each option type, and is then extended into the individual versions.
+
+
 ---- MCT Option Object
 ---@class MCT.Option
 ---@field _template string
----@field _wrapped_type template_type
 
 local mct = get_mct()
 local Settings = mct.settings
@@ -10,8 +13,11 @@ local log,logf,err,errf = get_vlog("[mct]")
 
 ---@class MCT.Option
 local mct_option_defaults = {
-    ---@type string The key of the owning mod object.
-    _mod_key = nil,
+    ---@type MCT.Mod The owning mod object.
+    _mod = nil,
+
+    -- ---@type string The key of the owning mod object.
+    -- _mod_key = nil,
 
     ---@type string The key of this option object.
     _key = "",
@@ -25,13 +31,8 @@ local mct_option_defaults = {
     ---@type string The tooltip for this option.
     _tooltip_text = "No tooltip assigned.",
 
-    __templates = {
-        checkbox = "ui/templates/checkbox_toggle",
-        dropdown = {"ui/templates/dropdown_button", "ui/vandy_lib/dropdown_option"},
-        text_input = "ui/common ui/text_box",
-        slider = {"ui/templates/cycle_button_arrow_previous", "ui/common ui/text_box", "ui/templates/cycle_button_arrow_next"}
-    },
 
+    ---@type table Used for Sliders / Dropdowns, internal values to choose betwixt.
     _values = {},
 
     -- default setting is the mct_mod default and the one to reset to;
@@ -70,45 +71,47 @@ local mct_option_defaults = {
 
 ---@class MCT.Option : Class
 ---@field __new fun():MCT.Option
-local mct_option = new_class("MCT.Option", mct_option_defaults)
+local mct_option = VLib.NewClass("MCT.Option", mct_option_defaults)
 
----- For internal use only. Called by @{mct_mod:add_new_option}.
---- @param mod_key string Key of the mod
---- @param option_key string
---- @param type string | "'slider'" | "'dropdown'" | "'checkbox'"
-function mct_option.new(mod_key, option_key, type)
-    ---@type MCT.Option
-    local o = mct_option:__new()
-    o._mod_key = mod_key
-    o._key = option_key
-    o._type = type or "NULL_TYPE"
-    o._text = option_key
+-- ---- For internal use only. Called by @{mct_mod:add_new_option}.
+-- --- @param mod_key string Key of the mod
+-- --- @param option_key string
+-- --- @param type string | "'slider'" | "'dropdown'" | "'checkbox'"
+-- function mct_option.new(mod_key, option_key, type)
+--     local t = mct._MCT_TYPES[type]
+--     local o = t:new()
 
-    o._wrapped_type = mct._MCT_TYPES[type]:new(o)
+--     ---@type MCT.Option
+--     local o = mct_option:__new()
 
-    if type == "slider" then
-        o._values = {
-            min = 0,
-            max = 100,
-            step_size = 1,
-            step_size_precision = 0,
-            precision = 0,
-        }
-    end
+--     o._wrapped_type = mct._MCT_TYPES[type]:new(o)
 
-    local mod = o:get_mod()
+--     if type == "slider" then
+
+--     end
+
+--     local mod = o:get_mod()
+
+
+--     -- read the "type" field in the metatable's __templates field - ie., __templates[checkbox]
+--     o._template = mct_option_defaults.__templates[type]
+
+--     return o
+-- end
+
+function mct_option:init(mod_obj, option_key)
+    logf("MCT.Option init on %s", option_key)
+    self._mod = mod_obj
+    self._key = option_key
+    self._text = option_key
 
     -- assigned section, used for UI, defaults to the last created section unless one is specified
-    o._assigned_section = mod:get_last_section():get_key()
+    self._assigned_section = mod_obj:get_last_section():get_key()
 
     -- add the option to the mct_section
-    mod:get_section_by_key(o._assigned_section):assign_option(o)
-
-    -- read the "type" field in the metatable's __templates field - ie., __templates[checkbox]
-    o._template = mct_option_defaults.__templates[type]
-
-    return o
+    mod_obj:get_section_by_key(self._assigned_section):assign_option(self)
 end
+
 
 ---- Read whether this mct_option is edited exclusively for the client, instead of passed between both PC's.
 --- @treturn boolean local_only Whether this option is only edited on the local PC, instead of both.
@@ -198,13 +201,13 @@ end
 ---- Get the @{mct_mod} object housing this option.
 --- @return MCT.Mod @{mct_mod}
 function mct_option:get_mod()
-    return mct:get_mod_by_key(self._mod_key)
+    return self._mod
 end
 
 --- Grab the key of the owning mct_mod.
 ---@return string
 function mct_option:get_mod_key()
-    return self._mod_key
+    return self._mod:get_key()
 end
 
 ---- Internal use only. Clears all the UIC objects attached to this boy.
@@ -263,6 +266,9 @@ function mct_option:set_uic_with_key(key, uic, force_override)
     self._uics[key] = uic
 end
 
+---comment
+---@param key string
+---@return UIComponent
 function mct_option:get_uic_with_key(key)
     if self._uics == {} then
         err("get_uic_with_key() called for mct_option with key ["..self:get_key().."] but no uics are found! Returning false.")
@@ -527,60 +533,29 @@ function mct_option:get_position()
     return self._pos.x, self._pos.y
 end
 
---- Returns the underlying "wrapped_type" object. Under no circumstances should a modder need to use this. Probably.
-function mct_option:get_wrapped_type()
-    return self._wrapped_type
-end
-
 --- Internal checker to see if the values passed through mct_option methods are valid.
 --- This remains because I renamed the function to "check_validity" but didn't want to ruin backwards compatibility.
 ---@param val any Value being tested for type.
 ---@return any valid Returns true if valid; returns a valid default value if the one passed isn't valid.
 function mct_option:is_val_valid_for_type(val)
-    local wrapped = self:get_wrapped_type()
-
-    return wrapped:check_validity(val)
+    return self:check_validity(val)
 end
 
+--- TODO abstract
 --- Internal checker to see if the values passed through mct_option methods are valid.
 ---@param val any Value being tested for type.
 ---@return any valid Returns true if valid; returns a valid default value if the one passed isn't valid.
 function mct_option:check_validity(val)
-    return self:get_wrapped_type():check_validity(val)
+    --- TODO abstract this method
 end
 
 --- Sets an automatic default for this mct_option, if a modder didn't.
 --- Automatic default depends on the type of the mct_option; ie., booleans automatically default to false.
 function mct_option:set_default()
-    return self:get_wrapped_type():set_default()
+    -- return self:get_wrapped_type():set_default()
 end
 
----- Internal function that calls the operation to change an option's selected value. Exposed here so it can be called through presets and the like. Use `set_selected_setting` instead, please!
----@param val any Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
----@param is_new_version boolean Set this to true to skip calling mct_option:set_selected_setting from within. This is done to keep the mod backwards compatible with the last patch, where the Order of Operations went ui_select_value -> set_selected_setting; the new Order of Operations is the inverse.
 function mct_option:ui_select_value(val, is_new_version)
-    local valid, new_value = self:is_val_valid_for_type(val)
-    if not valid then
-        if val ~= nil then
-            err("ui_select_value() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type. Replacing with ["..tostring(new_value).."].")
-            val = new_value
-        else
-            err("ui_select_value() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type!")
-            return false
-        end
-    end
-
-
-    local option_uic = self:get_uic_with_key("option")
-
-    if not is_uicomponent(option_uic) then
-        err("ui_select_value() called for option with key ["..self:get_key().."], in mct_mod ["..self:get_mod():get_key().."], but this option doesn't currently exist in the UI! Aborting change.")
-        return false
-    end
-
-    self:get_wrapped_type():ui_select_value(val)
-
-    --- TODO, err?
     if not is_new_version then
         self:set_selected_setting(val)
     end
@@ -588,73 +563,92 @@ function mct_option:ui_select_value(val, is_new_version)
     mct.ui:set_actions_states()
 end
 
+
+-- function mct_option:ui_select_value(val, is_new_version)
+--     local valid, new_value = self:check_validity(val)
+--     if not valid then
+--         if val ~= nil then
+--             err("ui_select_value() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type. Replacing with ["..tostring(new_value).."].")
+--             val = new_value
+--         else
+--             err("ui_select_value() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type!")
+--             return false
+--         end
+--     end
+
+
+--     local option_uic = self:get_uic_with_key("option")
+
+--     if not is_uicomponent(option_uic) then
+--         err("ui_select_value() called for option with key ["..self:get_key().."], in mct_mod ["..self:get_mod():get_key().."], but this option doesn't currently exist in the UI! Aborting change.")
+--         return false
+--     end
+
+--     --- TODO, err?
+
+-- end
+
 ---- Internal function to set the option UIC as disabled or enabled, for read-only/mp-disabled.
 --- Use `mct_option:set_uic_locked()` for the external version of this; this just reads the uic_locked boolean and changes the UI.
 --- @see mct_option:set_uic_locked
 function mct_option:ui_change_state()
-    return self:get_wrapped_type():ui_change_state()
+    -- return self:get_wrapped_type():ui_change_state()
 end
 
 --- Creates the UI component in the UI. Shouldn't be used externally!
 ---@param dummy_parent UIC The parent component for the new option.
 function mct_option:ui_create_option(dummy_parent)
-    return self:get_wrapped_type():ui_create_option(dummy_parent)
+    -- return self:get_wrapped_type():ui_create_option(dummy_parent)
 end
 
 -- type-specifics
 
 ---- sliders ----
 
---- Slider-specific function. Calls @{mct_slider:slider_get_precise_value}.
-function mct_option:slider_get_precise_value(...)
----@diagnostic disable-next-line: redundant-parameter
-return self:get_wrapped_type():slider_get_precise_value(...)
-end
+-- --- Slider-specific function. Calls @{mct_slider:slider_get_precise_value}.
+-- function mct_option:slider_get_precise_value(...)
+-- ---@diagnostic disable-next-line: redundant-parameter
+-- -- return self:get_wrapped_type():slider_get_precise_value(...)
+-- end
 
---- Slider-specific function. Calls @{mct_slider:slider_set_step_size}.
-function mct_option:slider_set_step_size(...)
-    ---@diagnostic disable-next-line: redundant-parameter
-    return self:get_wrapped_type():slider_set_step_size(...)
-end
+-- --- Slider-specific function. Calls @{mct_slider:slider_set_step_size}.
+-- function mct_option:slider_set_step_size(...)
+--     -- ---@diagnostic disable-next-line: redundant-parameter
+--     -- return self:get_wrapped_type():slider_set_step_size(...)
+-- end
 
---- Slider-specific function. Calls @{mct_slider:slider_set_precision}.
-function mct_option:slider_set_precision(...)
-    ---@diagnostic disable-next-line: redundant-parameter
-    return self:get_wrapped_type():slider_set_precision(...)
-end
+-- --- Slider-specific function. Calls @{mct_slider:slider_set_precision}.
+-- function mct_option:slider_set_precision(...)
+--     -- ---@diagnostic disable-next-line: redundant-parameter
+--     -- return self:get_wrapped_type():slider_set_precision(...)
+-- end
 
---- Slider-specific function. Calls @{mct_slider:slider_set_min_max}.
-function mct_option:slider_set_min_max(...)
-    ---@diagnostic disable-next-line: redundant-parameter
-    return self:get_wrapped_type():slider_set_min_max(...)
-end
+-- --- Slider-specific function. Calls @{mct_slider:slider_set_min_max}.
+-- function mct_option:slider_set_min_max(...)
+--     -- ---@diagnostic disable-next-line: redundant-parameter
+--     -- return self:get_wrapped_type():slider_set_min_max(...)
+-- end
 
 ---- dropdowns ----
 
---- Dropdown-specific function. Calls @{mct_dropdown:add_dropdown_values}
-function mct_option:add_dropdown_values(...)
-    ---@diagnostic disable-next-line: redundant-parameter
-    return self:get_wrapped_type():add_dropdown_values(...)
-end
+-- --- Dropdown-specific function. Calls @{mct_dropdown:add_dropdown_values}
+-- function mct_option:add_dropdown_values(...)
+--     -- ---@diagnostic disable-next-line: redundant-parameter
+--     -- return self:get_wrapped_type():add_dropdown_values(...)
+-- end
 
---- Dropdown-specific function. Calls @{mct_dropdown:add_dropdown_value}
-function mct_option:add_dropdown_value(...)
-    ---@diagnostic disable-next-line: redundant-parameter
-    return self:get_wrapped_type():add_dropdown_value(...)
-end
+-- --- Dropdown-specific function. Calls @{mct_dropdown:add_dropdown_value}
+-- function mct_option:add_dropdown_value(...)
+--     -- ---@diagnostic disable-next-line: redundant-parameter
+--     -- return self:get_wrapped_type():add_dropdown_value(...)
+-- end
 
---- Dropdown-specific function. Calls @{mct_dropdown:refresh_dropdown_box}
-function mct_option:refresh_dropdown_box()
-    return self:get_wrapped_type():refresh_dropdown_box()
-end
+-- --- Dropdown-specific function. Calls @{mct_dropdown:refresh_dropdown_box}
+-- function mct_option:refresh_dropdown_box()
+--     -- return self:get_wrapped_type():refresh_dropdown_box()
+-- end
 
 ---- text-input ----
-
---- Text-input-specific function. Calls @{mct_text_input:add_validity_test}
-function mct_option:text_input_add_validity_test(...)
-    ---@diagnostic disable-next-line: redundant-parameter
-    return self:get_wrapped_type():add_validity_test(...)
-end
 
 
 ---- Getter for the "finalized_setting" for this `mct_option`.
@@ -850,7 +844,7 @@ function mct_option:get_text()
     end
 
     -- nothing found, check for anything supplied by `set_text()`, or send the default "No text assigned"
-    text = vlib_format_text(self._text)
+    text = VLib.FormatText(self._text)
 
     if not is_string(text) or text == "" then
         text = "No text assigned"
@@ -871,7 +865,7 @@ function mct_option:get_tooltip_text()
     end
 
     -- nothing found, check for anything supplied by `set_tooltip()`, or send the default "No tooltip assigned"
-    text = vlib_format_text(self._tooltip_text)
+    text = VLib.FormatText(self._tooltip_text)
 
     if not is_string(text) then
         text = ""

@@ -138,7 +138,7 @@ local mct_section_defaults = {
 
 ---@class MCT.Section : Class
 ---@field __new fun():MCT.Section
-local mct_section = new_class("MCT.Section", mct_section_defaults)
+local mct_section = VLib.NewClass("MCT.Section", mct_section_defaults)
 
 --- For internal use only. Use @{mct_mod:add_new_section}.
 ---@param key string The key to identify the new mct_section.
@@ -207,7 +207,7 @@ function mct_section:sort_options()
         local option_key = ordered_options[i]
         local option_obj = mct_mod:get_option_by_key(option_key)
 
-        if not mct:is_mct_option(option_obj) then 
+        if not mct:is_mct_option(option_obj) then
             --- TODO warn
             log("sort_options() called but the option found ["..option_key.."] is not a valid MCT option! Skipping.")
         else
@@ -372,7 +372,7 @@ function mct_section:get_localised_text()
         return text
     else
         -- nothing found, check for anything supplied by `set_localised_text()`, or send the default "No text assigned"
-        text = vlib_format_text(self._text)
+        text = VLib.FormatText(self._text)
     end
 
     if not is_string(text) or text == "" then
@@ -447,7 +447,7 @@ function mct_section:get_tooltip_text()
         return text
     else
         -- nothing found, check for anything supplied by `set_localised_text()`, or send the default "No text assigned"
-        text = vlib_format_text(self._tooltip_text)
+        text = VLib.FormatText(self._tooltip_text)
     end
 
     if not is_string(text) then

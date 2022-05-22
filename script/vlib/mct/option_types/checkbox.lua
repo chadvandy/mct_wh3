@@ -4,87 +4,39 @@
 local mct = get_mct()
 local log,logf,err,errf = get_vlog("[mct]")
 
-local template_type = mct._MCT_TYPES.template
+local Super = mct._MCT_OPTION
 
-local wrapped_type = {}
+---@type MCT.Option.Checkbox
+local defaults = {
+    _template = "ui/templates/checkbox_toggle"
+}
 
---- Create a new wrapped type within an mct_option.
----@param option_obj MCT.Option The mct_option this wrapped_type is being passed.
-function wrapped_type:new(option_obj)
-    local self = {}
+---@class MCT.Option.Checkbox : MCT.Option
+---@field __new fun():MCT.Option.Checkbox
+local Checkbox = Super:extend("MCT.Option.Checkbox", defaults)
 
+function Checkbox:new(mod_obj, option_key)
+    local o = self:__new()
+    Super.init(o, mod_obj, option_key)
+    self.init(o)
 
-    setmetatable(self, wrapped_type)
-
-    self.option = option_obj
-
-    local tt = template_type:new(option_obj)
-
-    self.template_type = tt
-
-    return self
+    return o
 end
 
-function wrapped_type:__index(attempt)
-    --log("start check in type:__index")
-    --log("calling: "..attempt)
-    --log("key: "..self:get_key())
-    --log("calling "..attempt.." on mct option "..self:get_key())
-    local field = rawget(getmetatable(self), attempt)
-    local retval = nil
-
-    if type(field) == "nil" then
-        --log("not found, check mct_option")
-        -- not found in mct_option, check template_type!
-        local wrapped_boi = rawget(self, "option")
-
-        field = wrapped_boi and wrapped_boi[attempt]
-
-        if type(field) == "nil" then
-            --log("not found in wrapped_type or mct_option, check in template_type!")
-            -- not found in mct_option or wrapped_type, check in template_type
-            local wrapped_boi_boi = rawget(self, "template_type")
-            
-            field = wrapped_boi_boi and wrapped_boi_boi[attempt]
-            if type(field) == "function" then
-                retval = function(obj, ...)
-                    return field(wrapped_boi_boi, ...)
-                end
-            else
-                retval = field
-            end
-        else
-            if type(field) == "function" then
-                retval = function(obj, ...)
-                    return field(wrapped_boi, ...)
-                end
-            else
-                retval = field
-            end
-        end
-    else
-        --log("found in wrapped_type")
-        if type(field) == "function" then
-            retval = function(obj, ...)
-                return field(self, ...)
-            end
-        else
-            retval = field
-        end
-    end
-    
-    return retval
+function Checkbox:init()
+    self:set_default_value(false)
 end
 
+--- A test function to see what Sumneko does.
+function Checkbox:test_function()
 
---------- OVERRIDEN SECTION -------------
--- These functions exist for every type, and have to be overriden from the version defined in template_types.
+end
 
 --- Checks the validity of the value passed.
 ---@param value any Tested value.
---- @treturn boolean valid Returns true if the value passed is valid, false otherwise.
---- @treturn boolean valid_return If the value passed isn't valid, a second return is sent, for a valid value to replace the tested one with.
-function wrapped_type:check_validity(value)
+--- @return boolean valid Returns true if the value passed is valid, false otherwise.
+--- @return boolean valid_return If the value passed isn't valid, a second return is sent, for a valid value to replace the tested one with.
+function Checkbox:check_validity(value)
     if not is_boolean(value) then
         return false, false
     end
@@ -93,22 +45,34 @@ function wrapped_type:check_validity(value)
 end
 
 --- Sets a default value for this mct_option. Defaults to "false" for checkboxes.
-function wrapped_type:set_default()
+function Checkbox:set_default()
 
     -- if there's no default, set it to false.
     self:set_default_value(false)
 end
 
+---- Internal function that calls the operation to change an option's selected value. Exposed here so it can be called through presets and the like. Use `set_selected_setting` instead, please!
 --- Selects a value in UI for this mct_option.
-function wrapped_type:ui_select_value(val)
+---@param val any Set the selected setting as the passed value, tested with check_validity()
+---@param is_new_version true? Set this to true to skip calling mct_option:set_selected_setting from within. This is done to keep the mod backwards compatible with the last patch, where the Order of Operations went ui_select_value -> set_selected_setting; the new Order of Operations is the inverse.
+function Checkbox:ui_select_value(val, is_new_version)
+    local valid,new = self:check_validity(val)
+    if not valid then
+        if val ~= nil then
+            VLib.Warn("ui_select_value() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type. Replacing with ["..tostring(new).."].")
+            val = new
+        else
+            err("ui_select_value() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type!")
+            return false
+        end
+    end
 
+    -- grab the checkbox UI
     local option_uic = self:get_uic_with_key("option")
     if not is_uicomponent(option_uic) then
         err("ui_select_value() triggered for mct_option with key ["..self:get_key().."], but no option_uic was found internally. Aborting!")
         return false
     end
-
-    -- grab the checkbox UI
 
     local state = "selected"
 
@@ -117,10 +81,12 @@ function wrapped_type:ui_select_value(val)
     end
 
     option_uic:SetState(state)
+
+    Super.ui_select_value(self, val, is_new_version)
 end
 
 --- Changes the state for the mct_option in UI, ie. locked/unlocked.
-function wrapped_type:ui_change_state(val)
+function Checkbox:ui_change_state(val)
     local option_uic = self:get_uic_with_key("option")
     local text_uic = self:get_uic_with_key("text")
 
@@ -153,7 +119,7 @@ function wrapped_type:ui_change_state(val)
 end
 
 --- Creates the mct_option in the UI. Do not call externally.
-function wrapped_type:ui_create_option(dummy_parent)
+function Checkbox:ui_create_option(dummy_parent)
     local template = self:get_uic_template()
 
     local new_uic = core:get_or_create_component("mct_checkbox_toggle", template, dummy_parent)
@@ -164,13 +130,6 @@ function wrapped_type:ui_create_option(dummy_parent)
     return new_uic
 end
 
---------- UNIQUE SECTION -----------
--- These functions are unique for this type only. Be careful calling these!
-
-
-
---------- List'n'rs ----------
--- Unique listeners for just this type.
 core:add_listener(
     "mct_checkbox_toggle_option_selected",
     "ComponentLClickUp",
@@ -196,4 +155,4 @@ core:add_listener(
     true
 )
 
-return wrapped_type
+return Checkbox

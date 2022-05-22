@@ -1,101 +1,37 @@
 --- TODO prettify
 
----- MCT Dropdown Wrapped Type.
---- @class mct_dropdown
-
 local mct = get_mct()
+local Super = mct._MCT_OPTION
+
 -- local vlib = get_vlib()
 local log,logf,err,errf = get_vlog("[mct]")
 
-local template_type = mct._MCT_TYPES.template
+---@type MCT.Option.Dropdown
+local defaults = {
+    _template = {"ui/vandy_lib/dropdown_button", "ui/vandy_lib/dropdown_option"},
+}
 
-local wrapped_type = {}
+---@class MCT.Option.Dropdown : MCT.Option A Dropdown object.
+---@field __new fun():MCT.Option.Dropdown
+local Dropdown = Super:extend("MCT.Option.Dropdown", defaults)
 
---- Create a new wrapped type within an mct_option.
----@param option_obj MCT.Option The mct_option this wrapped_type is being passed.
-function wrapped_type:new(option_obj)
-    local self = {}
+function Dropdown:new(mod_obj, option_key)
+    local o = self:__new()
+    Super.init(o, mod_obj, option_key)
+    self.init(o)
 
-    --[[for k,v in pairs(getmetatable(tt)) do
-        mct:log("assigning ["..k.."] to checkbox_type from template_type.")
-        self[k] = v
-    end
-]]
-    setmetatable(self, wrapped_type)
-
-    --[[for k,v in pairs(type) do
-        mct:log("assigning ["..k.."] to checkbox_type from self!")
-        self[k] = v
-    end]]
-
-    self.option = option_obj
-
-    local tt = template_type:new(option_obj)
-
-    self.template_type = tt
-
-    return self
+    return o
 end
 
-function wrapped_type:__index(attempt)
-    --mct:log("start check in type:__index")
-    --mct:log("calling: "..attempt)
-    --mct:log("key: "..self:get_key())
-    --mct:log("calling "..attempt.." on mct option "..self:get_key())
-    local field = rawget(getmetatable(self), attempt)
-    local retval = nil
-
-    if type(field) == "nil" then
-        --mct:log("not found, check mct_option")
-        -- not found in mct_option, check template_type!
-        local wrapped_boi = rawget(self, "option")
-
-        field = wrapped_boi and wrapped_boi[attempt]
-
-        if type(field) == "nil" then
-            --mct:log("not found in wrapped_type or mct_option, check in template_type!")
-            -- not found in mct_option or wrapped_type, check in template_type
-            local wrapped_boi_boi = rawget(self, "template_type")
-            
-            field = wrapped_boi_boi and wrapped_boi_boi[attempt]
-            if type(field) == "function" then
-                retval = function(obj, ...)
-                    return field(wrapped_boi_boi, ...)
-                end
-            else
-                retval = field
-            end
-        else
-            if type(field) == "function" then
-                retval = function(obj, ...)
-                    return field(wrapped_boi, ...)
-                end
-            else
-                retval = field
-            end
-        end
-    else
-        --mct:log("found in wrapped_type")
-        if type(field) == "function" then
-            retval = function(obj, ...)
-                return field(self, ...)
-            end
-        else
-            retval = field
-        end
-    end
-    
-    return retval
+function Dropdown:init()
+    --- anything?
 end
-
---------- OVERRIDEN SECTION -------------
--- These functions exist for every type, and have to be overriden from the version defined in template_types.
 
 --- Checks the validity of the value passed.
 ---@param val any Tested value.
---- @treturn boolean valid Returns true if the value passed is valid, false otherwise.
---- @treturn boolean valid_return If the value passed isn't valid, a second return is sent, for a valid value to replace the tested one with.
-function wrapped_type:check_validity(val)
+--- @return boolean valid Returns true if the value passed is valid, false otherwise.
+--- @return boolean valid_return If the value passed isn't valid, a second return is sent, for a valid value to replace the tested one with.
+function Dropdown:check_validity(val)
     if not is_string(val) then
         return false
     end
@@ -118,7 +54,7 @@ end
 
 --- Sets the default value for this dropdown, if none is selected by the modder.
 --- Defaults to the first dropdown value added.
-function wrapped_type:set_default()
+function Dropdown:set_default()
 
     local values = self:get_values()
     -- set the default value as the first added dropdown option
@@ -126,9 +62,18 @@ function wrapped_type:set_default()
 end
 
 --- Select a value within the UI; ie., change from the first dropdown value to the second.
-function wrapped_type:ui_select_value(val)
+function Dropdown:ui_select_value(val, is_new_version)
+    local valid,new = self:check_validity(val)
+    if not valid then
+        if val ~= nil then
+            VLib.Warn("ui_select_value() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type. Replacing with ["..tostring(new).."].")
+            val = new
+        else
+            err("ui_select_value() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type!")
+            return false
+        end
+    end
 
-    local ok, msg = pcall(function()
     local dropdown_box_uic = self:get_uic_with_key("option")
     if not is_uicomponent(dropdown_box_uic) then
         err("ui_select_value() triggered for mct_option with key ["..self:get_key().."], but no dropdown_box_uic was found internally. Aborting!")
@@ -176,11 +121,12 @@ function wrapped_type:ui_select_value(val)
 
     popup_menu:SetVisible(false)
     popup_menu:RemoveTopMost()
-end) if not ok then err(msg) end
+
+    Super.ui_select_value(self, val, is_new_version)
 end
 
 --- Change the state of the mct_option in UI; ie., lock the option from being used.
-function wrapped_type:ui_change_state()
+function Dropdown:ui_change_state()
     local option_uic = self:get_uic_with_key("option")
     local text_uic = self:get_uic_with_key("text")
 
@@ -201,9 +147,9 @@ function wrapped_type:ui_change_state()
 end
 
 --- Create the dropdown option in UI.
-function wrapped_type:ui_create_option(dummy_parent)
+function Dropdown:ui_create_option(dummy_parent)
     --local templates = option_obj:get_uic_template()
-    local box = "ui/vandy_lib/dropdown_button_no_event"
+    local box = "ui/vandy_lib/dropdown_button"
     --local dropdown_option = templates[2]
 
     local new_uic = core:get_or_create_component("mct_dropdown_box", box, dummy_parent)
@@ -234,7 +180,10 @@ end
 ---          {key = "example1", text = "Example Dropdown Value", tt = "My dropdown value does this!", is_default = true},
 ---          {key = "example2", text = "Lame Dropdown Value", tt = "This dropdown value does another thing!", is_default = false},
 ---      })
-function wrapped_type:add_dropdown_values(dropdown_table)
+---
+---@param dropdown_table {key:string,text:string?,tt:string?,is_default:boolean?}[]
+---@return boolean
+function Dropdown:add_dropdown_values(dropdown_table)
     --[[if not self:get_type() == "dropdown" then
         err("add_dropdown_values() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a dropdown! Returning false.")
         return false
@@ -266,7 +215,7 @@ end
 ---@param text string The localised text for this dropdown value.
 ---@param tt string The localised tooltip for this dropdown value.
 ---@param is_default boolean Whether or not to set this dropdown_value as the default one, when the dropdown box is created.
-function wrapped_type:add_dropdown_value(key, text, tt, is_default)
+function Dropdown:add_dropdown_value(key, text, tt, is_default)
     --[[if not self:get_type() == "dropdown" then
         err("add_dropdown_value() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a dropdown! Returning false.")
         return false
@@ -286,12 +235,12 @@ function wrapped_type:add_dropdown_value(key, text, tt, is_default)
         tt = tt
     }
 
-    local option = self:get_option()
+    -- local option = self:get_option()
 
-    option._values[#option._values+1] = val
+    self._values[#self._values+1] = val
 
     -- check if it's the first value being assigned to the dropdown, to give at least one default value
-    if #option._values == 1 then
+    if #self._values == 1 then
         self:set_default_value(key)
     end
 
@@ -308,7 +257,7 @@ end
 
 --- Only called on creation & add_dropdown_value, if the latter is called after the UI is created
 --- Allows for dynamic dropdowns!
-function wrapped_type:refresh_dropdown_box()
+function Dropdown:refresh_dropdown_box()
     local uic = self:get_uic_with_key("option")
 
     local popup_menu = UIComponent(uic:Find("popup_menu"))
@@ -468,4 +417,4 @@ core:add_listener(
     true
 )
 
-return wrapped_type
+return Dropdown
