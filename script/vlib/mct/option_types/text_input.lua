@@ -51,7 +51,7 @@ end
 
 --- Selects a passed value in UI.
 function TextInput:ui_select_value(val, is_new_version)
-    local option_uic = self:get_uic_with_key("text_input")
+    local option_uic = self:get_uic_with_key("option")
     if not is_uicomponent(option_uic) then
         err("ui_select_value() triggered for mct_option with key ["..self:get_key().."], but no option_uic was found internally. Aborting!")
         return false
@@ -66,7 +66,7 @@ end
 --- Changes the state of the option in UI.
 --- Locks the edit button, changes the tooltip, etc.
 function TextInput:ui_change_state()
-    local option_uic = self:get_uic_with_key("text_input")
+    local option_uic = self:get_uic_with_key("option")
     local text_uic = self:get_uic_with_key("text")
     -- local edit_button = self:get_uic_with_key("edit_button")
 
@@ -91,21 +91,16 @@ end
 function TextInput:ui_create_option(dummy_parent)
     local text_input_template = "ui/common ui/text_box"
 
-    local new_uic = core:get_or_create_component("mct_text_input_dummy", "ui/campaign ui/script_dummy", dummy_parent)
-    new_uic:SetVisible(true)
-    new_uic:SetCanResizeWidth(true) new_uic:SetCanResizeHeight(true)
-    new_uic:Resize(dummy_parent:Width() * 0.5, dummy_parent:Height())
-
-    local text_input = core:get_or_create_component("mct_text_input", text_input_template, new_uic)
+    local text_input = core:get_or_create_component("mct_text_input", text_input_template, dummy_parent)
     text_input:SetVisible(true)
     text_input:SetCanResizeWidth(true) text_input:SetCanResizeHeight(true)
-    text_input:Resize(new_uic:Width() - text_input:Height() - 10, text_input:Height())
+    text_input:Resize(dummy_parent:Width() * 0.4, text_input:Height())
     text_input:SetDockingPoint(6)
     text_input:SetDockOffset(-5, 0)
 
     text_input:SetInteractive(true)
 
-    local error_popup = core:get_or_create_component("error_popup", "ui/common ui/tooltip_text_only", new_uic)
+    local error_popup = core:get_or_create_component("error_popup", "ui/common ui/tooltip_text_only", dummy_parent)
     error_popup:SetDockingPoint(1)
     error_popup:SetCanResizeHeight(true)
     error_popup:Resize(error_popup:Width(), error_popup:Height() * 2)
@@ -122,11 +117,10 @@ function TextInput:ui_create_option(dummy_parent)
         error_popup:SetVisible(false)
     end, 1, nil)
 
-    self:set_uic_with_key("option", new_uic, true)
-    self:set_uic_with_key("text_input", text_input, true)
+    self:set_uic_with_key("option", text_input, true)
     self:set_uic_with_key("error_popup", error_popup, true)
 
-    return new_uic
+    return text_input
 end
 
 --------- UNIQUE SECTION -----------
@@ -186,12 +180,9 @@ core:add_listener(
     end,
     function(context)
         local text_input = UIComponent(context.component)
-        local parent = UIComponent(text_input:Parent())
-        local parent_id = parent:Id()
-        local option_uic = UIComponent(parent:Parent())
-        local option_key = option_uic:Id()
-
         local mod_obj = mct:get_selected_mod()
+        local option_key = text_input:GetProperty("mct_option")
+
         ---@type MCT.Option.TextInput
         local option_obj = mod_obj:get_option_by_key(option_key)
 
@@ -216,7 +207,7 @@ core:add_listener(
             if valid ~= true then
                 --- TODO print out an error on the screen!
                 popup:SetVisible(true)
-                popup:SetStateText("[[col:red]]" .. valid .. "[[/col]]")
+                find_uicomponent(popup, "text"):SetStateText("[[col:red]]" .. valid .. "[[/col]]")
                 popup:RegisterTopMost()
             else
                 

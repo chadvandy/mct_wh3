@@ -2,6 +2,8 @@ local mct = get_mct()
 
 local mct_mod = mct:register_mod("mct_mod")
 
+mct_mod:set_tooltip_text("Testing this tooltip text out!")
+
 local section = mct_mod:add_new_section("my_section", "This Is My Section")
 section:set_tooltip_text("My Section||This section is all about cool stuff.")
 
@@ -151,3 +153,8 @@ input:add_validity_test(
 local my_dummy = mct_mod:add_new_option("dummy", "dummy")
 my_dummy:set_text("This is a Dummy object!")
 my_dummy:set_tooltip_text("Yallooooo")
+
+
+local second_mod = mct:register_mod("my_test_mod")
+second_mod:set_author("")
+second_mod:set_title("bloop")

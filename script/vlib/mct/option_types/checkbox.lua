@@ -138,15 +138,12 @@ core:add_listener(
     end,
     function(context)
         local uic = UIComponent(context.component)
-
-        -- will tell us the name of the option
-        local parent_id = UIComponent(uic:Parent()):Id()
-        --log("Checkbox Pressed - parent id ["..parent_id.."]")
         local mod_obj = mct:get_selected_mod()
-        local option_obj = mod_obj:get_option_by_key(parent_id)
+        local option_key = uic:GetProperty("mct_option")
+        local option_obj = mod_obj:get_option_by_key(option_key)
 
         if not mct:is_mct_option(option_obj) then
-            err("mct_checkbox_toggle_option_selected listener trigger, but the checkbox pressed ["..parent_id.."] doesn't have a valid mct_option attached. Returning false.")
+            err("mct_checkbox_toggle_option_selected listener trigger, but the checkbox pressed ["..option_key.."] doesn't have a valid mct_option attached. Returning false.")
             return false
         end
 

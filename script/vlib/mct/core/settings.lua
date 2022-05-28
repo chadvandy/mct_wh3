@@ -524,23 +524,19 @@ end
 
 ---@param option_obj MCT.Option
 function Settings:get_selected_setting_for_option(option_obj)
-    logf("Is this being called?")
     local value
 
     local mod_key = option_obj:get_mod_key()
     local option_key = option_obj:get_key()
-    logf("Getting selected setting for [%s]_[%s]", mod_key, option_key)
 
     ---@type any
-    logf("Querying changed settings")
     value = self:get_changed_settings(mod_key, option_key)
-    if not is_nil(value) then logf("Changed found: %s", tostring(value))  return value end
+    if not is_nil(value) then return value end
 
     local current_profile = self:get_selected_profile()
     value = current_profile:query_mod_option(mod_key, option_key)
 
     if not is_nil(value) then 
-        logf("Current profile found: %s", tostring(value))
         return value
     end
 end
@@ -549,13 +545,11 @@ end
 function Settings:get_finalized_setting_for_option(option_obj)
     local mod_key = option_obj:get_mod_key()
     local option_key = option_obj:get_key()
-    logf("getting finalized setting for %s", option_key)
 
     -- local ret
 
     local profile = self:get_selected_profile()
     local value = profile:query_mod_option(mod_key, option_key)
-    if not is_nil(value) then logf("Found! %s", tostring(value)) end
 
     -- ret = value
     return value
@@ -646,7 +640,7 @@ function Settings:delete_profile_with_key(key)
     self:set_selected_profile("Default Profile")
 
     -- refresh the dropdown UI
-    mct.ui:populate_profiles_dropdown_box()
+    mct.ui:set_actions_states()
 
     self:save()
 end
@@ -726,6 +720,7 @@ function Settings:rename_profile(key, new_key, desc)
 
     self.__profiles[key] = nil
     self.__profiles[new_key] = profile
+    self.__selected_profile = new_key
 end
 
 function Settings:apply_profile_with_key(key)
@@ -821,7 +816,7 @@ function Settings:add_profile_with_key(name, desc, mods)
     self:set_selected_profile(name)
     self.__settings_changed = true
 
-    mct.ui:populate_profiles_dropdown_box()
+    mct.ui:set_actions_states()
 
     return true
 end

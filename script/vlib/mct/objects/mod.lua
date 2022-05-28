@@ -137,6 +137,9 @@ local mct_mod_defaults = {
     _title = "No Title Assigned",
     _author = "No Author Assigned",
     _description = "No Description Assigned",
+
+    ---@type string The tooltip text for this mod, shown on the row header.
+    _tooltip_text = "",
     -- _workshop_url = "",
 }
 
@@ -750,6 +753,25 @@ function mct_mod:set_description(desc_text, is_localised)
 
         self._description = desc_text
     end
+end
+
+function mct_mod:set_tooltip_text(text, is_localised)
+    if is_string(text) then
+        if is_localised then text = "{{loc:"..text.."}}" end
+
+        self._tooltip_text = text
+    end
+end
+
+function mct_mod:get_tooltip_text()
+    local tooltip = common.get_localised_string("mct_"..self:get_key().."_tooltip_text")
+    if tooltip ~= "" then
+        return tooltip
+    end
+
+    tooltip = VLib.FormatText(self._tooltip_text)
+
+    return tooltip or ""
 end
 
 --[[function mct_mod:set_workshop_link(link_text)

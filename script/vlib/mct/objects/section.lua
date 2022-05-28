@@ -133,7 +133,7 @@ local mct_section_defaults = {
     ---@type function
     _visibility_change_callback = nil,
 
-    _sort_order_function = sorting.key,
+    _sort_order_function = sorting.index,
 }
 
 ---@class MCT.Section : Class

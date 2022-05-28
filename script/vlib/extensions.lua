@@ -1,4 +1,16 @@
 --- Extend Lua functionality.
+function math.clamp(x, min, max)
+    if not is_number(max) then max = math.huge end
+    if min > max then
+        --- errmsg
+        return x
+    end
+
+    if x < min then return min end
+    if x > max then return max end
+
+    return x
+end
 
 --- Create a new table by completely copying an existing one.
 ---@param tbl table

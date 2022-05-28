@@ -85,15 +85,14 @@ end
 ---@param val any Set the selected setting as the passed value, tested with check_validity()
 ---@param is_new_version true? Set this to true to skip calling mct_option:set_selected_setting from within. This is done to keep the mod backwards compatible with the last patch, where the Order of Operations went ui_select_value -> set_selected_setting; the new Order of Operations is the inverse.
 function Slider:ui_select_value(val, is_new_version)
-    local option_uic = self:get_uic_with_key("option")
-    if not is_uicomponent(option_uic) then
+    local text_input = self:get_uic_with_key("option")
+    if not is_uicomponent(text_input) then
         err("ui_select_value() triggered for mct_option with key ["..self:get_key().."], but no option_uic was found internally. Aborting!")
         return false
     end
 
     local right_button = self:get_uic_with_key("right_button")
     local left_button = self:get_uic_with_key("left_button")
-    local text_input = self:get_uic_with_key("text_input")
 
     local values = self:get_values()
     local max = values.max
@@ -144,8 +143,6 @@ function Slider:ui_change_state()
 
     local left_button = self:get_uic_with_key("left_button")
     local right_button = self:get_uic_with_key("right_button")
-    -- local edit_button = self:get_uic_with_key("edit_button")
-    --local text_input = self:get_uic_with_key("text_input")
 
     local state = "active"
     local tt = self:get_tooltip_text()
@@ -177,19 +174,11 @@ function Slider:ui_create_option(dummy_parent)
     
     local text_input_template = templates[2]
 
-    -- hold it all in a dummy
-    local new_uic = core:get_or_create_component("mct_slider", "ui/campaign ui/script_dummy", dummy_parent)
-    new_uic:SetVisible(true)
-    new_uic:Resize(dummy_parent:Width() * 0.5, dummy_parent:Height())
+    local text_input = core:get_or_create_component("mct_slider_text_input", text_input_template, dummy_parent)
+    local left_button = core:get_or_create_component("left_button", left_button_template, text_input)
+    local right_button = core:get_or_create_component("right_button", right_button_template, text_input)
 
-    -- secondary dummy for everything but the edit button
-    local second_dummy = core:get_or_create_component("positioning_dummy", "ui/campaign ui/script_dummy", new_uic)
-
-    local left_button = core:get_or_create_component("left_button", left_button_template, second_dummy)
-    local right_button = core:get_or_create_component("right_button", right_button_template, second_dummy)
-    local text_input = core:get_or_create_component("mct_slider_text_input", text_input_template, second_dummy)
-
-    local error_popup = core:get_or_create_component("error_popup", "ui/common ui/tooltip_text_only", new_uic)
+    local error_popup = core:get_or_create_component("error_popup", "ui/common ui/tooltip_text_only", dummy_parent)
     error_popup:SetDockingPoint(1)
     error_popup:SetCanResizeHeight(true)
     error_popup:Resize(error_popup:Width(), error_popup:Height() * 2)
@@ -201,34 +190,35 @@ function Slider:ui_create_option(dummy_parent)
     local t = find_uicomponent(error_popup, "text")
     t:SetStateText("")
     t:SetTextHAlign("centre")
+    t:SetTextVAlign("top")
+    t:SetDockingPoint(2)
+    t:SetDockOffset(0, 12)
+    t:SetTextXOffset(0, 0)
+    t:SetTextYOffset(0, 0)
+    t:Resize(error_popup:Width(), error_popup:Height() * 0.6)
 
     core:get_tm():real_callback(function()
         error_popup:SetVisible(false)
     end, 1, nil)
-
-    second_dummy:Resize(new_uic:Width() - 5, new_uic:Height())
-    second_dummy:SetDockingPoint(6)
-    second_dummy:SetDockOffset(-5, 0)
 
     text_input:SetCanResizeWidth(true)
     text_input:Resize(text_input:Width() * 0.4, text_input:Height())
     text_input:SetCanResizeWidth(false)
     text_input:SetInteractive(true)
 
+    text_input:SetDockingPoint(6)
     left_button:SetDockingPoint(4)
-    text_input:SetDockingPoint(5)
     right_button:SetDockingPoint(6)
 
-    left_button:SetDockOffset(0,0)
-    right_button:SetDockOffset(0,0)
+    left_button:SetDockOffset(-left_button:Width(),0)
+    right_button:SetDockOffset(right_button:Width(),0)
 
-    self:set_uic_with_key("option", new_uic, true)
-    self:set_uic_with_key("text_input", text_input, true)
+    self:set_uic_with_key("option", text_input, true)
     self:set_uic_with_key("left_button", left_button, true)
     self:set_uic_with_key("right_button", right_button, true)
     self:set_uic_with_key("error_popup", error_popup, true)
 
-    return new_uic
+    return text_input
 end
 
 --------- UNIQUE SECTION -----------
@@ -403,7 +393,6 @@ end
 ---------- List'n'rs -------------
 --
 
---- TODO
 core:add_listener(
     "mct_slider_text_input",
     "ComponentLClickUp",
@@ -414,17 +403,9 @@ core:add_listener(
         --- text input
         local text_input = UIComponent(context.component)
 
-        --- positioning dummy
-        local pos_dummy = UIComponent(text_input:Parent())
-
-        --- mct_slider dummy
-        local dummy = UIComponent(pos_dummy:Parent())
-
-        --- the whole option dumy
-        local parent = UIComponent(dummy:Parent())
-        local option_key = parent:Id()
-
         local mod_obj = mct:get_selected_mod()
+        local option_key = text_input:GetProperty("mct_option")
+
         ---@type MCT.Option.Slider
         local option_obj = mod_obj:get_option_by_key(option_key)
 
@@ -433,16 +414,16 @@ core:add_listener(
             return false
         end
 
-        --- TODO set the left/right buttons inactive until clicked out
+        --- set the left/right buttons inactive until clicked out
         local left_button = option_obj:get_uic_with_key("left_button")
         local right_button = option_obj:get_uic_with_key("right_button")
 
         left_button:SetState("inactive")
         right_button:SetState("inactive")
 
-        --- TODO while clicked in this text input, check its contents - if it's ever wrong, flash an error!
+        --- while clicked in this text input, check its contents - if it's ever wrong, flash an error!
         core:get_tm():repeat_real_callback(function()
-            --- TODO if no text input (changed tab etc.) remove this callback
+            --- if no text input (changed tab etc.) remove this callback
             if not is_uicomponent(text_input) then
                 core:get_tm():remove_real_callback("mct_slider_text_input_" .. option_key)
                 return
@@ -454,9 +435,9 @@ core:add_listener(
 
             local popup = option_obj:get_uic_with_key("error_popup")
             if valid ~= true then
-                --- TODO print out an error on the screen!
+                --- print out an error on the screen!
                 popup:SetVisible(true)
-                popup:SetStateText("[[col:red]]" .. valid .. "[[/col]]")
+                find_uicomponent(popup, "text"):SetStateText("[[col:red]]" .. valid .. "[[/col]]")
                 popup:RegisterTopMost()
             else
                 
@@ -465,7 +446,7 @@ core:add_listener(
             end
         end, 50, "mct_slider_text_input_" .. option_key)
 
-        --- TODO does this trigger on "enter"?
+        --- TODO does this trigger on "enter"? <- NO.
         core:add_listener(
             "mct_slider_text_input_released",
             "ComponentLClickUp",
@@ -507,19 +488,20 @@ core:add_listener(
     "ComponentLClickUp",
     function(context)
         local uic = UIComponent(context.component)
-        return (uic:Id() == "left_button" or uic:Id() == "right_button") and uicomponent_descended_from(uic, "mct_slider")
+        return (uic:Id() == "left_button" or uic:Id() == "right_button") and uicomponent_descended_from(uic, "mct_slider_text_input")
     end,
     function(context)
         local ok, msg = pcall(function()
+            logf("Left or Right slider button pressed!")
         local step = context.string
         local uic = UIComponent(context.component)
 
         local slider = UIComponent(uic:Parent())
-        local dummy_option = UIComponent(slider:Parent())
-        local slider_dummy_dummy = UIComponent(dummy_option:Parent())
+        local option_key = slider:GetProperty("mct_option")
 
-        local option_key = slider_dummy_dummy:Id()
+        logf("Slider option key %s", option_key)
         local mod_obj = mct:get_selected_mod()
+
         log("getting mod "..mod_obj:get_key())
         log("finding option with key "..option_key)
 

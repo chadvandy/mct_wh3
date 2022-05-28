@@ -264,6 +264,11 @@ function mct_option:set_uic_with_key(key, uic, force_override)
     end
 
     self._uics[key] = uic
+
+    if key == "option" then
+        uic:SetProperty("mct_option", self:get_key())
+        uic:SetProperty("mct_mod", self:get_mod_key())
+    end
 end
 
 ---comment
@@ -780,7 +785,6 @@ end
 --- Used when finalizing settings.
 --- @treturn any val The value set as the selected_setting for this mct_option.
 function mct_option:get_selected_setting()
-    logf("Getting selected setting for %s", self:get_key())
     return Settings:get_selected_setting_for_option(self)
 end
 

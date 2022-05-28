@@ -154,6 +154,7 @@ function Dropdown:ui_create_option(dummy_parent)
 
     local new_uic = core:get_or_create_component("mct_dropdown_box", box, dummy_parent)
     new_uic:SetVisible(true)
+    new_uic:Resize(dummy_parent:Width() * 0.4, new_uic:Height())
 
     local popup_menu = find_uicomponent(new_uic, "popup_menu")
     popup_menu:PropagatePriority(1000) -- higher z-value than other shits
@@ -282,6 +283,8 @@ function Dropdown:refresh_dropdown_box()
         local tt = dropdown_value.tt
 
         local new_entry = core:get_or_create_component(key, dropdown_option_template, popup_list)
+        new_entry:SetProperty("mct_option", self:get_key())
+        new_entry:SetProperty("mct_mod", self:get_mod_key())
         
         -- if they're localised text strings, localise them!
         do
@@ -349,6 +352,8 @@ end
 
 
 ---- Specific listeners for the UI ----
+
+--- TODO shouldn't the sub listener be inside of this listener?
 core:add_listener(
     "mct_dropdown_box",
     "ComponentLClickUp",
@@ -358,8 +363,13 @@ core:add_listener(
     function(context)
         local box = UIComponent(context.component)
         local menu = find_uicomponent(box, "popup_menu")
+
+        local mod_obj = mct:get_selected_mod()
+        local option_key = box:GetProperty("mct_option")
+        local option_obj = mod_obj:get_option_by_key(option_key)
+
         if is_uicomponent(menu) then
-            if menu:Visible() then
+            if menu:Visible(false) then
                 menu:SetVisible(false)
             else
                 menu:SetVisible(true)
@@ -370,6 +380,7 @@ core:add_listener(
                     "ComponentLClickUp",
                     true,
                     function(context)
+                        core:remove_listener("mct_dropdown_box_option_selected")
                         if box:CurrentState() == "selected" then
                             box:SetState("active")
                         end
@@ -379,40 +390,30 @@ core:add_listener(
                     end,
                     false
                 )
+
+                -- Set Selected listeners
+                core:add_listener(
+                    "mct_dropdown_box_option_selected",
+                    "ComponentLClickUp",
+                    function(context)
+                        local uic = UIComponent(context.component)
+                        
+                        return UIComponent(uic:Parent()):Id() == "popup_list" and uicomponent_descended_from(uic, "mct_dropdown_box")
+                    end,
+                    function(context)
+                        -- core:remove_listener("mct_dropdown_box_close")
+                        log("mct_dropdown_box_option_selected")
+                        local uic = UIComponent(context.component)
+
+                        -- this operation is set externally (so we can perform the same operation outside of here)
+                        local ok, msg = pcall(function()
+                        option_obj:set_selected_setting(uic:Id())
+                        end) if not ok then err(msg) end
+                    end,
+                    false
+                )
             end
         end
-    end,
-    true
-)
-
--- Set Selected listeners
-core:add_listener(
-    "mct_dropdown_box_option_selected",
-    "ComponentLClickUp",
-    function(context)
-        local uic = UIComponent(context.component)
-        
-        return UIComponent(uic:Parent()):Id() == "popup_list" and UIComponent(UIComponent(UIComponent(uic:Parent()):Parent()):Parent()):Id() == "mct_dropdown_box"
-    end,
-    function(context)
-        log("mct_dropdown_box_option_selected")
-        core:remove_listener("mct_dropdown_box_close")
-
-        local uic = UIComponent(context.component)
-        local popup_list = UIComponent(uic:Parent())
-        local popup_menu = UIComponent(popup_list:Parent())
-        local dropdown_box = UIComponent(popup_menu:Parent())
-
-
-        -- will tell us the name of the option
-        local parent_id = UIComponent(dropdown_box:Parent()):Id()
-        local mod_obj = mct:get_selected_mod()
-        local option_obj = mod_obj:get_option_by_key(parent_id)
-
-        -- this operation is set externally (so we can perform the same operation outside of here)
-        local ok, msg = pcall(function()
-        option_obj:set_selected_setting(uic:Id())
-        end) if not ok then err(msg) end
     end,
     true
 )
