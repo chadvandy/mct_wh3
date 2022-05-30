@@ -265,10 +265,10 @@ function mct_option:set_uic_with_key(key, uic, force_override)
 
     self._uics[key] = uic
 
-    if key == "option" then
+    -- if key == "option" then
         uic:SetProperty("mct_option", self:get_key())
         uic:SetProperty("mct_mod", self:get_mod_key())
-    end
+    -- end
 end
 
 ---comment
@@ -304,6 +304,7 @@ function mct_option:get_uic_with_key(key)
 end
 
 ---- Internal use only. Get all UICs.
+---@return table<string, UIComponent>
 function mct_option:get_uics()
     local uic_table = self._uics
     local copy = {}
@@ -348,10 +349,9 @@ function mct_option:set_uic_visibility(visibility, keep_in_ui)
 
     -- if the UIC exists, set it to the new visibility!
     local uic_table = self:get_uics()
-    --log("DOING THIS")
-    for _, uic in pairs(uic_table) do
-        if is_uicomponent(uic) then
-            --log("Setting component to the thing! ["..tostring(self:get_uic_visibility()).."].")
+
+    for key, uic in pairs(uic_table) do
+        if is_uicomponent(uic) and key ~= "error_popup" then
             uic:SetVisible(self:get_uic_visibility())
         end
     end
@@ -716,8 +716,8 @@ end
 ---- Set this option as disabled in the UI, so the user can't interact with it.
 --- This will result in `mct_option:ui_change_state()` being called later on.
 ---@param should_lock boolean Lock this UI option, preventing it from being interacted with.
----@param lock_reason string The text to supply to the tooltip, to show the player why this is locked. This argument is ignored if should_lock is false.
----@param is_localised boolean Set to true if lock_reason is a localised key; else, set it to false or leave it blank. Ignored ditto above.
+---@param lock_reason string? The text to supply to the tooltip, to show the player why this is locked. This argument is ignored if should_lock is false.
+---@param is_localised boolean? Set to true if lock_reason is a localised key; else, set it to false or leave it blank. Ignored ditto above.
 function mct_option:set_uic_locked(should_lock, lock_reason, is_localised)
     if is_nil(should_lock) then 
         should_lock = true 

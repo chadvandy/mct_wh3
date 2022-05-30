@@ -243,7 +243,7 @@ end
 -- When this function is called, it assumes all following options being defined are being assigned to this section, unless further specified with
 -- mct_option.
 --- @param section_key string The unique identifier for this section.
---- @param localised_name string The localised text for this section. You can provide a direct string - "My Section Name" - or a loc key - "`loc_key_example_my_sect ion_name`". If a loc key is provided, it will check first at runtime to see if that localised text exists. If no localised_name is provided, it will default to "No Text Assigned". Can leave this and the other blank, and use @{mct_section:set_localised_text} instead.
+--- @param localised_name string? The localised text for this section. You can provide a direct string - "My Section Name" - or a loc key - "`loc_key_example_my_sect ion_name`". If a loc key is provided, it will check first at runtime to see if that localised text exists. If no localised_name is provided, it will default to "No Text Assigned". Can leave this and the other blank, and use @{mct_section:set_localised_text} instead.
 --- @param is_localised boolean? If a loc key is provided in localised_name, set this to true, please.
 --- @return MCT.Section # Returns the mct_section object created from this call.
 function mct_mod:add_new_section(section_key, localised_name, is_localised)
@@ -378,7 +378,7 @@ function mct_mod:get_last_section()
 end
 
 --- Getter for the mct_mod's key
--- @treturn string key The key for this mct_mod
+---@return string key The key for this mct_mod
 function mct_mod:get_key()
     return self._key
 end
@@ -610,6 +610,7 @@ function mct_mod:are_any_settings_not_default()
     return false
 end
 
+--- TODO implement this
 --- Create a new patch. This allows you to slightly-better communicate with your users, by adding patches to a tab within the UI and potentially forcing a popup to inform your users of important stuff.
 ---@param patch_name string The name of your patch. Will display in larger text in the patch notes section.
 ---@param patch_description string Description for your patch. Accepts any existing localisation tags - [[col]] tags or whatever. Will get automatic linebreaks in it, to make it fit properly.
@@ -718,7 +719,6 @@ function mct_mod:load_finalized_settings()
     self._finalized_settings = ret
 end
 
---- TODO replace this with wrapping through Settings, since _finalized_settings is gonezo
 --- Returns the `finalized_settings` field of this `mct_mod`.
 function mct_mod:get_settings()
     return mct.settings:get_settings_for_mod(self)
@@ -755,6 +755,9 @@ function mct_mod:set_description(desc_text, is_localised)
     end
 end
 
+--- Create a tooltip that will be displayed when hovering over the Mod row header in the left panel. Leave this blank to avoid any toolitp.
+---@param text string
+---@param is_localised boolean?
 function mct_mod:set_tooltip_text(text, is_localised)
     if is_string(text) then
         if is_localised then text = "{{loc:"..text.."}}" end

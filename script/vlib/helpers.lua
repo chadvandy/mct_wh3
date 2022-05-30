@@ -43,7 +43,6 @@ end
 --- TODO auto resize based on contents, optionally resize dynamically
 --- TODO return the popup component to do stuff later
 --- TODO add in a title component
---- TODO use the existing buttons
 
 --- Trigger a popup on the screen, using the Dialogue Box. This wrapper is provided to make handling the whole system a bit easier.
 ---@param popup_key string

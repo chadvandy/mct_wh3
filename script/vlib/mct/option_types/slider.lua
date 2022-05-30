@@ -174,9 +174,15 @@ function Slider:ui_create_option(dummy_parent)
     
     local text_input_template = templates[2]
 
-    local text_input = core:get_or_create_component("mct_slider_text_input", text_input_template, dummy_parent)
-    local left_button = core:get_or_create_component("left_button", left_button_template, text_input)
-    local right_button = core:get_or_create_component("right_button", right_button_template, text_input)
+    --- This is solely for the sake of positioning everything!
+    local slider_parent = core:get_or_create_component("slider_parent", "ui/campaign ui/script_dummy", dummy_parent)
+    slider_parent:SetDockingPoint(6)
+    slider_parent:SetDockOffset(0, 0)
+    slider_parent:Resize(dummy_parent:Width() * 0.5, dummy_parent:Height())
+
+    local text_input = core:get_or_create_component("mct_slider_text_input", text_input_template, slider_parent)
+    local left_button = core:get_or_create_component("left_button", left_button_template, slider_parent)
+    local right_button = core:get_or_create_component("right_button", right_button_template, slider_parent)
 
     local error_popup = core:get_or_create_component("error_popup", "ui/common ui/tooltip_text_only", dummy_parent)
     error_popup:SetDockingPoint(1)
@@ -202,23 +208,27 @@ function Slider:ui_create_option(dummy_parent)
     end, 1, nil)
 
     text_input:SetCanResizeWidth(true)
-    text_input:Resize(text_input:Width() * 0.4, text_input:Height())
+    text_input:Resize(slider_parent:Width() - right_button:Width() * 2, text_input:Height())
     text_input:SetCanResizeWidth(false)
     text_input:SetInteractive(true)
 
-    text_input:SetDockingPoint(6)
-    left_button:SetDockingPoint(4)
     right_button:SetDockingPoint(6)
+    text_input:SetDockingPoint(5)
+    left_button:SetDockingPoint(4)
 
-    left_button:SetDockOffset(-left_button:Width(),0)
-    right_button:SetDockOffset(right_button:Width(),0)
+    right_button:SetDockOffset(-2, 0)
+    text_input:SetDockOffset(0, 0)
+    left_button:SetDockOffset(2, 0)
+    -- text_input:SetDockOffset(-right_button:Width() * 1.1, 0)
+    -- left_button:SetDockOffset(-right_button:Width() * 1.1 - text_input:Width() * 1.1, 0)
 
+    self:set_uic_with_key("dummy_parent", slider_parent, true)
     self:set_uic_with_key("option", text_input, true)
     self:set_uic_with_key("left_button", left_button, true)
     self:set_uic_with_key("right_button", right_button, true)
     self:set_uic_with_key("error_popup", error_popup, true)
 
-    return text_input
+    return slider_parent
 end
 
 --------- UNIQUE SECTION -----------
@@ -488,16 +498,14 @@ core:add_listener(
     "ComponentLClickUp",
     function(context)
         local uic = UIComponent(context.component)
-        return (uic:Id() == "left_button" or uic:Id() == "right_button") and uicomponent_descended_from(uic, "mct_slider_text_input")
+        return (uic:Id() == "left_button" or uic:Id() == "right_button") and uicomponent_descended_from(uic, "slider_parent")
     end,
     function(context)
         local ok, msg = pcall(function()
             logf("Left or Right slider button pressed!")
         local step = context.string
         local uic = UIComponent(context.component)
-
-        local slider = UIComponent(uic:Parent())
-        local option_key = slider:GetProperty("mct_option")
+        local option_key = uic:GetProperty("mct_option")
 
         logf("Slider option key %s", option_key)
         local mod_obj = mct:get_selected_mod()

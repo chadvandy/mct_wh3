@@ -19,10 +19,7 @@ mct_new_settings_created_start	[[col:red]]MCT - New Options Created![[/col]]	tru
 mct_new_settings_created_end	Press the check mark to open up the MCT panel. Press the x to set to the default values for the new options.	true
 mct_button_revert_to_default_tt	Change all the settings for the currently selected mod back to the modder-specified defaults.	true
 mct_button_finalize_settings_tt	Save and apply all changed settings. There will be a pop-up to confirm your changes.	true
-mct_profiles_new_txt	New	true
-mct_profiles_new_tt	Add a new MCT Profile, with the current applied settings.	true
-mct_profiles_delete_txt	Delete	true
-mct_profiles_delete_tt	Delete the currently selected MCT Profile. Non-reversible!	true
+mct_profiles_delete_tt	Delete Profile||Delete the currently selected MCT Profile. Non-reversible!	true
 mct_finalize_settings_popup_mod_header	Mods & Options	true
 mct_finalize_settings_popup_old_value_header	Previous Value	true
 mct_finalize_settings_popup_new_value_header	New Value	true
@@ -33,17 +30,18 @@ mct_mp_is_host_end	[[col:fabulous_pink]]IF THIS IS WRONG - IF THE OTHER PLAYER I
 mct_mp_not_host_mid	's Settings[[/col]]	false
 mct_mp_not_host_end_actually	[[col:fabulous_pink]]IF THIS IS WRONG - IF YOU ARE ON THE LEFT SIDE OF THE SCREEN - PLEASE LOAD TO THE MAIN MENU AND LOAD BACK IN. ALSO REPORT THIS TO VANDY.[[/col]]	false
 mct_mct_mod_default_section_text	Default Category	false
-mct_profiles_delete_tt_inactive	Cannot delete the Default Profile!	false
+mct_profiles_delete_tt_inactive	[[col:red]]Cannot delete the Default Profile![[/col]]	false
 mct_profiles_new	Type in your desired profile name and description below.	true
 mct_profiles_current_name	\\nCurrent name: %s	true
 mct_profiles_bad_key	\\n[[col:red]]Invalid key - not a valid string![[/col]]	true
 mct_profiles_exists	\\n[[col:red]]Invalid key - a profile with that name already exists![[/col]]	true
 mct_profiles_blank_key	\\n[[col:red]]Invalid key - you have to insert a string![[/col]]	true
 mct_profiles_default_profile	Default Profile	true
-mct_profiles_edit_txt	Edit	true
-mct_profiles_edit_tt	Edit the selected profile, to rename it or change its description.	true
+mct_profiles_edit_tt	Edit Profile||Edit the selected profile, to rename it or change its description.	true
 mct_profiles_import_txt	Import	true
 mct_profiles_import_tt	TODO	true
 mct_profiles_export_txt	Export	true
 mct_profiles_export_tt	TODO	true
-mct_profiles_edit_inactive_tt	Can't edit the Default Profile!	true
+mct_profiles_edit_tt_inactive	[[col:red]]Can't edit the Default Profile![[/col]]	true
+mct_profiles_new_tt	Create Profile||Add a new Profile, with all the same settings as the currently selected Profile to start.	true
+mct_profiles_new_tt_inactive	[[col:red]]Maximum amount of Profiles reached![[/col]]	true

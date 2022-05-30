@@ -1,4 +1,4 @@
---- TODO mct initialization
+---@alias MCT.OptionType 'slider'|'dropdown'|'checkbox'|'text_input'
 
 ---@class ModConfigurationTool:Class
 local mct_defaults = {
@@ -22,6 +22,9 @@ local mct = VLib.NewClass("ModConfigurationTool", mct_defaults)
 function mct:init()
     self:load_modules()
     self:load_mods()
+
+    ---@diagnostic disable-next-line : missing-parameter
+    core:add_static_object("mod_configuration_tool", self)
 
     if not core:is_campaign() then
         -- trigger load_and_start after all mod scripts are loaded!
@@ -70,8 +73,6 @@ function mct:load_modules()
     ---@type table<string, MCT.Option>
     self._MCT_TYPES = { }
 
-    ---@alias MCT.OptionType 'slider'|'dropdown'|'checkbox'|'text_input'
-
     ---@type MCT.Option
     self._MCT_OPTION = load_module("option", obj_path)
     
@@ -94,7 +95,7 @@ function mct:load_modules()
     self._MCT_MOD = load_module("mod", obj_path)
 
     ---@type MCT.Section
-    self._MCT_SECTION = load_module("section", obj_path) -- TODO move to UI?
+    self._MCT_SECTION = load_module("section", obj_path)
 end
 
 --- TODO get the option type
@@ -125,7 +126,6 @@ function mct:mp_prep()
 
 end
 
---- TODO trigger this lol
 --- TODO clean this the fuck up
 function mct:load_and_start(loading_game_context, is_mp)
     self._initialized = true
@@ -275,7 +275,6 @@ function mct:finalize_new()
     
 end
 
---- TODO use new system!
 --- Internal use only. Triggers all the functionality for "Finalize Settings!"
 function mct:finalize()
     local ok, msg = pcall(function()

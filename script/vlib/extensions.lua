@@ -123,7 +123,6 @@ function table.join(t1, t2)
 	-- for i,v in ipairs(t1) 
 end
 
---- TODO a function to strip a table of any non-saveable types (number, string, boolean)
 function table.strip(t)
 	local o = {}
 	for k,v in pairs(t) do

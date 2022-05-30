@@ -86,9 +86,9 @@ mct_mod:create_patch("Brass Bull & Blowpipe\nJuly 14th, 2021", [[
 -- debug:set_tooltip_text("This option removes the performative nature of the Vandy Library logging. Using Debug mode will mean more accurate log files, but you may notice a slowdown at points as the mod writes the logs. [[col:red]]Only use if you're getting crashes![[/col]]")
 -- debug:set_local_only(true)
 
-local check = mct_mod:add_new_option("check", 'checkbox')
-check:set_text("Checkbox")
-check:set_tooltip_text("Test checkbox")
+-- local check = mct_mod:add_new_option("check", 'checkbox')
+-- check:set_text("Checkbox")
+-- check:set_tooltip_text("Test checkbox")
 
 ---@type MCT.Option.Dropdown
 local drop = mct_mod:add_new_option("dropdown", "dropdown")

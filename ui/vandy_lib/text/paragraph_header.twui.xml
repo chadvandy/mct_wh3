@@ -5,7 +5,7 @@
 	precache_condition="">
 	<hierarchy>
 		<root this="19CEC4C5-F299-409E-9483CF14F5E68FFF">
-			<text this="345A7C15-9AF4-46A2-A317E69DCAE9E2FF"/>
+			<text this="9552E503-AD32-4B92-8BB1A2B675970B0C"/>
 		</root>
 	</hierarchy>
 	<components>
@@ -43,32 +43,36 @@
 			</states>
 		</root>
 		<text
-			this="345A7C15-9AF4-46A2-A317E69DCAE9E2FF"
+			this="9552E503-AD32-4B92-8BB1A2B675970B0C"
 			id="text"
 			offset="0.00,0.00"
-			allowhorizontalresize="true"
-			allowverticalresize="false"
-			priority="42"
+			docking="Center"
+			dock_offset="0.00,0.00"
+			component_anchor_point="0.0,0.0"
+			priority="45"
 			tooltipslocalised="true"
-			uniqueguid="345A7C15-9AF4-46A2-A317E69DCAE9E2FF"
-			currentstate="82190DAB-1375-4F75-B160B37EEF67313D"
-			defaultstate="82190DAB-1375-4F75-B160B37EEF67313D">
+			uniqueguid="9552E503-AD32-4B92-8BB1A2B675970B0C"
+			currentstate="B16A2469-B934-49EF-9C2B96C93FEA62E3"
+			defaultstate="B16A2469-B934-49EF-9C2B96C93FEA62E3">
 			<states>
-				<active
-					this="82190DAB-1375-4F75-B160B37EEF67313D"
-					name="active"
-					width="80"
-					height="16"
-                    text=""
-					textxoffset="0.00,0.00"
-					textyoffset="0.00,0.00"
-					texthbehaviour="Slip by character"
-					font_m_size="12"
+				<newstate
+					this="B16A2469-B934-49EF-9C2B96C93FEA62E3"
+					name="NewState"
+					width="298"
+					text=""
+					textvalign="Center"
+					texthalign="Center"
+					texthbehaviour="Never split"
+					textlocalised="true"
+					font_m_font_name="brand_header"
+					font_m_size="16"
 					font_m_colour="#FFF8D7FF"
 					font_m_leading="1"
-					fontcat_name="fe_default_text"
-					uniqueguid="82190DAB-1375-4F75-B160B37EEF67313D">
-				</active>
+					fontcat_name="fe_paragraph_heading"
+					interactive="true"
+					text_shader_name="drop_shadow_t0"
+					textshadervars="0.00,1.00,2.00,0.00"
+					uniqueguid="B16A2469-B934-49EF-9C2B96C93FEA62E3"/>
 			</states>
 		</text>
 	</components>
