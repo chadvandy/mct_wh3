@@ -19,7 +19,7 @@ mct_new_settings_created_start	[[col:red]]MCT - New Options Created![[/col]]	tru
 mct_new_settings_created_end	Press the check mark to open up the MCT panel. Press the x to set to the default values for the new options.	true
 mct_button_revert_to_default_tt	Change all the settings for the currently selected mod back to the modder-specified defaults.	true
 mct_button_finalize_settings_tt	Save and apply all changed settings. There will be a pop-up to confirm your changes.	true
-mct_profiles_delete_tt	Delete Profile||Delete the currently selected MCT Profile. Non-reversible!	true
+mct_profiles_delete_tt	Delete Profile||Delete the currently selected MCT Profile. Irreversible!	true
 mct_finalize_settings_popup_mod_header	Mods & Options	true
 mct_finalize_settings_popup_old_value_header	Previous Value	true
 mct_finalize_settings_popup_new_value_header	New Value	true
@@ -45,3 +45,5 @@ mct_profiles_export_tt	TODO	true
 mct_profiles_edit_tt_inactive	[[col:red]]Can't edit the Default Profile![[/col]]	true
 mct_profiles_new_tt	Create Profile||Add a new Profile, with all the same settings as the currently selected Profile to start.	true
 mct_profiles_new_tt_inactive	[[col:red]]Maximum amount of Profiles reached![[/col]]	true
+mct_profiles_delete_popup	Are you sure you would like to delete your Profile with the key [%s]? This action is irreversible!	true
+mct_profiles_change_popup	Are you sure you want to change profiles? There are pending changes on [%s] that will be lost if you continue.	true

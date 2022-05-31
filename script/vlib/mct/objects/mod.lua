@@ -724,6 +724,23 @@ function mct_mod:get_settings()
     return mct.settings:get_settings_for_mod(self)
 end
 
+
+function mct_mod:get_settings_by_section(section_key)
+    local retval = {}
+
+    if not self:get_section_by_key(section_key) then
+        VLib.Error("Trying to get settings within section %s of mod %s, but there is no section with that name!", section_key, self:get_key())
+        return retval
+    end
+
+    local options = self:get_options_by_section(section_key)
+    for key,option in pairs(options) do
+        retval[key] = option:get_finalized_setting()
+    end
+
+    return retval
+end
+
 --- Enable localisation for this mod's title. Accepts either finalized text, or a localisation key.
 ---@param title_text string The text supplied for the title. You can supply the text - ie., "My Mod", or a loc-key, ie. "ui_text_replacements_my_dope_mod". Please note you can also skip this method, and just make a loc key called: `mct_[mct_mod_key]_title`, and MCT will automatically read that.
 ---@param is_localised boolean True if the title_text supplied is a loc key.

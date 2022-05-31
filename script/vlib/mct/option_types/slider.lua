@@ -482,7 +482,9 @@ core:add_listener(
                     option_obj:set_selected_setting(option_obj:get_finalized_setting())
 
                     local uic = option_obj:get_uic_with_key("error_popup")
-                    uic:SetVisible(false)
+                    if uic then
+                        uic:SetVisible(false)
+                    end
                 end
                 
 

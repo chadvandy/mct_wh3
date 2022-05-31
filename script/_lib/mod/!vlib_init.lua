@@ -244,7 +244,7 @@ function VLib.LoadModules(path, search_override, func_for_each)
         end
 
         local module = VLib.LoadModule(filename, string.gsub(filename_for_out, filename..".lua", ""))
-        if is_function(func_for_each) then
+        if func_for_each and is_function(func_for_each) then
             func_for_each(filename_for_out, module)
         end
     end
