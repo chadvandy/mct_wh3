@@ -124,6 +124,8 @@ local mct_section_defaults = {
 
     _ordered_options = {},
 
+    _true_ordered_options = {},
+
     ---@type boolean Visibility.
     _visible = true,
 
@@ -190,6 +192,7 @@ function mct_section:set_option_at_index(option_key, x, y)
 
     --mct:log("Setting option key ["..option_key.."] to pos ["..index.."] in section ["..self:get_key().."]")
 
+    self._true_ordered_options[#self._true_ordered_options+1] = option_key
     self._ordered_options[index] = option_key
 end
 

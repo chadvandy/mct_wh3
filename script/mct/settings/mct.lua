@@ -73,88 +73,93 @@ logging:set_text("[DISABLED]") -- Logging: Vanilla/Mods
 logging:set_tooltip_text("This option doesn't do anything right now, I have to fix it. :)")
 logging:set_local_only(true)
 
--- local mct_logging = mct_mod:add_new_option("mct_logging", "checkbox")
--- mct_logging:set_default_value(true)
+local mct_logging = mct_mod:add_new_option("mct_logging", "checkbox")
+mct_logging:set_default_value(true)
 
--- mct_logging:set_text("Logging: Vandy Library")
--- mct_logging:set_tooltip_text("Allows the Vandy Library (MCT and all submods) to print a log file to your desktop. It's very performative and refreshes every time the game is loaded.")
--- mct_logging:set_local_only(true)
+mct_logging:set_text("Logging: Vandy Library")
+mct_logging:set_tooltip_text("Allows the Vandy Library (MCT and all submods) to print a log file to your desktop. It's very performative and refreshes every time the game is loaded.")
+mct_logging:set_local_only(true)
 
--- local debug = mct_mod:add_new_option("mct_debug", "checkbox")
--- debug:set_default_value(false)
--- debug:set_text("Debug Logging")
--- debug:set_tooltip_text("This option removes the performative nature of the Vandy Library logging. Using Debug mode will mean more accurate log files, but you may notice a slowdown at points as the mod writes the logs. [[col:red]]Only use if you're getting crashes![[/col]]")
--- debug:set_local_only(true)
+local debug = mct_mod:add_new_option("mct_debug", "checkbox")
+debug:set_default_value(false)
+debug:set_text("Debug Logging")
+debug:set_tooltip_text("This option removes the performative nature of the Vandy Library logging. Using Debug mode will mean more accurate log files, but you may notice a slowdown at points as the mod writes the logs. [[col:red]]Only use if you're getting crashes![[/col]]")
+debug:set_local_only(true)
 
--- local check = mct_mod:add_new_option("check", 'checkbox')
--- check:set_text("Checkbox")
--- check:set_tooltip_text("Test checkbox")
+local check = mct_mod:add_new_option("check", 'checkbox')
+check:set_text("Checkbox")
+check:set_tooltip_text("Test checkbox")
 
--- ---@type MCT.Option.Dropdown
--- local drop = mct_mod:add_new_option("dropdown", "dropdown")
--- drop:set_text("Dropdown")
--- drop:add_dropdown_values({
---     {
---         key = "Test",
---         text = "Testing text!",
---         is_default = false,
---     },
---     {
---         key = "Other Test",
---         text = "Use this!",
---         is_default = true,
---     },
---     {
---         key = "test",
---         text = "Hello",
---     }
--- })
--- -- drop:add_drop
+---@type MCT.Option.Dropdown
+local drop = mct_mod:add_new_option("dropdown", "dropdown")
+drop:set_text("Dropdown")
+drop:add_dropdown_values({
+    {
+        key = "Test",
+        text = "Testing text!",
+        is_default = false,
+    },
+    {
+        key = "Other Test",
+        text = "Use this!",
+        is_default = true,
+    },
+    {
+        key = "test",
+        text = "Hello",
+    }
+})
+-- drop:add_drop
 
--- ---@type MCT.Option.Slider
--- local slider = mct_mod:add_new_option("slider", 'slider')
--- slider:set_text("Test Slider")
--- slider:set_tooltip_text("This is my Test Slider.")
--- slider:set_default_value(200)
--- slider:slider_set_min_max(50, 500)
+---@type MCT.Option.Slider
+local slider = mct_mod:add_new_option("slider", 'slider')
+slider:set_text("Test Slider")
+slider:set_tooltip_text("This is my Test Slider.")
+slider:set_default_value(200)
+slider:slider_set_min_max(50, 500)
 
--- ---@type MCT.Option.TextInput
--- local input = mct_mod:add_new_option("input", "text_input")
--- input:set_text("Text Input")
--- input:set_tooltip_text("This is my test text input.")
--- input:add_validity_test(
---     function(t)
---         if t == "Dummy" then
---             return false, "What did you call me?!"
---         end
+---@type MCT.Option.TextInput
+local input = mct_mod:add_new_option("input", "text_input")
+input:set_text("Text Input")
+input:set_tooltip_text("This is my test text input.")
+input:add_validity_test(
+    function(t)
+        if t == "Dummy" then
+            return false, "What did you call me?!"
+        end
 
---         if string.find(t, "butt") then
---             return false, "Get that out of here"
---         end
---     end
--- )
+        if string.find(t, "butt") then
+            return false, "Get that out of here"
+        end
+    end
+)
 
--- ---@type MCT.Option.TextInput
--- local input = mct_mod:add_new_option("double_imput", "text_input")
--- input:set_text("Other Text Input")
--- input:set_tooltip_text("This is my test text input.")
--- input:add_validity_test(
---     function(t)
---         if t == "fuck" then
---             return false, "NO CUSSING"
---         end
+---@type MCT.Option.TextInput
+local input = mct_mod:add_new_option("double_imput", "text_input")
+input:set_text("Other Text Input")
+input:set_tooltip_text("This is my test text input.")
+input:add_validity_test(
+    function(t)
+        if t == "fuck" then
+            return false, "NO CUSSING"
+        end
 
---         if t:len() > 10 then
---             return false, "Must be 10 characters or less!"
---         end
---     end
--- )
+        if t:len() > 10 then
+            return false, "Must be 10 characters or less!"
+        end
+    end
+)
 
--- local my_dummy = mct_mod:add_new_option("dummy", "dummy")
--- my_dummy:set_text("This is a Dummy object!")
--- my_dummy:set_tooltip_text("Yallooooo")
+local my_dummy = mct_mod:add_new_option("dummy", "dummy")
+my_dummy:set_text("This is a Dummy object!")
+my_dummy:set_tooltip_text("Yallooooo")
 
 
 -- local second_mod = mct:register_mod("my_test_mod")
 -- second_mod:set_author("")
 -- second_mod:set_title("bloop")
+
+for i = 1, 1000 do
+    local option = mct_mod:add_new_option("test_"..i, "checkbox")
+    option:set_default_value(math.random(1, 2) == 1)
+end

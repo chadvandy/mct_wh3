@@ -1332,8 +1332,11 @@ function ui_obj:populate_panel_on_mod_selected()
 
     box:DestroyChildren()
 
+    
+    --- TODO go through each Layout, then each Section within.
     local ok, msg = pcall(function()
-    self:create_sections_and_contents(selected_mod)
+        local this_layout = core:get_or_create_component("settings_layout", "ui/mct/layouts/three_column", box)
+        self:create_sections_and_contents(this_layout)
     end) if not ok then logerr(msg) end
 
 
@@ -1345,9 +1348,11 @@ function ui_obj:populate_panel_on_mod_selected()
     core:trigger_custom_event("MctPanelPopulated", {["mct"] = mct, ["ui_obj"] = self, ["mod"] = selected_mod})
 end
 
-function ui_obj:create_sections_and_contents(mod_obj)
+function ui_obj:create_sections_and_contents(this_layout)
+    local mod_obj = mct:get_selected_mod()
+
     local mod_settings_panel = self.mod_settings_panel
-    local mod_settings_box = find_uicomponent(mod_settings_panel, "settings_list_view", "list_clip", "list_box")
+    -- local mod_settings_box = find_uicomponent(mod_settings_panel, "settings_list_view", "list_clip", "list_box")
 
     core:remove_listener("MCT_SectionHeaderPressed")
     
@@ -1366,11 +1371,12 @@ function ui_obj:create_sections_and_contents(mod_obj)
             section_obj._dummy_rows = {}
 
             -- first, create the section header
-            local section_header = core:get_or_create_component("mct_section_"..section_key, "ui/vandy_lib/row_header", mod_settings_box)
+            local section_header = core:get_or_create_component("mct_section_"..section_key, "ui/vandy_lib/row_header", this_layout)
             --local open = true
 
             section_obj._header = section_header
 
+            --- TODO set this in a Section method, mct_section:set_is_collapsible() or whatever
             core:add_listener(
                 "MCT_SectionHeaderPressed",
                 "ComponentLClickUp",
@@ -1387,7 +1393,7 @@ function ui_obj:create_sections_and_contents(mod_obj)
             -- TODO set text & width and shit
             section_header:SetCanResizeWidth(true)
             -- section_header:SetCanResizeHeight(false)
-            section_header:Resize(mod_settings_panel:Width() * 0.95, section_header:Height())
+            section_header:Resize(mod_settings_panel:Width() * 0.30, section_header:Height())
             section_header:SetDockingPoint(2)
             -- section_header:SetCanResizeWidth(false)
 
@@ -1412,86 +1418,92 @@ function ui_obj:create_sections_and_contents(mod_obj)
 
             -- this is the table with the positions to the options
             -- ie. options_table["1,1"] = "option 1 key"
-            local options_table, num_remaining_options = section_obj:get_ordered_options()
+            -- local options_table, num_remaining_options = section_obj:get_ordered_options()
 
-            local x = 1
-            local y = 1
-
-            local function move_to_next()
-                if x >= 3 then
-                    x = 1
-                    y = y + 1
-                else
-                    x = x + 1
-                end
+            for i,option_key in ipairs(section_obj._true_ordered_options) do
+                local option_obj = mod_obj:get_option_by_key(option_key)
+                self:new_option_row_at_pos(option_obj, this_layout) 
             end
 
-            -- prevent infinite loops, will only do nothing 3 times
-            local loop_num = 0
+            -- add a new column (and potentially, row, if x==1) for this position
 
-            --TODO resolve this to better make the dummy rows/columns when nothing is assigned to it
+            -- local x = 1
+            -- local y = 1
 
-            while valid do
-                --loop_num = loop_num + 1
-                if num_remaining_options < 1 then
-                    -- log("No more remaining options!")
-                    -- no more options, abort!
-                    break
-                end
+            -- local function move_to_next()
+            --     if x >= 3 then
+            --         x = 1
+            --         y = y + 1
+            --     else
+            --         x = x + 1
+            --     end
+            -- end
 
-                if loop_num >= 3 then
-                    break
-                end
+            -- -- prevent infinite loops, will only do nothing 3 times
+            -- local loop_num = 0
 
-                local index = tostring(x) .. "," .. tostring(y)
-                local option_key = options_table[index]
+            -- --TODO resolve this to better make the dummy rows/columns when nothing is assigned to it
 
-                -- check to see if any option was even made at this index!
-                --[[if option_key == nil then
-                    -- skip, go to the next index
-                    move_to_next()
+            -- while valid do
+            --     --loop_num = loop_num + 1
+            --     if num_remaining_options < 1 then
+            --         -- log("No more remaining options!")
+            --         -- no more options, abort!
+            --         break
+            --     end
 
-                    -- prevent it from looping without doing anything more than 6 times
-                    loop_num = loop_num + 1
-                else]]
-                --loop_num = 0
+            --     if loop_num >= 3 then
+            --         break
+            --     end
 
-                if option_key == nil then option_key = "MCT_BLANK" end
+            --     local index = tostring(x) .. "," .. tostring(y)
+            --     local option_key = options_table[index]
+
+            --     -- check to see if any option was even made at this index!
+            --     --[[if option_key == nil then
+            --         -- skip, go to the next index
+            --         move_to_next()
+
+            --         -- prevent it from looping without doing anything more than 6 times
+            --         loop_num = loop_num + 1
+            --     else]]
+            --     --loop_num = 0
+
+            --     if option_key == nil then option_key = "MCT_BLANK" end
                 
-                local option_obj
-                if is_string(option_key) then
-                    --log("Populating UI option at index ["..index.."].\nOption key ["..option_key.."]")
-                    if option_key == "NONE" then
-                        -- no option objects remaining, kill the engine
-                        break
-                    end
-                    if option_key == "MCT_BLANK" then
-                        option_obj = option_key
-                        loop_num = loop_num + 1
-                    else
-                        -- only iterate down this iterator when it's a real option
-                        num_remaining_options = num_remaining_options - 1
-                        loop_num = 0
-                        option_obj = mod_obj:get_option_by_key(option_key)
-                    end
+            --     local option_obj
+            --     if is_string(option_key) then
+            --         --log("Populating UI option at index ["..index.."].\nOption key ["..option_key.."]")
+            --         if option_key == "NONE" then
+            --             -- no option objects remaining, kill the engine
+            --             break
+            --         end
+            --         if option_key == "MCT_BLANK" then
+            --             option_obj = option_key
+            --             loop_num = loop_num + 1
+            --         else
+            --             -- only iterate down this iterator when it's a real option
+            --             num_remaining_options = num_remaining_options - 1
+            --             loop_num = 0
+            --             option_obj = mod_obj:get_option_by_key(option_key)
+            --         end
 
-                    if not mct:is_mct_option(option_obj) then
-                        logerr("no option found with the key ["..option_key.."]. Issue!")
-                    else
-                        -- add a new column (and potentially, row, if x==1) for this position
-                        self:new_option_row_at_pos(option_obj, x, y, section_key) 
-                    end
+            --         if not mct:is_mct_option(option_obj) then
+            --             logerr("no option found with the key ["..option_key.."]. Issue!")
+            --         else
 
-                else
-                    -- issue? break? dunno?
-                    log("issue? break? dunno?")
-                    break
-                end
+            --         end
+
+            --     else
+            --         -- issue? break? dunno?
+            --         log("issue? break? dunno?")
+            --         break
+            --     end
         
-                -- move the coords down and to the left when the row is done, or move over one space if the row isn't done
-                move_to_next()
-                --end
-            end
+            --     -- move the coords down and to the left when the row is done, or move over one space if the row isn't done
+            --     move_to_next()
+            --     --end
+            -- end
 
             -- set own visibility (for sections that default to closed)
             section_obj:uic_visibility_change(true)
@@ -1499,8 +1511,144 @@ function ui_obj:create_sections_and_contents(mod_obj)
     end
 end
 
+function ui_obj:new_option_row_at_pos(option_obj, this_layout)
+    local dummy_option = core:get_or_create_component(option_obj:get_key(), "ui/campaign ui/script_dummy", this_layout)
+
+    local panel = self.mod_settings_panel
+    local w,h = panel:Dimensions()
+    w = w * 0.30
+    h = h * 0.12
+
+        -- set to be flush with the column dummy
+        dummy_option:SetCanResizeHeight(true) dummy_option:SetCanResizeWidth(true)
+        dummy_option:Resize(w, h)
+        dummy_option:SetCanResizeHeight(false) dummy_option:SetCanResizeWidth(false)
+
+        _SetVisible(dummy_option, true)
+        
+        --self:SetState(dummy_option, "custom_state_2")
+        --dummy_option:SetImagePath("ui/skins/default/panel_back_border.png", 1)
+
+        -- set to dock center
+        dummy_option:SetDockingPoint(5)
+
+        -- give priority over column
+        dummy_option:PropagatePriority(this_layout:Priority() +1)
+
+        local dummy_border = core:get_or_create_component("border", "ui/vandy_lib/image", dummy_option)
+        dummy_border:SetCanResizeHeight(true) dummy_border:SetCanResizeWidth(true)
+        dummy_border:Resize(w, h)
+        dummy_border:SetCanResizeHeight(false) dummy_border:SetCanResizeWidth(false)
+
+        dummy_border:SetState("tiled")
+
+        local border_path = option_obj:get_border_image_path()
+        local border_visible = option_obj:get_border_visibility()
+
+        if is_string(border_path) and border_path ~= "" then
+            dummy_border:SetImagePath(border_path, 1)
+        else -- some error; default to default
+            dummy_border:SetImagePath("ui/skins/default/panel_back_border.png", 1)
+        end
+
+        dummy_border:SetVisible(border_visible)
+
+        option_obj:set_uic_with_key("border", dummy_border, true)
+
+        -- make some text to display deets about the option
+        local option_text = core:get_or_create_component("text", "ui/vandy_lib/text/dev_ui", dummy_option)
+        _SetVisible(option_text, true)
+        option_text:SetDockingPoint(4)
+        option_text:SetDockOffset(15, 0)
+
+        -- set the tooltip on the "dummy", and remove anything from the option text
+        dummy_option:SetInteractive(true)
+        option_text:SetInteractive(false)
+
+        if option_obj:get_tooltip_text() ~= "No tooltip assigned" then
+            _SetTooltipText(dummy_option, option_obj:get_tooltip_text(), true)
+        end
+
+        -- create the interactive option
+        local new_option = option_obj:ui_create_option(dummy_option)
+
+        option_obj:set_uic_with_key("text", option_text, true)
+
+        -- resize the text so it takes up the space of the dummy column that is not used by the option
+        local n_w = new_option:Width()
+        local t_w = dummy_option:Width()
+        local ow = t_w - n_w - 35 -- -25 is for some spacing! -15 for the offset, -10 for spacing between the option to the right
+        local oh = dummy_option:Height() * 0.95
+        
+        option_text:Resize(ow, oh)
+        option_text:SetTextVAlign("centre")
+        option_text:SetTextHAlign("left")
+        option_text:SetTextXOffset(5, 0)
+
+        do
+            -- local w, h = option_text:TextDimensionsForText(option_obj:get_text())
+            option_text:ResizeTextResizingComponentToInitialSize(ow, oh)
+
+            _SetStateText(option_text, option_obj:get_text())
+
+            -- w,h = option_text:TextDimensionsForText(option_obj:get_text())
+            -- option_text:ResizeTextResizingComponentToInitialSize(ow, oh)
+        end
+
+        new_option:SetDockingPoint(6)
+        new_option:SetDockOffset(0, 0)
+
+        option_obj:set_uic_visibility(option_obj:get_uic_visibility())
+
+        local setting
+        local ok, errmsg = pcall(function()
+        setting = option_obj:get_selected_setting() end) if not ok then logerrf(errmsg) end
+        option_obj:ui_select_value(setting, true)
+
+        -- TODO do all this shit through /script/campaign/mod/ or similar
+
+        -- read if the option is read-only in campaign (and that we're in campaign)
+        if __game_mode == __lib_type_campaign then
+            if option_obj:get_read_only() then
+                option_obj:set_uic_locked(true, "mct_lock_reason_read_only", true)
+            end
+
+            -- if game is MP, and the local faction isn't the host, lock any non-local settings
+            if cm:is_multiplayer() and cm:get_local_faction_name(true) ~= cm:get_saved_value("mct_host") then
+                log("local faction: "..cm:get_local_faction_name(true))
+                log("host faction: "..cm:get_saved_value("mct_host"))
+                -- if the option isn't local only, disable it
+                log("mp and client")
+                if not option_obj:get_local_only() then
+                    log("option ["..option_obj:get_key().."] is not local only, locking!")
+                    option_obj:set_uic_locked(true, "mct_lock_reason_mp_client", true)
+                    --[[local state = new_option:CurrentState()f
+
+                    --log("UIc state is ["..state.."]")
+
+                    -- selected_inactive for checkbox buttons
+                    if state == "selected" then
+                        new_option:SetState("selected_inactive")
+                    else
+                        new_option:SetState("inactive")
+                    end]]
+                end
+            end
+        end
+
+        -- -- read-only in battle (do this elsewhere? (TODO))
+        -- if __game_mode == __lib_type_battle then
+        --     option_obj:set_uic_locked(true, "mct_lock_reason_battle", true)
+        -- end
+
+        -- TODO why the fuck do I do this?
+        if option_obj:get_uic_locked() then
+            option_obj:set_uic_locked(true)
+        end
+end
+
 ---@param option_obj MCT.Option
-function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
+function ui_obj:old_new_option_row_at_pos(option_obj, x, y, section_key)
     local mod_settings_panel = self.mod_settings_panel
     local list = find_uicomponent(mod_settings_panel, "settings_list_view")
     local mod_settings_box = find_uicomponent(list , "list_clip", "list_box")
@@ -1626,7 +1774,7 @@ function ui_obj:new_option_row_at_pos(option_obj, x, y, section_key)
             option_text:SetTextHAlign("left")
             option_text:SetTextXOffset(5, 0)
 
-            do         
+            do
                 -- local w, h = option_text:TextDimensionsForText(option_obj:get_text())
                 option_text:ResizeTextResizingComponentToInitialSize(ow, oh)
 

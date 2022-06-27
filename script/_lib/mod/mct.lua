@@ -69,7 +69,6 @@ function mct:load_modules()
     ---@type MCT.UI
     self.ui = load_module("main", ui_path)
 
-    -- TODO auto-load all types
     ---@type table<string, MCT.Option>
     self._MCT_TYPES = { }
 
@@ -97,8 +96,6 @@ function mct:load_modules()
     ---@type MCT.Section
     self._MCT_SECTION = load_module("section", obj_path)
 end
-
---- TODO get the option type
 
 ---comment
 ---@overload fun(key:"checkbox"):MCT.Option.Checkbox
@@ -232,14 +229,6 @@ function mct:load_mods()
         "*.lua", 
         function(filepath, module)
             vlogf("Loading mod %s!", filepath)
-
-            -- module()
-            --- TODO needed?
-            -- local all_mods = self:get_mods_from_file(filepath)
-
-            -- for _,mod in pairs(all_mods) do
-            --     mod:finalize()
-            -- end
         end
     )
 end
@@ -362,6 +351,7 @@ function mct:get_mod_by_key(mod_name)
     return self._registered_mods[mod_name]
 end
 
+---@return table<string, MCT.Mod>
 function mct:get_mods()
     return self._registered_mods
 end
