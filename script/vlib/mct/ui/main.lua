@@ -46,6 +46,9 @@ local ui_obj = {
     -- currently selected mod UIC
     selected_mod_row = nil,
 
+    ---@type MCT.Layout? The currently opened page for the selected mod.
+    selected_page = nil,
+
     -- var to read whether there have been any settings changed while the panel has been opened
     locally_edited = false,
 
@@ -301,8 +304,9 @@ function ui_obj:create_popup(key, text, two_buttons, button_one_callback, button
     end
 end
 
-
-function ui_obj:set_selected_mod(row_uic)
+--- TODO pass forward the mod object and get the row uic through the mod obj
+---@param mod_obj MCT.Mod
+function ui_obj:set_selected_mod(mod_obj, layout)
     -- deselect the former one
     local former = mct:get_selected_mod()
     if former then
@@ -312,20 +316,27 @@ function ui_obj:set_selected_mod(row_uic)
     local former_uic = self.selected_mod_row
     if is_uicomponent(former_uic) then
         former_uic:SetState("active")
+
+        for i,page_uic in ipairs(former._page_uics) do
+            page_uic:SetVisible(false)
+        end
     end
-    
+
+    local row_uic = mod_obj:get_row_uic()
+
     if is_uicomponent(row_uic) then
+        --- TODO if layout, then set the main row as active, select the page, and populate that shit
+
         row_uic:SetState("selected")
         mct:set_selected_mod(row_uic:Id())
         self.selected_mod_row = row_uic
 
-        self:populate_panel_on_mod_selected()
-    elseif is_string(row_uic) then
-        -- find the propa row and set the mod selected.
-        local list_box = self.mod_row_list_box
-        local row = find_uicomponent(list_box, row_uic)
+        for i,page_uic in ipairs(mct:get_selected_mod()._page_uics) do
+            page_uic:SetVisible(true)
+            page_uic:SetState("active")
+        end
 
-        self:set_selected_mod(row)
+        self:populate_panel_on_mod_selected()
     end
 end
 
@@ -374,15 +385,37 @@ function ui_obj:open_frame()
                 return UIComponent(row:Parent()) == self.mod_row_list_box
             end,
             function(context)
-                local uic = UIComponent(context.component)
+                --- TODO handle page UICs!
 
-                if mct:get_selected_mod_name() ~= uic:Id() then
-                    -- trigger stuff on the right
-                    self:set_selected_mod(uic)
-                else
-                    -- we aren't changing rows, keep this one active.
-                    uic:SetState("selected")
+                local uic = UIComponent(context.component)
+                local mod_key = uic:GetProperty("mct_mod")
+
+                if not mod_key then
+                    logf("No mct_mod property for the UIcomponent clicked!")
+                    return
                 end
+
+                logf("mct_mod: %s", mod_key)
+
+                local mod_obj = mct:get_mod_by_key(mod_key)
+                local layout = uic:GetProperty("mct_layout")
+
+                -- we've selected a subheader of the currently selected mod - check if it's a different subheader than currently selected!
+                if is_string(layout) and layout ~= "" then
+                    --- TODO test if this layout is different than the currently selected layout
+                    uic:SetState("selected")
+
+                    -- self:set_selected_mod(mod_obj, layout)
+                else
+                    if mct:get_selected_mod() ~= mod_obj then
+                        -- trigger stuff on the right
+                        self:set_selected_mod(mod_obj)
+                    else
+                        -- we aren't changing rows, keep this one selected.
+                        uic:SetState("selected")
+                    end
+                end
+
             end,
             true
         )
@@ -1305,6 +1338,7 @@ function ui_obj:handle_tabs()
     -- )
 end
 
+--- TODO page support
 function ui_obj:populate_panel_on_mod_selected()
     local selected_mod = mct:get_selected_mod()
 
@@ -1358,6 +1392,8 @@ function ui_obj:create_sections_and_contents(this_layout)
     
 
     --- TODO create the Description layout first
+
+    --- TODO go through section, call section:draw() or w/e
     
     local ordered_section_keys = mod_obj:sort_sections()
 
@@ -1855,6 +1891,7 @@ function ui_obj:new_mod_row(mod_obj)
     end
     
     row:SetState("active")
+    row:SetProperty("mct_mod", mod_obj:get_key())
 
     local txt = find_uicomponent(row, "dy_title")
 
@@ -1878,6 +1915,48 @@ function ui_obj:new_mod_row(mod_obj)
     if is_string(tt) and tt ~= "" then
         row:SetTooltipText(tt, true)
     end
+
+    --- TODO create the subpages for this mod row and then hide them to be reopened when this mod is selected.
+    for page_key,_ in pairs(mod_obj._pages) do
+        local page_row = core:get_or_create_component(mod_obj:get_key().."_"..page_key, "ui/vandy_lib/row_header", self.mod_row_list_box)
+        page_row:SetVisible(true)
+        page_row:SetCanResizeHeight(true) page_row:SetCanResizeWidth(true)
+        page_row:Resize(self.mod_row_list_view:Width() * 0.8, page_row:Height() * 0.95)
+        page_row:SetDockingPoint(2)
+
+        page_row:SetProperty("mct_mod", mod_obj:get_key())
+        page_row:SetProperty("mct_layout", page_key)
+
+        local diff = row:Width() - page_row:Width()
+        page_row:SetDockOffset(diff - 5, 0)
+    
+        --- This hides the +/- button from the row headers.
+        for i = 0, page_row:NumStates() -1 do
+            page_row:SetState(page_row:GetStateByIndex(i))
+            page_row:SetCurrentStateImageOpacity(1, 0)
+        end
+        
+        page_row:SetState("active")
+    
+        local txt = find_uicomponent(page_row, "dy_title")
+    
+        txt:Resize(page_row:Width() * 0.9, page_row:Height() * 0.9)
+        txt:SetDockingPoint(2)
+        txt:SetDockOffset(10,0)
+    
+        _SetStateText(txt, page_key)
+    
+        -- local tt = mod_obj:get_tooltip_text()
+    
+        -- if is_string(tt) and tt ~= "" then
+        --     page_row:SetTooltipText(tt, true)
+        -- end
+
+        page_row:SetVisible(false)
+        mod_obj:set_page_uic(page_row)
+    end
+
+    mod_obj:set_row_uic(row)
 end
 
 --- TODO add MCT button to the Esc menu(?)

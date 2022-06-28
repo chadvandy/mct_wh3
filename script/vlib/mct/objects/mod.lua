@@ -141,6 +141,15 @@ local mct_mod_defaults = {
     ---@type string The tooltip text for this mod, shown on the row header.
     _tooltip_text = "",
     -- _workshop_url = "",
+
+    --- TODO create the Main page by default.
+    ---@type table<string, MCT.Layout> All of the Pages defined for this mod.
+    _pages = {},
+
+    _page_uics = {},
+
+    ---@type UIC The row header for this mod's main page
+    _row_uic = nil,
 }
 
 ---@class MCT.Mod : Class
@@ -1011,7 +1020,32 @@ function mct_mod:clear_uics(b)
     for _, section in pairs(sections) do
         section:clear_uics()
     end
+
+    self._row_uic = nil
 end
 
+--- Create a new page, with specified Layout and Title.
+---@param title string
+function mct_mod:create_new_page(title)
+    self._pages[title] = true
+end
+
+function mct_mod:set_page_uic(uic)
+    self._page_uics[#self._page_uics+1] = uic
+end
+
+--- INTERNAL ONLY.
+--- Set the row-header UIC for this mod object, for easy retrieval later.
+---@param uic UIC
+function mct_mod:set_row_uic(uic)
+    if not is_uicomponent(uic) then return end
+    
+    self._row_uic = uic
+end
+
+---@return UIC #The row header UIC for this mod.
+function mct_mod:get_row_uic()
+    return self._row_uic
+end
 
 return mct_mod

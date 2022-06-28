@@ -1,0 +1,1 @@
+--- TODO the system for handling global registry values, cvontext-specific registry values, and campaign-saved registry values

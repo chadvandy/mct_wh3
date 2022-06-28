@@ -2,6 +2,8 @@ local mct = get_mct()
 
 local mct_mod = mct:register_mod("mct_mod")
 
+mct_mod:create_new_page("Testing Page")
+
 -- mct_mod:set_tooltip_text("Testing this tooltip text out!")
 
 -- local section = mct_mod:add_new_section("my_section", "This Is My Section")
@@ -159,7 +161,7 @@ my_dummy:set_tooltip_text("Yallooooo")
 -- second_mod:set_author("")
 -- second_mod:set_title("bloop")
 
-for i = 1, 1000 do
-    local option = mct_mod:add_new_option("test_"..i, "checkbox")
-    option:set_default_value(math.random(1, 2) == 1)
-end
+-- for i = 1, 1000 do
+--     local option = mct_mod:add_new_option("test_"..i, "checkbox")
+--     option:set_default_value(math.random(1, 2) == 1)
+-- end

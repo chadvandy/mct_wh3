@@ -55,6 +55,10 @@ function mct:init()
     end
 end
 
+function mct:add_new_layout(key, layout)
+    self._LAYOUTS[key] = layout
+end
+
 --- Load up all the included modules for MCT - UI, Options, Settings, etc.
 function mct:load_modules()
     local path = "script/vlib/mct/"
@@ -62,12 +66,21 @@ function mct:load_modules()
     local ui_path = path .. "ui/"
     local obj_path = path .. "objects/"
     local options_path = path .. "option_types/"
+    local layout_path = path .. "layouts/"
 
     ---@type MCT.Settings
     self.settings = load_module("settings", core_path)
 
     ---@type MCT.UI
     self.ui = load_module("main", ui_path)
+
+    ---@type MCT.Layout
+    self._LAYOUT = load_module("layout", obj_path)
+
+    ---@type table<string, MCT.Layout>
+    self._LAYOUTS = { }
+
+    load_modules(layout_path, "*.lua")
 
     ---@type table<string, MCT.Option>
     self._MCT_TYPES = { }

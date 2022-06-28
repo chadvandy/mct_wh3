@@ -322,7 +322,7 @@ end
 
 ---- Set a UIC as visible or invisible, dynamically. If the UIC isn't created yet, it will get the applied setting when it is created.
 ---@param visibility boolean True for visible, false for invisible.
----@param keep_in_ui boolean This boolean determines whether this mct_option will exist at all in the UI. Tick this to true to make the option invisible but still have a "gap" in the UI where it would be placed. Set this to false to make that spot be taken by the next otion. ONLY AFFECTS INITIAL UI CREATION.
+---@param keep_in_ui boolean? This boolean determines whether this mct_option will exist at all in the UI. Tick this to true to make the option invisible but still have a "gap" in the UI where it would be placed. Set this to false to make that spot be taken by the next otion. ONLY AFFECTS INITIAL UI CREATION.
 function mct_option:set_uic_visibility(visibility, keep_in_ui)
     -- default to true if a param isn't provided
     if is_nil(visibility) then

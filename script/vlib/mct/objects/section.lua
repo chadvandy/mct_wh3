@@ -132,6 +132,9 @@ local mct_section_defaults = {
     ---@type MCT.Mod
     _mod = nil,
 
+    ---@type boolean Whether this section can be collapsed
+    _is_collapsible = false,
+
     ---@type function
     _visibility_change_callback = nil,
 
@@ -493,8 +496,19 @@ function mct_section:assign_option(option_obj)
     option_obj._assigned_section = self:get_key() -- we can't call option_obj:set_assigned_section here without creating an infinite loop
 end
 
+function mct_section:get_collapsible()
+    return self._is_collapsible
+end
+
+function mct_section:set_is_collapsible(b)
+    if is_nil(b) then b = true end
+    if not is_boolean(b) then return false end
+
+    self._is_collapsible = b
+end
+
 --- Return all the options assigned to the mct_section.
--- @treturn {[string]=mct_object,...} The table of all the options in this mct_section.
+---@return table<string,MCT.Option> #The table of all the options in this mct_section.
 function mct_section:get_options()
     return self._options
 end
