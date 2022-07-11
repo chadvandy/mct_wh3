@@ -1,6 +1,6 @@
 ---@alias MCT.OptionType 'slider'|'dropdown'|'checkbox'|'text_input'
 
----@class ModConfigurationTool:Class
+---@class ModConfigurationTool : Class
 local mct_defaults = {
     _mods_path = "/script/mct/settings/",
     _self_path = "/script/vlib/mct/",
@@ -9,13 +9,15 @@ local mct_defaults = {
     _initialized = false,
     
     _registered_mods = {},
-    _selected_mod = nil,
+
+    ---@type string[] #Index 1 is the mct_mod key, index 2 is the mct_layout key.
+    _selected_mod = {"", ""},
 }
 
 local load_module = VLib.LoadModule
 local load_modules = VLib.LoadModules
 
----@type ModConfigurationTool
+---@class ModConfigurationTool
 local mct = VLib.NewClass("ModConfigurationTool", mct_defaults)
 
 --- Initial creation and loading of MCT, and all the individual MCT Mods.
@@ -55,8 +57,17 @@ function mct:init()
     end
 end
 
-function mct:add_new_layout(key, layout)
-    self._LAYOUTS[key] = layout
+--- Create a new MCT.Page type
+---@param key string
+---@param layout MCT.Page
+function mct:add_new_page_type(key, layout)
+    self._MCT_PAGE_TYPES[key] = layout
+end
+
+---@param key string
+---@return MCT.Page
+function mct:get_page_type(key)
+    return self._MCT_PAGE_TYPES[key]
 end
 
 --- Load up all the included modules for MCT - UI, Options, Settings, etc.
@@ -74,11 +85,11 @@ function mct:load_modules()
     ---@type MCT.UI
     self.ui = load_module("main", ui_path)
 
-    ---@type MCT.Layout
-    self._LAYOUT = load_module("layout", obj_path)
+    ---@type MCT.Page
+    self._MCT_PAGE = load_module("layout", obj_path)
 
-    ---@type table<string, MCT.Layout>
-    self._LAYOUTS = { }
+    ---@type table<string, MCT.Page>
+    self._MCT_PAGE_TYPES = { }
 
     load_modules(layout_path, "*.lua")
 
@@ -250,17 +261,21 @@ function mct:open_panel()
     self.ui:open_frame()
 end
 
-function mct:set_selected_mod(mod_name)
-    self._selected_mod = mod_name
+function mct:set_selected_mod(mod_name, layout_name)
+    self._selected_mod  = {
+        mod_name,
+        layout_name,
+    }
 end
 
 function mct:get_selected_mod_name()
-    return self._selected_mod
+    return self._selected_mod[1]
 end
 
 ---@return MCT.Mod
+---@return string #The key of the Layout page. TODO return the actual page.
 function mct:get_selected_mod()
-    return is_string(self:get_selected_mod_name()) and self:get_mod_by_key(self:get_selected_mod_name())
+    return is_string(self:get_selected_mod_name()) and self:get_mod_by_key(self:get_selected_mod_name()), self._selected_mod[2]
 end
 
 
@@ -471,6 +486,7 @@ function mct:get_valid_option_types_table()
     return o
 end
 
+---@return ModConfigurationTool
 function get_mct()
     return mct
 end

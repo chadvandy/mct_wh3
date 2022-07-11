@@ -2,7 +2,7 @@ local mct = get_mct()
 
 local mct_mod = mct:register_mod("mct_mod")
 
-mct_mod:create_new_page("Testing Page")
+mct_mod:create_infobox_page("Testing Page", "My Description", "ui/skins/default/advisor_beastmen_2d.png")
 
 -- mct_mod:set_tooltip_text("Testing this tooltip text out!")
 

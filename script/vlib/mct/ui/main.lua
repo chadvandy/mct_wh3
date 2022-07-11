@@ -46,9 +46,6 @@ local ui_obj = {
     -- currently selected mod UIC
     selected_mod_row = nil,
 
-    ---@type MCT.Layout? The currently opened page for the selected mod.
-    selected_page = nil,
-
     -- var to read whether there have been any settings changed while the panel has been opened
     locally_edited = false,
 
@@ -304,8 +301,9 @@ function ui_obj:create_popup(key, text, two_buttons, button_one_callback, button
     end
 end
 
---- TODO pass forward the mod object and get the row uic through the mod obj
+--- TODO if no layout object is supplied, assume "Main" page
 ---@param mod_obj MCT.Mod
+---@param layout string #TODO make it the Layout object
 function ui_obj:set_selected_mod(mod_obj, layout)
     -- deselect the former one
     local former = mct:get_selected_mod()
@@ -373,7 +371,7 @@ function ui_obj:open_frame()
             self:new_mod_row(mod_obj)
         end
 
-        self:set_selected_mod("mct_mod")
+        self:set_selected_mod(mct:get_mod_by_key("mct_mod"))
         self.mod_row_list_box:Layout()
 
         --- The listener for selecting an individual mod
@@ -400,14 +398,19 @@ function ui_obj:open_frame()
                 local mod_obj = mct:get_mod_by_key(mod_key)
                 local layout = uic:GetProperty("mct_layout")
 
+                local selected_mod, selected_layout = mct:get_selected_mod()
+
                 -- we've selected a subheader of the currently selected mod - check if it's a different subheader than currently selected!
                 if is_string(layout) and layout ~= "" then
                     --- TODO test if this layout is different than the currently selected layout
                     uic:SetState("selected")
 
+                    if selected_layout ~= layout then
+                        self:set_selected_mod(mod_obj, layout)
+                    end
                     -- self:set_selected_mod(mod_obj, layout)
                 else
-                    if mct:get_selected_mod() ~= mod_obj then
+                    if selected_mod ~= mod_obj then
                         -- trigger stuff on the right
                         self:set_selected_mod(mod_obj)
                     else
@@ -1892,6 +1895,7 @@ function ui_obj:new_mod_row(mod_obj)
     
     row:SetState("active")
     row:SetProperty("mct_mod", mod_obj:get_key())
+    row:SetProperty("mct_layout", "main")
 
     local txt = find_uicomponent(row, "dy_title")
 
@@ -1917,43 +1921,8 @@ function ui_obj:new_mod_row(mod_obj)
     end
 
     --- TODO create the subpages for this mod row and then hide them to be reopened when this mod is selected.
-    for page_key,_ in pairs(mod_obj._pages) do
-        local page_row = core:get_or_create_component(mod_obj:get_key().."_"..page_key, "ui/vandy_lib/row_header", self.mod_row_list_box)
-        page_row:SetVisible(true)
-        page_row:SetCanResizeHeight(true) page_row:SetCanResizeWidth(true)
-        page_row:Resize(self.mod_row_list_view:Width() * 0.8, page_row:Height() * 0.95)
-        page_row:SetDockingPoint(2)
-
-        page_row:SetProperty("mct_mod", mod_obj:get_key())
-        page_row:SetProperty("mct_layout", page_key)
-
-        local diff = row:Width() - page_row:Width()
-        page_row:SetDockOffset(diff - 5, 0)
-    
-        --- This hides the +/- button from the row headers.
-        for i = 0, page_row:NumStates() -1 do
-            page_row:SetState(page_row:GetStateByIndex(i))
-            page_row:SetCurrentStateImageOpacity(1, 0)
-        end
-        
-        page_row:SetState("active")
-    
-        local txt = find_uicomponent(page_row, "dy_title")
-    
-        txt:Resize(page_row:Width() * 0.9, page_row:Height() * 0.9)
-        txt:SetDockingPoint(2)
-        txt:SetDockOffset(10,0)
-    
-        _SetStateText(txt, page_key)
-    
-        -- local tt = mod_obj:get_tooltip_text()
-    
-        -- if is_string(tt) and tt ~= "" then
-        --     page_row:SetTooltipText(tt, true)
-        -- end
-
-        page_row:SetVisible(false)
-        mod_obj:set_page_uic(page_row)
+    for page_key,page_obj in pairs(mod_obj._pages) do
+        page_obj:create_row_uic()
     end
 
     mod_obj:set_row_uic(row)

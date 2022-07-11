@@ -143,8 +143,11 @@ local mct_mod_defaults = {
     -- _workshop_url = "",
 
     --- TODO create the Main page by default.
-    ---@type table<string, MCT.Layout> All of the Pages defined for this mod.
+    ---@type table<string, MCT.Page> All of the Pages defined for this mod.
     _pages = {},
+
+    ---@type MCT.Page the Main page for this mod, the one that will open on pressing the mod header.
+    _main_page = nil,
 
     _page_uics = {},
 
@@ -164,11 +167,17 @@ function mct_mod:new(key)
     local o = mct_mod:__new()
     o._key = key
 
+    -- o:create_new_page("main", mct)
+
     --- TODO do I want this?
     -- start with the default section, if none are specified this is what's used
     o:add_new_section("default", "mct_mct_mod_default_section_text", true)
 
     return o
+end
+
+function mct_mod:get_main_page()
+    return self._main_page
 end
 
 -- TODO move this back to settings?
@@ -228,6 +237,25 @@ function mct_mod:save_mct_settings()
     retstr = retstr .. "\t},\n"
 
     return retstr
+end
+
+--- Create a new page of specified type
+---@param page_name string
+---@param page_type any
+function mct_mod:create_new_page(page_name, page_type)
+    --- TODO default type!
+    if not page_type then page_type = "Infobox" end
+    local page_class = mct:get_page_type(page_type)
+    if page_class then
+        self._pages[page_name] = page_class:new(page_name, self)
+    end
+end
+
+function mct_mod:create_infobox_page(title, description, image_path, workshop_link)
+    logf("Creating new Infobox page for %s", self:get_key())
+    local page_class = mct:get_page_type("Infobox")
+    ---@cast page_class MCT.Page.Infobox
+    self._pages[title] = page_class:new(title, self, description, image_path, workshop_link)
 end
 
 --- Getter for any @{mct_section}s linked to this mct_mod.
@@ -1022,12 +1050,6 @@ function mct_mod:clear_uics(b)
     end
 
     self._row_uic = nil
-end
-
---- Create a new page, with specified Layout and Title.
----@param title string
-function mct_mod:create_new_page(title)
-    self._pages[title] = true
 end
 
 function mct_mod:set_page_uic(uic)

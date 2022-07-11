@@ -40,7 +40,7 @@ end
 --- @return boolean valid_return If the value passed isn't valid, a second return is sent, for a valid value to replace the tested one with.
 function Slider:check_validity(value)
     if not is_number(value) then
-        return false
+        return false, false
     end
 
     local values = self:get_values()
@@ -58,6 +58,7 @@ function Slider:check_validity(value)
     local test = self:slider_get_precise_value(value, false)
     
     if test ~= value then
+        ---@cast test boolean
         -- not precise!
         return false, test
     end

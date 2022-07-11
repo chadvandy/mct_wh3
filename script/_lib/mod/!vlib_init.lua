@@ -6,11 +6,11 @@ local new_class = require "script.vlib.includes.30-log"
 local defaults = {
     ---@type table<string, VLib.Log>
     logs = {
-        lib = nil,
+        -- lib = nil,
     },
 }
 
----@class VLib
+---@class VLib : Class
 VLib = new_class("VLib", defaults)
 
 ---@class VLib.Log : Class
@@ -28,14 +28,14 @@ local log_defaults = {
     file = nil,
 }
 
----@class VLib.Log
+---@class VLib.Log : Class
 ---@field __new fun():VLib.Log
 local Log = new_class("VLib_Log", log_defaults)
 
 --- Create a new Log Object.
 ---@param key string
----@param file_name string
----@param prefix string
+---@param file_name string?
+---@param prefix string?
 function Log.new(key, file_name, prefix)
     local o = Log:__new()
     o:init(key, file_name, prefix)
@@ -148,7 +148,7 @@ end
 
 --- Get the @LogObj with this name.
 ---@param name string? The name of the log object when created. Leave blank to get the default one.
----@return VLib.Log
+---@return VLib.Log?
 function VLib.GetLog(name)
     if not is_string(name) then name = "lib" end
     local t = VLib.logs[name]

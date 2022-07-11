@@ -1,1 +1,0 @@
---- TODO the default Layout (three equal columns which can take )
