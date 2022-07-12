@@ -11,8 +11,9 @@
     "Lua.diagnostics.disable": [
         "lowercase-global",
         "need-check-nil",
-        "assign-type-mismatch",
         "return-type-mismatch",
-        "param-type-mismatch"
+        "param-type-mismatch",
+        "assign-type-mismatch",
+        "missing-return-value"
     ],
 }

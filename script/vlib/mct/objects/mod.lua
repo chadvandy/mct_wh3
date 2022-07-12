@@ -167,7 +167,14 @@ function mct_mod:new(key)
     local o = mct_mod:__new()
     o._key = key
 
+    local ok, err = pcall(function()
     -- o:create_new_page("main", mct)
+    local settings = o:add_new_page("settings", "SettingsThreeColumns")
+    logf("Created settings page: " .. tostring(settings))
+    o:set_main_page(settings)
+    o:create_infobox_page("Testing Infobox", "This is my test of the emergency infobox system")
+
+    end) if not ok then VLib.Error(err) end
 
     --- TODO do I want this?
     -- start with the default section, if none are specified this is what's used
@@ -178,6 +185,16 @@ end
 
 function mct_mod:get_main_page()
     return self._main_page
+end
+
+function mct_mod:get_page_with_key(key)
+    return self._pages[key]
+end
+
+---@param page MCT.Page
+function mct_mod:set_main_page(page)
+    logf("Setting main page of %s to %s", self:get_key(), page:get_key())
+    self._main_page = page
 end
 
 -- TODO move this back to settings?
@@ -242,12 +259,16 @@ end
 --- Create a new page of specified type
 ---@param page_name string
 ---@param page_type any
-function mct_mod:create_new_page(page_name, page_type)
+function mct_mod:add_new_page(page_name, page_type)
+    logf("adding a new page to %s", self:get_key())
     --- TODO default type!
     if not page_type then page_type = "Infobox" end
     local page_class = mct:get_page_type(page_type)
     if page_class then
+        logf("Adding a new page to %s of type %s with name %s", self:get_key(), page_type, page_name)
         self._pages[page_name] = page_class:new(page_name, self)
+
+        return self._pages[page_name]
     end
 end
 

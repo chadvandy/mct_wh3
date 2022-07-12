@@ -10,14 +10,14 @@ local mct_defaults = {
     
     _registered_mods = {},
 
-    ---@type string[] #Index 1 is the mct_mod key, index 2 is the mct_layout key.
-    _selected_mod = {"", ""},
+    ---@type {[1]: MCT.Mod, [2]: MCT.Page}
+    _selected_mod = {nil, nil},
 }
 
 local load_module = VLib.LoadModule
 local load_modules = VLib.LoadModules
 
----@class ModConfigurationTool
+---@class ModConfigurationTool : Class
 local mct = VLib.NewClass("ModConfigurationTool", mct_defaults)
 
 --- Initial creation and loading of MCT, and all the individual MCT Mods.
@@ -261,24 +261,25 @@ function mct:open_panel()
     self.ui:open_frame()
 end
 
-function mct:set_selected_mod(mod_name, layout_name)
+---comment
+---@param mod_obj MCT.Mod
+---@param page_obj MCT.Page
+function mct:set_selected_mod(mod_obj, page_obj)
     self._selected_mod  = {
-        mod_name,
-        layout_name,
+        mod_obj,
+        page_obj,
     }
 end
 
 function mct:get_selected_mod_name()
-    return self._selected_mod[1]
+    return self._selected_mod[1]:get_key()
 end
 
 ---@return MCT.Mod
----@return string #The key of the Layout page. TODO return the actual page.
+---@return MCT.Page #The opened page.
 function mct:get_selected_mod()
-    return is_string(self:get_selected_mod_name()) and self:get_mod_by_key(self:get_selected_mod_name()), self._selected_mod[2]
+    return self._selected_mod[1], self._selected_mod[2]
 end
-
-
 
 function mct:has_mod_with_name_been_registered(mod_name)
     return not not self._registered_mods[mod_name]

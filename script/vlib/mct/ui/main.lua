@@ -303,8 +303,9 @@ end
 
 --- TODO if no layout object is supplied, assume "Main" page
 ---@param mod_obj MCT.Mod
----@param layout string #TODO make it the Layout object
-function ui_obj:set_selected_mod(mod_obj, layout)
+---@param page MCT.Page #TODO make it the Layout object
+function ui_obj:set_selected_mod(mod_obj, page)
+    local ok, err = pcall(function()
     -- deselect the former one
     local former = mct:get_selected_mod()
     if former then
@@ -315,18 +316,20 @@ function ui_obj:set_selected_mod(mod_obj, layout)
     if is_uicomponent(former_uic) then
         former_uic:SetState("active")
 
-        for i,page_uic in ipairs(former._page_uics) do
-            page_uic:SetVisible(false)
-        end
+        -- for i,page_uic in ipairs(former._page_uics) do
+        --     page_uic:SetVisible(false)
+        -- end
     end
 
-    local row_uic = mod_obj:get_row_uic()
+    local mod_key = mod_obj:get_key()
+    local page_key = page:get_key()
+    local row_uic = page:get_row_uic()
 
     if is_uicomponent(row_uic) then
         --- TODO if layout, then set the main row as active, select the page, and populate that shit
 
         row_uic:SetState("selected")
-        mct:set_selected_mod(row_uic:Id())
+        mct:set_selected_mod(mod_obj, page)
         self.selected_mod_row = row_uic
 
         for i,page_uic in ipairs(mct:get_selected_mod()._page_uics) do
@@ -334,8 +337,24 @@ function ui_obj:set_selected_mod(mod_obj, layout)
             page_uic:SetState("active")
         end
 
-        self:populate_panel_on_mod_selected()
-    end
+        local uic = self.mod_settings_panel
+        local list = find_uicomponent(uic, "list_view")
+        local box = find_uicomponent(list, "list_clip", "list_box")
+        box:DestroyChildren()
+        box:Layout()
+        box:Resize(list:Width(), list:Height())
+    
+        self:set_title(mod_obj)
+        page:populate(box)
+
+        box:Layout()
+        
+        --- Needed? TODO
+        self:set_actions_states()
+
+        core:trigger_custom_event("MctPanelPopulated", {["mct"] = mct, ["ui_obj"] = self, ["mod"] = mod_obj, ["page"] = page})
+        
+    end end) if not ok then VLib.Error(err) end
 end
 
 function ui_obj:get_selected_mod()
@@ -371,7 +390,8 @@ function ui_obj:open_frame()
             self:new_mod_row(mod_obj)
         end
 
-        self:set_selected_mod(mct:get_mod_by_key("mct_mod"))
+        local mct_mod = mct:get_mod_by_key("mct_mod")
+        self:set_selected_mod(mct_mod, mct_mod:get_main_page())
         self.mod_row_list_box:Layout()
 
         --- The listener for selecting an individual mod
@@ -393,26 +413,27 @@ function ui_obj:open_frame()
                     return
                 end
 
-                logf("mct_mod: %s", mod_key)
-
+                
                 local mod_obj = mct:get_mod_by_key(mod_key)
-                local layout = uic:GetProperty("mct_layout")
+                local layout_key = uic:GetProperty("mct_layout")
+                
+                logf("mct_mod: %s", mod_key)
+                logf("mct_page: %s", layout_key)
 
                 local selected_mod, selected_layout = mct:get_selected_mod()
 
                 -- we've selected a subheader of the currently selected mod - check if it's a different subheader than currently selected!
-                if is_string(layout) and layout ~= "" then
+                if is_string(layout_key) and layout_key ~= "" then
                     --- TODO test if this layout is different than the currently selected layout
                     uic:SetState("selected")
 
-                    if selected_layout ~= layout then
-                        self:set_selected_mod(mod_obj, layout)
+                    if selected_layout:get_key() ~= layout_key then
+                        self:set_selected_mod(mod_obj, mod_obj:get_page_with_key(layout_key))
                     end
-                    -- self:set_selected_mod(mod_obj, layout)
                 else
                     if selected_mod ~= mod_obj then
                         -- trigger stuff on the right
-                        self:set_selected_mod(mod_obj)
+                        self:set_selected_mod(mod_obj, mod_obj:get_main_page())
                     else
                         -- we aren't changing rows, keep this one selected.
                         uic:SetState("selected")
@@ -1169,7 +1190,7 @@ function ui_obj:create_right_panel()
 
     local w,h = mod_settings_panel:Dimensions()
 
-    local mod_settings_listview = core:get_or_create_component("settings_list_view", "ui/templates/listview", mod_settings_panel)
+    local mod_settings_listview = core:get_or_create_component("list_view", "ui/mct/listview", mod_settings_panel)
     mod_settings_listview:SetDockingPoint(1)
     mod_settings_listview:SetDockOffset(0, 10)
     mod_settings_listview:SetCanResizeWidth(true) mod_settings_listview:SetCanResizeHeight(true)
@@ -1199,356 +1220,13 @@ function ui_obj:create_right_panel()
     self.mod_settings_panel = mod_settings_panel
 end
 
---- TODO affect order
---- TODO check if there's already a tab by this name
---- Create a new tab for the UI.
----@param name string The key for this tab.
----@param icon string The icon for this tab. Just provide the "name.png"; it must be a skinned file, ie. in ui/skins/default.
-function ui_obj:new_tab(name, icon)
-    -- if not is_string(name) or not is_string(icon) then return end
-
-    -- self._tabs[#self._tabs+1] = {
-    --     name,
-    --     icon
-    -- }
-end
-
----comment
----@param tab_name string
----@param callback fun(ui_obj:MCT.UI, mod:MCT.Mod, list_view:UIComponent)
----@return boolean
-function ui_obj:set_tab_action(tab_name, callback)
-    -- if not is_string(tab_name) then return false end
-    -- if not is_function(callback) then return false end
-
-    -- self._tab_actions[tab_name] = callback
-end
-
---- TODO completely hide a tab if it's just not used.
-function ui_obj:set_tab_validity_check(tab_name, callback)
-    -- if not is_string(tab_name) then return false end
-    -- if not is_function(callback) then return false end
-
-    -- self._tab_validity[tab_name] = callback
-end
-
--- Run through the tabs, and reposition them based on who is visible.
-function ui_obj:position_tabs()
---     local selected_mod = mct:get_selected_mod()
---     local mod_settings_panel = self.mod_settings_panel
---     local tab_holder = find_uicomponent(mod_settings_panel, "tab_holder")
-
---     local num = 1
-
---     for i = 0, tab_holder:ChildCount() -1 do
---         local child = UIComponent(tab_holder:Find(i))
-
---         if child:Visible() then
---             child:SetDockOffset(child:Width() * 1.2 * (num-1), 0)
---             num = num + 1
---         end
---     end
-end
-
-function ui_obj:set_tab_active(tab_name)
---     local selected_mod = mct:get_selected_mod()
---     local mod_settings_panel = self.mod_settings_panel
---     local tab_holder = find_uicomponent(mod_settings_panel, "tab_holder")
-
---     local logging_list_view = find_uicomponent(mod_settings_panel, "logging_list_view")
---     local settings_list_view = find_uicomponent(mod_settings_panel, "settings_list_view")
---     local patch_notes_list_view = find_uicomponent(mod_settings_panel, "patch_notes_list_view")
-
---     local lists = {
---         logging_list_view,
---         settings_list_view,
---         patch_notes_list_view,
---     }
-
---     for i = 0, tab_holder:ChildCount() -1 do
---         local child = UIComponent(tab_holder:Find(i))
---         if child:CurrentState() ~= "inactive" then
---             if child:Id() == tab_name.."_tab" then
---                 local str = common.get_localised_string("mct_"..tab_name.."_tab_selected")
---                 child:SetState("selected")
---                 child:SetTooltipText(str, true)
---             else
---                 local str = common.get_localised_string("mct_"..child:Id().."_active")
---                 child:SetState("active")
---                 child:SetTooltipText(str, true)
---             end
---         end
---     end
-
---     for i = 1, #lists do
---         local list = lists[i]
---         if list:Id() == tab_name.."_list_view" then
---             list:SetVisible(true)
-
---             -- self:populate_tab(tab_name, selected_mod, list)
---         else
---             list:SetVisible(false)
---         end
---     end
-end
-
-function ui_obj:handle_tabs()
-    -- local selected_mod = mct:get_selected_mod()
-    -- local mod_settings_panel = self.mod_settings_panel
-    -- local tab_holder = find_uicomponent(mod_settings_panel, "tab_holder")
-
-    -- for tab_name,validity_check in pairs(self._tab_validity) do
-    --     local ok,msg = validity_check(self, selected_mod)
-    --     local tab = find_uicomponent(tab_holder, tab_name.."_tab")
-
-    --     --- TODO hook it up so if no msg is returned, set the tab completely invisible.
-    --     if not ok then
-    --         if not msg then
-    --             tab:SetVisible(false)
-    --         else
-    --             tab:SetVisible(true)
-    --             tab:SetState("inactive")
-    --             local str = common.get_localised_string("mct_"..tab_name.."_tab_inactive") .. msg
-                
-    --             tab:SetTooltipText(str, true)
-    --         end
-    --     else
-    --         tab:SetVisible(true)
-    --         local str = common.get_localised_string("mct_"..tab_name.."_tab_active")
-
-    --         -- set it active!
-    --         tab:SetState("active")
-    --         tab:SetTooltipText(str, true)
-    --     end
-    -- end
-
-    -- self:position_tabs()
-
-    -- self:set_tab_active("settings")
-
-    -- core:remove_listener("mct_tab_listeners")
-    -- core:add_listener(
-    --     "mct_tab_listeners",
-    --     "ComponentLClickUp",
-    --     function(context)
-    --         local uic = UIComponent(context.component)
-    --         return uicomponent_descended_from(uic, "tab_holder") and uicomponent_descended_from(uic, "mct_options")
-    --     end,
-    --     function(context)
-    --         self:set_tab_active(context.string:gsub("_tab", ""))
-    --     end,
-    --     true
-    -- )
-end
-
---- TODO page support
-function ui_obj:populate_panel_on_mod_selected()
-    local selected_mod = mct:get_selected_mod()
-
-    -- set the positions for all options in the mod
-    selected_mod:set_positions_for_options()
-
-    self:set_actions_states()
-
-    log("Mod selected ["..selected_mod:get_key().."]")
-
-    -- local mod_details_panel = self.mod_details_panel
-    local mod_settings_panel = self.mod_settings_panel
+function ui_obj:set_title(mod_obj)
     local mod_title = self.mod_title
-
-    local title = selected_mod:get_title()
+    local title = mod_obj:get_title()
 
     mod_title:SetStateText(title)
-
-    -- refresh the display once all the option rows are created!
-    local box = find_uicomponent(mod_settings_panel, "settings_list_view", "list_clip", "list_box")
-    if not is_uicomponent(box) then
-        -- TODO issue
-        return
-    end
-
-    box:DestroyChildren()
-
-    
-    --- TODO go through each Layout, then each Section within.
-    local ok, msg = pcall(function()
-        local this_layout = core:get_or_create_component("settings_layout", "ui/mct/layouts/three_column", box)
-        self:create_sections_and_contents(this_layout)
-    end) if not ok then logerr(msg) end
-
-
-    box:Layout()
-    box:SetVisible(true)
-
-    self:handle_tabs()
-
-    core:trigger_custom_event("MctPanelPopulated", {["mct"] = mct, ["ui_obj"] = self, ["mod"] = selected_mod})
 end
 
-function ui_obj:create_sections_and_contents(this_layout)
-    local mod_obj = mct:get_selected_mod()
-
-    local mod_settings_panel = self.mod_settings_panel
-    -- local mod_settings_box = find_uicomponent(mod_settings_panel, "settings_list_view", "list_clip", "list_box")
-
-    core:remove_listener("MCT_SectionHeaderPressed")
-    
-
-    --- TODO create the Description layout first
-
-    --- TODO go through section, call section:draw() or w/e
-    
-    local ordered_section_keys = mod_obj:sort_sections()
-
-    for _, section_key in ipairs(ordered_section_keys) do
-        local section_obj = mod_obj:get_section_by_key(section_key);
-
-        if not section_obj or section_obj._options == nil or next(section_obj._options) == nil then
-            -- skip
-        else
-            -- make sure the dummy rows table is clear before doing anything
-            section_obj._dummy_rows = {}
-
-            -- first, create the section header
-            local section_header = core:get_or_create_component("mct_section_"..section_key, "ui/vandy_lib/row_header", this_layout)
-            --local open = true
-
-            section_obj._header = section_header
-
-            --- TODO set this in a Section method, mct_section:set_is_collapsible() or whatever
-            core:add_listener(
-                "MCT_SectionHeaderPressed",
-                "ComponentLClickUp",
-                function(context)
-                    return context.string == "mct_section_"..section_key
-                end,
-                function(context)
-                    local visible = section_obj:is_visible()
-                    section_obj:set_visibility(not visible)
-                end,
-                true
-            )
-
-            -- TODO set text & width and shit
-            section_header:SetCanResizeWidth(true)
-            -- section_header:SetCanResizeHeight(false)
-            section_header:Resize(mod_settings_panel:Width() * 0.30, section_header:Height())
-            section_header:SetDockingPoint(2)
-            -- section_header:SetCanResizeWidth(false)
-
-            -- section_header:SetDockOffset(mod_settings_box:Width() * 0.005, 0)
-            
-            -- local child_count = find_uicomponent(section_header, "child_count")
-            -- _SetVisible(child_count, false)
-
-            local text = section_obj:get_localised_text()
-            local tt_text = section_obj:get_tooltip_text()
-
-            local dy_title = find_uicomponent(section_header, "dy_title")
-            dy_title:SetStateText(text)
-
-            if tt_text ~= "" then
-                _SetTooltipText(section_header, tt_text, true)
-            end
-
-            -- lastly, create all the rows and options within
-            --local num_remaining_options = 0
-            local valid = true
-
-            -- this is the table with the positions to the options
-            -- ie. options_table["1,1"] = "option 1 key"
-            -- local options_table, num_remaining_options = section_obj:get_ordered_options()
-
-            for i,option_key in ipairs(section_obj._true_ordered_options) do
-                local option_obj = mod_obj:get_option_by_key(option_key)
-                self:new_option_row_at_pos(option_obj, this_layout) 
-            end
-
-            -- add a new column (and potentially, row, if x==1) for this position
-
-            -- local x = 1
-            -- local y = 1
-
-            -- local function move_to_next()
-            --     if x >= 3 then
-            --         x = 1
-            --         y = y + 1
-            --     else
-            --         x = x + 1
-            --     end
-            -- end
-
-            -- -- prevent infinite loops, will only do nothing 3 times
-            -- local loop_num = 0
-
-            -- --TODO resolve this to better make the dummy rows/columns when nothing is assigned to it
-
-            -- while valid do
-            --     --loop_num = loop_num + 1
-            --     if num_remaining_options < 1 then
-            --         -- log("No more remaining options!")
-            --         -- no more options, abort!
-            --         break
-            --     end
-
-            --     if loop_num >= 3 then
-            --         break
-            --     end
-
-            --     local index = tostring(x) .. "," .. tostring(y)
-            --     local option_key = options_table[index]
-
-            --     -- check to see if any option was even made at this index!
-            --     --[[if option_key == nil then
-            --         -- skip, go to the next index
-            --         move_to_next()
-
-            --         -- prevent it from looping without doing anything more than 6 times
-            --         loop_num = loop_num + 1
-            --     else]]
-            --     --loop_num = 0
-
-            --     if option_key == nil then option_key = "MCT_BLANK" end
-                
-            --     local option_obj
-            --     if is_string(option_key) then
-            --         --log("Populating UI option at index ["..index.."].\nOption key ["..option_key.."]")
-            --         if option_key == "NONE" then
-            --             -- no option objects remaining, kill the engine
-            --             break
-            --         end
-            --         if option_key == "MCT_BLANK" then
-            --             option_obj = option_key
-            --             loop_num = loop_num + 1
-            --         else
-            --             -- only iterate down this iterator when it's a real option
-            --             num_remaining_options = num_remaining_options - 1
-            --             loop_num = 0
-            --             option_obj = mod_obj:get_option_by_key(option_key)
-            --         end
-
-            --         if not mct:is_mct_option(option_obj) then
-            --             logerr("no option found with the key ["..option_key.."]. Issue!")
-            --         else
-
-            --         end
-
-            --     else
-            --         -- issue? break? dunno?
-            --         log("issue? break? dunno?")
-            --         break
-            --     end
-        
-            --     -- move the coords down and to the left when the row is done, or move over one space if the row isn't done
-            --     move_to_next()
-            --     --end
-            -- end
-
-            -- set own visibility (for sections that default to closed)
-            section_obj:uic_visibility_change(true)
-        end
-    end
-end
 
 function ui_obj:new_option_row_at_pos(option_obj, this_layout)
     local dummy_option = core:get_or_create_component(option_obj:get_key(), "ui/campaign ui/script_dummy", this_layout)
@@ -1689,7 +1367,7 @@ end
 ---@param option_obj MCT.Option
 function ui_obj:old_new_option_row_at_pos(option_obj, x, y, section_key)
     local mod_settings_panel = self.mod_settings_panel
-    local list = find_uicomponent(mod_settings_panel, "settings_list_view")
+    local list = find_uicomponent(mod_settings_panel, "list_view")
     local mod_settings_box = find_uicomponent(list , "list_clip", "list_box")
     local section_obj = option_obj:get_mod():get_section_by_key(section_key)
 
@@ -1895,7 +1573,7 @@ function ui_obj:new_mod_row(mod_obj)
     
     row:SetState("active")
     row:SetProperty("mct_mod", mod_obj:get_key())
-    row:SetProperty("mct_layout", "main")
+    row:SetProperty("mct_layout", mod_obj:get_main_page():get_key())
 
     local txt = find_uicomponent(row, "dy_title")
 
@@ -1922,9 +1600,13 @@ function ui_obj:new_mod_row(mod_obj)
 
     --- TODO create the subpages for this mod row and then hide them to be reopened when this mod is selected.
     for page_key,page_obj in pairs(mod_obj._pages) do
-        page_obj:create_row_uic()
+        --- if page_obj is the  main_page then don't do anything (because that row header has already been made!)
+        if page_obj ~= mod_obj:get_main_page() then
+            page_obj:create_row_uic()
+        end
     end
 
+    mod_obj:get_main_page():set_row_uic(row)
     mod_obj:set_row_uic(row)
 end
 

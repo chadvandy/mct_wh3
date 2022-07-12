@@ -45,6 +45,15 @@ function Page:get_row_uic()
     return self.row_uic
 end
 
+function Page:get_key()
+    return self.key
+end
+
+--- TODO Create the UI panel for this layout.
+function Page:populate(panel)
+
+end
+
 --- Called on UIC creation.
 function Page:create_row_uic()
     local left_panel = get_mct().ui.mod_row_list_box
@@ -83,7 +92,7 @@ function Page:create_row_uic()
     -- if is_string(tt) and tt ~= "" then
     --     page_row:SetTooltipText(tt, true)
     -- end
-    page_row:SetVisible(false)
+    -- page_row:SetVisible(false)
 
     self:set_row_uic(page_row)
 

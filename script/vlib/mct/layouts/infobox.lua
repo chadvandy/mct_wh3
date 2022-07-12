@@ -24,7 +24,7 @@ function Infobox:new(key, mod, description, image_path, workshop_link)
     VLib.Log("In infobox:new()")
     local o = self:__new()
     ---@cast o MCT.Page.Infobox
-    o:init(key, mod, description, workshop_link, image_path)
+    o:init(key, mod, description, image_path, workshop_link)
 
     return o
 end
@@ -41,16 +41,20 @@ function Infobox:init(key, mod, description, image_path, workshop_link)
 end
 
 --- TODO draw in the UI
-function Infobox:create()
-    local uic = get_mct().ui.mod_settings_panel
+function Infobox:populate(box)
+    local uic = core:get_or_create_component("infobox", "ui/campaign ui/script_dummy", box)
+    uic:SetDockingPoint(2)
+    uic:Resize(box:Width() * 0.9, box:Height())
 
     local xo,yo = 0,0
     if self.image_path then
         local img = core:get_or_create_component("image", "ui/vandy_lib/image", uic)
-        img:SetImagePath(self.image_path)
+        img:SetImagePath(self.image_path, 0)
         img:SetDockingPoint(2)
         img:SetDockOffset(0, 50)
         img:SetVisible(true) -- TODO needed?
+        img:Resize(100, 100)
+        img:ResizeCurrentStateImage(0, 100, 100)
         
         yo = img:Height()
     end
@@ -60,5 +64,7 @@ function Infobox:create()
         t:SetStateText(self.description)
         t:SetDockingPoint(2)
         t:SetDockOffset(0, yo + 15)
+
+        t:Resize(100, 90)
     end
 end
