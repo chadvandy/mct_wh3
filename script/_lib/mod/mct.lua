@@ -25,7 +25,6 @@ function mct:init()
     self:load_modules()
     self:load_mods()
 
-    ---@diagnostic disable-next-line : missing-parameter
     core:add_static_object("mod_configuration_tool", self)
 
     if not core:is_campaign() then

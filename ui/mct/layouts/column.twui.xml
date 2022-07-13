@@ -65,12 +65,10 @@
 			<LayoutEngine
 				type="List"
 				spacing="8.00,8.00"
-				sizetocontent="true"
+				sizetocontent="false"
 				horizontal_alignment="Center">
 				<columnwidths>
-					<column width="350"/>
-					<column width="350"/>
-					<column width="350"/>
+					<column width="700"/>
 				</columnwidths>
 			</LayoutEngine>
 		</holder>

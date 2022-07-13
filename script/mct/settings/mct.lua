@@ -156,6 +156,12 @@ local my_dummy = mct_mod:add_new_option("dummy", "dummy")
 my_dummy:set_text("This is a Dummy object!")
 my_dummy:set_tooltip_text("Yallooooo")
 
+mct_mod:add_new_section("Testing", "Testing Section")
+mct_mod:add_new_option("plapooey", "checkbox"):set_text("This is a testing checkbox!")
+
+mct_mod:add_new_section("Final Section", "Testing third!")
+mct_mod:add_new_option("flarbo", "checkbox"):set_text("This is a testing checkbox!")
+
 
 -- local second_mod = mct:register_mod("my_test_mod")
 -- second_mod:set_author("")

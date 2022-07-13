@@ -129,7 +129,7 @@ local mct_mod_defaults = {
 
     _sections = {},
     _sections_by_index_order = {},
-    _section_sort_order_function = sort_functions.key,
+    _section_sort_order_function = sort_functions.index,
 
     --- Used to store the path to a log file, for the internal MCT logging functionality.
     _log_file_path = nil,
@@ -169,7 +169,7 @@ function mct_mod:new(key)
 
     local ok, err = pcall(function()
     -- o:create_new_page("main", mct)
-    local settings = o:add_new_page("settings", "SettingsThreeColumns")
+    local settings = o:create_settings_page("settings", 2)
     logf("Created settings page: " .. tostring(settings))
     o:set_main_page(settings)
     o:create_infobox_page("Testing Infobox", "This is my test of the emergency infobox system")
@@ -256,27 +256,24 @@ function mct_mod:save_mct_settings()
     return retstr
 end
 
---- Create a new page of specified type
----@param page_name string
----@param page_type any
-function mct_mod:add_new_page(page_name, page_type)
-    logf("adding a new page to %s", self:get_key())
-    --- TODO default type!
-    if not page_type then page_type = "Infobox" end
-    local page_class = mct:get_page_type(page_type)
-    if page_class then
-        logf("Adding a new page to %s of type %s with name %s", self:get_key(), page_type, page_name)
-        self._pages[page_name] = page_class:new(page_name, self)
 
-        return self._pages[page_name]
-    end
+function mct_mod:create_settings_page(title, num_columns)
+    ---@type MCT.Page.SettingsSuperclass
+    local page_class = mct:get_page_type("SettingsSuperclass")
+    local page = page_class:new(title, self, num_columns)
+    self._pages[title] = page
+
+    return page
 end
 
 function mct_mod:create_infobox_page(title, description, image_path, workshop_link)
     logf("Creating new Infobox page for %s", self:get_key())
+    ---@type MCT.Page.Infobox
     local page_class = mct:get_page_type("Infobox")
-    ---@cast page_class MCT.Page.Infobox
-    self._pages[title] = page_class:new(title, self, description, image_path, workshop_link)
+    local page = page_class:new(title, self, description, image_path, workshop_link)
+    self._pages[title] = page
+    
+    return page
 end
 
 --- Getter for any @{mct_section}s linked to this mct_mod.

@@ -1,4 +1,0 @@
-key	text	tooltip
-#Loc PackedFile;1;text/db/mct_tooltips_text.loc		
-ui_tooltip_components_localised_text_mct_profiles_tooltiptitle	Profiles	true
-ui_tooltip_components_localised_text_mct_profiles_tooltiptext	Profiles are a way to save settings in an easy-to-access format.\\nWhen you make a new profile, you save all of your currently selected settings into it, enabling you to change your settings around and go back to a previous configuration when you'd like.	true

@@ -303,7 +303,7 @@ end
 
 --- TODO if no layout object is supplied, assume "Main" page
 ---@param mod_obj MCT.Mod
----@param page MCT.Page #TODO make it the Layout object
+---@param page MCT.Page
 function ui_obj:set_selected_mod(mod_obj, page)
     local ok, err = pcall(function()
     -- deselect the former one
@@ -315,10 +315,6 @@ function ui_obj:set_selected_mod(mod_obj, page)
     local former_uic = self.selected_mod_row
     if is_uicomponent(former_uic) then
         former_uic:SetState("active")
-
-        -- for i,page_uic in ipairs(former._page_uics) do
-        --     page_uic:SetVisible(false)
-        -- end
     end
 
     local mod_key = mod_obj:get_key()
@@ -326,16 +322,16 @@ function ui_obj:set_selected_mod(mod_obj, page)
     local row_uic = page:get_row_uic()
 
     if is_uicomponent(row_uic) then
-        --- TODO if layout, then set the main row as active, select the page, and populate that shit
+        logf("Setting %s page %s as selcted!", mod_key, page_key)
 
         row_uic:SetState("selected")
         mct:set_selected_mod(mod_obj, page)
         self.selected_mod_row = row_uic
 
-        for i,page_uic in ipairs(mct:get_selected_mod()._page_uics) do
-            page_uic:SetVisible(true)
-            page_uic:SetState("active")
-        end
+        -- for i,page_uic in ipairs(mct:get_selected_mod()._page_uics) do
+        --     page_uic:SetVisible(true)
+        --     page_uic:SetState("active")
+        -- end
 
         local uic = self.mod_settings_panel
         local list = find_uicomponent(uic, "list_view")
@@ -355,10 +351,6 @@ function ui_obj:set_selected_mod(mod_obj, page)
         core:trigger_custom_event("MctPanelPopulated", {["mct"] = mct, ["ui_obj"] = self, ["mod"] = mod_obj, ["page"] = page})
         
     end end) if not ok then VLib.Error(err) end
-end
-
-function ui_obj:get_selected_mod()
-    return self.selected_mod_row
 end
 
 function ui_obj:open_frame()
@@ -1227,13 +1219,13 @@ function ui_obj:set_title(mod_obj)
     mod_title:SetStateText(title)
 end
 
-
+--- TODO move this all into option_obj:populate() which is a Super called by the individual types!
 function ui_obj:new_option_row_at_pos(option_obj, this_layout)
     local dummy_option = core:get_or_create_component(option_obj:get_key(), "ui/campaign ui/script_dummy", this_layout)
+    local w,h = this_layout:Dimensions()
 
-    local panel = self.mod_settings_panel
-    local w,h = panel:Dimensions()
-    w = w * 0.30
+    --- TODO better dynamic height! Handle Arrays and the like!
+    w = w * 0.95
     h = h * 0.12
 
         -- set to be flush with the column dummy
@@ -1598,7 +1590,7 @@ function ui_obj:new_mod_row(mod_obj)
         row:SetTooltipText(tt, true)
     end
 
-    --- TODO create the subpages for this mod row and then hide them to be reopened when this mod is selected.
+    --- create the subpages for this mod row and then hide them to be reopened when this mod is selected.
     for page_key,page_obj in pairs(mod_obj._pages) do
         --- if page_obj is the  main_page then don't do anything (because that row header has already been made!)
         if page_obj ~= mod_obj:get_main_page() then
