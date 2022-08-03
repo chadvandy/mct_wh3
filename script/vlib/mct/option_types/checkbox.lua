@@ -27,11 +27,6 @@ function Checkbox:init()
     self:set_default_value(false)
 end
 
---- A test function to see what Sumneko does.
-function Checkbox:test_function()
-
-end
-
 --- Checks the validity of the value passed.
 ---@param value any Tested value.
 --- @return boolean valid Returns true if the value passed is valid, false otherwise.
@@ -88,6 +83,8 @@ end
 --- Changes the state for the mct_option in UI, ie. locked/unlocked.
 function Checkbox:ui_change_state(val)
     local option_uic = self:get_uic_with_key("option")
+    if not option_uic then return end
+    
     local text_uic = self:get_uic_with_key("text")
 
     local locked = self:get_uic_locked()
@@ -109,8 +106,8 @@ function Checkbox:ui_change_state(val)
     else
         if value == true then
             state = "selected"
-        else
-            state = "active"
+        -- else
+        --     state = "active"
         end
     end
 

@@ -7,7 +7,7 @@
 ---@field _template string
 
 local mct = get_mct()
-local Settings = mct.settings
+local Registry = mct.registry
 
 local log,logf,err,errf = get_vlog("[mct]")
 
@@ -41,8 +41,8 @@ local mct_option_defaults = {
     _default_setting = nil,
     _finalized_setting = nil,
 
-    -- whether this option obj is read only for campaign
-    _read_only = false,
+    _is_locked = false,
+    _lock_reason = "",
 
     _local_only = false,
     _mp_disabled = false,
@@ -67,37 +67,17 @@ local mct_option_defaults = {
 
     ---@type string
     _assigned_section = nil,
+
+    ---@type boolean Whether this option has its settings stored globally or within independent campaigns.
+    _is_global = false,
 }
 
 ---@class MCT.Option : Class
 ---@field __new fun():MCT.Option
 local mct_option = VLib.NewClass("MCT.Option", mct_option_defaults)
 
--- ---- For internal use only. Called by @{mct_mod:add_new_option}.
--- --- @param mod_key string Key of the mod
--- --- @param option_key string
--- --- @param type string | "'slider'" | "'dropdown'" | "'checkbox'"
--- function mct_option.new(mod_key, option_key, type)
---     local t = mct._MCT_TYPES[type]
---     local o = t:new()
-
---     ---@type MCT.Option
---     local o = mct_option:__new()
-
---     o._wrapped_type = mct._MCT_TYPES[type]:new(o)
-
---     if type == "slider" then
-
---     end
-
---     local mod = o:get_mod()
-
-
---     -- read the "type" field in the metatable's __templates field - ie., __templates[checkbox]
---     o._template = mct_option_defaults.__templates[type]
-
---     return o
--- end
+--- Overridden by subtypes!
+function mct_option:new(...) end
 
 function mct_option:init(mod_obj, option_key)
     logf("MCT.Option init on %s", option_key)
@@ -123,22 +103,75 @@ end
 --- For instance, this is useful for settings that don't edit the model, like enabling script logging.
 ---@param enabled boolean True for local-only, false for passed-in-MP-and-only-editable-by-the-host.
 function mct_option:set_local_only(enabled)
-    -- if is_nil(enabled) then
-    --     enabled = true
-    -- end
+    if is_nil(enabled) then
+        enabled = true
+    end
 
-    -- if not is_boolean(enabled) then
-    --     err("set_local_only() called for mct_mod ["..self:get_key().."], but the enabled argument passed is not a boolean or nil!")
-    --     return false
-    -- end
+    if not is_boolean(enabled) then
+        err("set_local_only() called for mct_mod ["..self:get_key().."], but the enabled argument passed is not a boolean or nil!")
+        return false
+    end
 
-    -- self._local_only = enabled
+    self._local_only = enabled
 end
+
+--- Set whether this Option is globally editable or on a campaign-basis.
+---@param b boolean
+function mct_option:set_is_global(b)
+    if is_nil(b) then b = true end
+    if not is_boolean(b) then return false end
+
+    self._is_global = b
+end
+
+--- Whether this Option is globally editable or on a campaign-basis.
+---@return any
+function mct_option:is_global() return self._is_global end
 
 ---- Read whether this mct_option is available in multiplayer.
 --- @treturn boolean mp_disabled Whether this mct_option is available in multiplayer or completely disabled.
 function mct_option:get_mp_disabled()
     return self._mp_disabled
+end
+
+--- Set whether this MCT Option is locked (ie. can't be edited). If the option is_global, this lock will be everywhere, otherwise it will be saved within the campaign.
+---@param is_locked boolean? True for locked, false for unlocked. Defaults to true.
+---@param lock_reason string? The localised text explaining why it's locked.
+function mct_option:set_locked(is_locked, lock_reason)
+    if not is_boolean(is_locked) then is_locked = true end
+    if not is_string(lock_reason) and is_locked then lock_reason = "" end
+    
+    self._is_locked = is_locked
+
+    if is_locked then self._lock_reason = lock_reason end
+
+    if is_uicomponent(self:get_uic_with_key("option")) then
+        self:ui_change_state()
+    end
+end
+
+function mct_option:is_locked()
+    return self._is_locked
+end
+
+function mct_option:get_lock_reason()
+end
+
+--- TODO make an option context-specific (ie. battle) so 
+function mct_option:set_context_specific(context)
+
+end
+
+--- Set this Option as an array-type. That means the option will have a table-type saved setting, useful for options which can 
+---@param max_fields number
+---@param min_fields number
+function mct_option:set_is_array(max_fields, min_fields)
+    self._is_array = true
+
+    self._array = {
+        max = max_fields,
+        min = min_fields,
+    }
 end
 
 ---- Set whether this mct_option exists for MP campaigns.
@@ -160,22 +193,34 @@ end
 --- Read whether this mct_option can be edited or not at the moment.
 -- @treturn boolean read_only Whether this option is uneditable or not.
 function mct_option:get_read_only()
-    return self._read_only
+    return self:is_locked()
 end
 
 ---- Set whether this mct_option can be edited or not at the moment.
----@param enabled boolean True for non-editable, false for editable.
-function mct_option:set_read_only(enabled)
-    if is_nil(enabled) then
-        enabled = true
-    end
+---@param b_read_only boolean True for non-editable, false for editable.
+---@param reason string
+function mct_option:set_read_only(b_read_only, reason)
+    -- if is_nil(b_read_only) then
+    --     b_read_only = true
+    -- end
 
-    if not is_boolean(enabled) then
-        -- issue
-        return false
-    end
+    -- if is_nil(reason) then
+    --     reason = "mct_lock_reason_read_only"
+    -- end
 
-    self._read_only = enabled
+    -- if not is_boolean(b_read_only) then
+    --     -- issue
+    --     return false
+    -- end
+
+    -- if not is_string(reason) then return false end
+
+    -- self._read_only = {
+    --     b = b_read_only,
+    --     reason = reason,
+    -- }
+
+    self:set_locked(b_read_only, reason)
 end
 
 ---- Assigns the section_key that this option is a member of.
@@ -489,7 +534,7 @@ function mct_option:set_selected_setting(val)
         return
     end
     
-    Settings:set_changed_setting(self:get_mod_key(), self:get_key(), val)
+    Registry:set_changed_setting(self:get_mod_key(), self:get_key(), val)
     
     -- call ui_select_value if the UI exists
     if is_uicomponent(self:get_uic_with_key("option")) then
@@ -659,7 +704,7 @@ end
 ---- Getter for the "finalized_setting" for this `mct_option`.
 --- @treturn any finalized_setting Finalized setting for this `mct_option` - either the default value set via @{mct_option:set_default_value}, or the latest saved value if in a campaign, or the latest mct_settings.lua - value if in a new campaign or in frontend.
 function mct_option:get_finalized_setting()
-    return Settings:get_finalized_setting_for_option(self)
+    return Registry:get_finalized_setting_for_option(self)
 end
 
 
@@ -678,7 +723,7 @@ function mct_option:set_finalized_setting(val, is_first_load)
         end
     end
 
-    Settings:save_setting(self, val)
+    Registry:save_setting(self, val)
 
     -- trigger an event to listen for externally (skip if it's first load)
     if not is_first_load then
@@ -717,75 +762,46 @@ end
 --- This will result in `mct_option:ui_change_state()` being called later on.
 ---@param should_lock boolean Lock this UI option, preventing it from being interacted with.
 ---@param lock_reason string? The text to supply to the tooltip, to show the player why this is locked. This argument is ignored if should_lock is false.
----@param is_localised boolean? Set to true if lock_reason is a localised key; else, set it to false or leave it blank. Ignored ditto above.
-function mct_option:set_uic_locked(should_lock, lock_reason, is_localised)
-    if is_nil(should_lock) then 
-        should_lock = true 
-    end
+function mct_option:set_uic_locked(should_lock, lock_reason)
+    self:set_locked(should_lock, lock_reason)
+    -- if is_nil(should_lock) then
+    --     should_lock = true
+    -- end
 
-    if not is_boolean(should_lock) then 
-        err("set_uic_locked() called for mct_option with key ["..self:get_key().."], but the should_lock argument passed is not a boolean or nil!")
-        return false 
-    end
+    -- if not is_boolean(should_lock) then 
+    --     err("set_uic_locked() called for mct_option with key ["..self:get_key().."], but the should_lock argument passed is not a boolean or nil!")
+    --     return false 
+    -- end
 
-    -- only care about localisation if it's being locked!
-    if should_lock then
-        if is_nil(lock_reason) then
-            lock_reason = "Locked."
-        end
+    -- -- only care about localisation if it's being locked!
+    -- if should_lock then
+    --     if is_nil(lock_reason) then
+    --         lock_reason = "Locked."
+    --     end
 
-        if not is_string(lock_reason) then
-            err("set_uic_locked() called for mct_option ["..self:get_key().."], but the lock_reason passed is not a string or nil! Returning false.")
-            return false
-        end
+    --     if not is_string(lock_reason) then
+    --         err("set_uic_locked() called for mct_option ["..self:get_key().."], but the lock_reason passed is not a string or nil! Returning false.")
+    --         return false
+    --     end
 
-        if is_nil(is_localised) then
-            is_localised = false
-        end
+    --     self._uic_lock_reason = lock_reason
+    -- else
+    --     self._uic_lock_reason = ""
+    -- end
 
-        if not is_boolean(is_localised) then
-            err("set_uic_locked() called for mct_option ["..self:get_key().."], but the is_localised passed is not a boolean or nil! Returning false.")
-            return false
-        end
+    -- self._uic_locked = should_lock
 
-        self._uic_lock_reason = {text = lock_reason, is_localised = is_localised}
-    else
-        self._uic_lock_reason = {}
-    end
-
-    self._uic_locked = should_lock
-
-    -- if the option already exists in UI, update its state
-    if is_uicomponent(self:get_uic_with_key("option")) then
-        self:ui_change_state()
-    end
-end
-
-function mct_option:get_lock_reason()
-    local locked = self:get_uic_locked()
-
-    local lock_reason = ""
-    if locked then
-        local lock_reason_tab = self._uic_lock_reason 
-        if lock_reason_tab.is_localised then
-            lock_reason = common.get_localised_string(lock_reason_tab.text)
-        else
-            lock_reason = lock_reason_tab.text
-        end
-
-        if lock_reason == "" then
-            -- revert to default? TODO
-        end
-    end
-
-    return lock_reason
+    -- -- if the option already exists in UI, update its state
+    -- if is_uicomponent(self:get_uic_with_key("option")) then
+    --     self:ui_change_state()
+    -- end
 end
 
 ---- Getter for the current selected setting. This is the value set in @{mct_option:set_default_value} if nothing has been selected yet in the UI.
 --- Used when finalizing settings.
 --- @treturn any val The value set as the selected_setting for this mct_option.
 function mct_option:get_selected_setting()
-    return Settings:get_selected_setting_for_option(self)
+    return Registry:get_selected_setting_for_option(self)
 end
 
 ---- Getter for the available values for this mct_option - true/false for checkboxes, different stuff for sliders/dropdowns/etc.

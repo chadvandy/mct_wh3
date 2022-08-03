@@ -776,7 +776,7 @@ end
 
 --- Returns the `finalized_settings` field of this `mct_mod`.
 function mct_mod:get_settings()
-    return mct.settings:get_settings_for_mod(self)
+    return mct.registry:get_settings_for_mod(self)
 end
 
 
@@ -967,6 +967,7 @@ end
 --- Use this! It calls an internal function, @{mct_option.new}, but wraps it with error checking and the like.
 ---@overload fun(self:MCT.Mod, self:MCT.Mod, option_key:string, option_type:"checkbox"):MCT.Option.Checkbox
 ---@overload fun(self:MCT.Mod, option_key:string, option_type:"dropdown"):MCT.Option.Dropdown
+---@overload fun(self:MCT.Mod, option_key:string, option_type:"dropdown_game_object"):MCT.Option.SpecialDropdown
 ---@overload fun(self:MCT.Mod, option_key:string, option_type:"slider"):MCT.Option.Slider
 ---@overload fun(self:MCT.Mod, option_key:string, option_type:"text_input"):MCT.Option.TextInput
 ---@overload fun(self:MCT.Mod, option_key:string, option_type:"dummy"):MCT.Option.Dummy

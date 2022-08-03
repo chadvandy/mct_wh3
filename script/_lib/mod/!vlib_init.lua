@@ -38,6 +38,7 @@ local Log = new_class("VLib_Log", log_defaults)
 ---@param prefix string?
 function Log.new(key, file_name, prefix)
     local o = Log:__new()
+    ---@cast o VLib.Log
     o:init(key, file_name, prefix)
 
     return o
@@ -247,6 +248,23 @@ function VLib.LoadModules(path, search_override, func_for_each)
         if func_for_each and is_function(func_for_each) then
             func_for_each(filename_for_out, module)
         end
+    end
+end
+
+--- Function to handle an optionally localised string.
+---@param str string The tested string.
+---@param default string? A default to pass if the string is empty and isn't a key.
+---@return string
+function VLib.HandleLocalisedText(str, default)
+    if not is_string(str) then return "" end
+
+    local test = common.get_localised_string(str)
+    if test == "" then
+        return str
+    elseif test == str then
+        return default
+    else
+        return test
     end
 end
 

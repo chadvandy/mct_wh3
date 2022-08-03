@@ -73,16 +73,27 @@ end
 function mct:load_modules()
     local path = "script/vlib/mct/"
     local core_path = path .. "core/"
-    local ui_path = path .. "ui/"
+    local ui_path = core_path .. "ui/"
     local obj_path = path .. "objects/"
     local options_path = path .. "option_types/"
     local layout_path = path .. "layouts/"
 
-    ---@type MCT.Settings
-    self.settings = load_module("settings", core_path)
+    -- ---@type MCT.Settings
+    -- self.settings = load_module("settings", core_path)
+
+    ---@type MCT.Registry
+    self.registry = load_module("registry", core_path)
 
     ---@type MCT.UI
     self.ui = load_module("main", ui_path)
+
+    if __game_mode == __lib_type_battle then
+        load_module("battle", ui_path)
+    elseif __game_mode == __lib_type_campaign then
+        load_module("campaign", ui_path)
+    elseif __game_mode == __lib_type_frontend then
+        load_module("frontend", ui_path)
+    end
 
     ---@type MCT.Page
     self._MCT_PAGE = load_module("layout", obj_path)
@@ -106,6 +117,9 @@ function mct:load_modules()
 
     ---@type MCT.Option.Dropdown
     self._MCT_TYPES.dropdown = load_module("dropdown", options_path)
+    
+    ---@type MCT.Option.SpecialDropdown
+    self._MCT_TYPES.dropdown_game_object = load_module("dropdown_game_object", options_path)
 
     ---@type MCT.Option.Checkbox
     self._MCT_TYPES.checkbox = load_module("checkbox", options_path)
@@ -165,7 +179,7 @@ function mct:load_and_start(loading_game_context, is_mp)
 
             cm:set_saved_value("mct_host", faction_key)
 
-            self.settings:mp_load()
+            -- self.settings:mp_load()
         end,
         false
     )
@@ -209,7 +223,7 @@ function mct:load_and_start(loading_game_context, is_mp)
                 end
             end)
             out("Pre load game callback")
-            self.settings:load_game_callback(loading_game_context)
+            self.registry:load_game(loading_game_context)
             out("Post load game callback")
             --trigger(true)
 
@@ -217,17 +231,17 @@ function mct:load_and_start(loading_game_context, is_mp)
             out("Post mp_prep()")
 
 
-            cm:add_saving_game_callback(function(context) out("save game callback pre") self.settings:save_game_callback(context) end)
+            cm:add_saving_game_callback(function(context) out("save game callback pre") self.registry:save_game(context) end)
         else
             --- if it's a new game, save the currently selected profile into the save file, and load up that profile
             if cm:is_new_game() then
                 vlogf("New game - loading!")
-                self.settings:load_old()
+                self.registry:load()
             else
-                self.settings:load_game_callback(loading_game_context)
+                self.registry:load_game(loading_game_context)
             end
 
-            cm:add_saving_game_callback(function(context) self.settings:save_game_callback(context) end)
+            cm:add_saving_game_callback(function(context) self.registry:save_game(context) end)
 
             trigger(false)
         end
@@ -235,7 +249,9 @@ function mct:load_and_start(loading_game_context, is_mp)
         --log("frontend?")
         -- read the settings file
         local ok, msg = pcall(function()
-            self.settings:load_old()
+            -- self.settings:load()
+
+            self.registry:load()
 
             trigger(false)
         end) if not ok then verr(msg) end
@@ -301,7 +317,7 @@ function mct:finalize()
             -- check if it's the host
             if cm:get_local_faction_name(true) == cm:get_saved_value("mct_host") then
                 vlog("Finalizing settings mid-campaign for MP.")
-                self.settings:finalize()
+                self.registry:finalize()
 
                 self._finalized = true
                 self.ui.locally_edited = false
@@ -329,16 +345,16 @@ function mct:finalize()
                 end
                 ClMultiplayerEvents.notifyEvent("MctMpFinalized", 0, mct_data)
 
-                self.settings:local_only_finalize(true)
+                self.registry:local_only_finalize(true)
             else
                 self._finalized = true
                 self.ui.locally_edited = false
                 
-                self.settings:local_only_finalize(false)
+                self.registry:local_only_finalize(false)
             end
         else
             -- it's SP, do regular stuff
-            self.settings:finalize()
+            self.registry:finalize()
 
             self._finalized = true
     
@@ -349,7 +365,7 @@ function mct:finalize()
         end
     else
         --- TODO if we haven't locally edited, don't do this?
-        self.settings:finalize()
+        self.registry:finalize()
 
         self._finalized = true
 

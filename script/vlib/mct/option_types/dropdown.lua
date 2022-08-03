@@ -2,8 +2,6 @@
 
 local mct = get_mct()
 local Super = mct._MCT_OPTION
-
--- local vlib = get_vlib()
 local log,logf,err,errf = get_vlog("[mct]")
 
 ---@type MCT.Option.Dropdown
@@ -17,14 +15,14 @@ local Dropdown = Super:extend("MCT.Option.Dropdown", defaults)
 
 function Dropdown:new(mod_obj, option_key)
     local o = self:__new()
-    Super.init(o, mod_obj, option_key)
-    self.init(o)
+    o:init(mod_obj, option_key)
 
     return o
 end
 
-function Dropdown:init()
+function Dropdown:init(mod_obj, option_key)
     --- anything?
+    Super.init(self, mod_obj, option_key)
 end
 
 --- Checks the validity of the value passed.
@@ -183,7 +181,7 @@ end
 ---      })
 ---
 ---@param dropdown_table {key:string,text:string?,tt:string?,is_default:boolean?}[]
----@return boolean
+---@return boolean? #Isn't valid if false
 function Dropdown:add_dropdown_values(dropdown_table)
     --[[if not self:get_type() == "dropdown" then
         err("add_dropdown_values() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a dropdown! Returning false.")
@@ -205,7 +203,7 @@ function Dropdown:add_dropdown_values(dropdown_table)
         local key = dropdown_option.key
         local text = dropdown_option.text or ""
         local tt = dropdown_option.tt or ""
-        local is_default = dropdown_option.default or false
+        local is_default = dropdown_option.is_default or false
 
         self:add_dropdown_value(key, text, tt, is_default)
     end
@@ -350,10 +348,8 @@ function Dropdown:refresh_dropdown_box()
     popup_menu:Resize(w,h)
 end
 
-
 ---- Specific listeners for the UI ----
 
---- TODO shouldn't the sub listener be inside of this listener?
 core:add_listener(
     "mct_dropdown_box",
     "ComponentLClickUp",

@@ -1,3 +1,9 @@
+--- TODO change this system a bit! 
+--[[
+    "finalized settings" are 
+]]
+
+
 ---- Settings Object. INTERNAL USE ONLY.
 --- @class MCT.Settings
 
@@ -29,26 +35,11 @@ end
 
 ---@class MCT.Settings
 local settings_defaults = {
-    ---@type string Path to the profile save file. ANTIQUATED.
-    profiles_file = "mct_profiles.lua",
-
-    ---@type string Path to the settings save file. ANTIQUATED.
-    settings_file = "mct_settings.lua",
-
     ---@type string Path to the default profile import.
     __import_profiles_file = "mct_profiles_import",
 
     ---@type string Path to the new save file for MCT.
     __new_settings_file = "mct_save.lua",
-
-    ---@alias changed_settings {old_value:any,new_value:any}
-
-    -- a better way to read if any settings have been changed
-    -- table of mod keys (only added when a setting is changed)
-    -- within each mod key table, option keys (only added when that specific option changed)
-    -- within each option key table, two field - old_value (for finalized-setting) and new_value (for selected-setting) (option key table removed if new_value is set to old_value)
-    ---@type table<string, table<string, changed_settings>> Changed-in-UI settings
-    __changed_settings = {},
 
     ---@type table Settings that have not yet been saved by MCT, new ones added by a mod since last load.
     __new_settings = {},
@@ -81,8 +72,6 @@ local settings_defaults = {
 
     ---@type string Key of the currently selected profile.
     __selected_profile = "",
-    ---@type boolean If any settings were changed during this "session", ie. one panel open/close
-    __settings_changed = false,
 }
 
 ---@class MCT.Settings
@@ -231,9 +220,6 @@ end
 function Settings:setup_default_profile()
 
     local main = self:get_main_profile()
-
-    logf("Reading profiles file")
-    self:read_profiles_file()
 
     -- for _,mod_obj in pairs(mct:get_mods()) do
     --     logf("Saving %s in Main Profile", _)
@@ -428,22 +414,6 @@ end) if not ok then errf("Issue with saving! \n%s", errmsg) end
     )
 end
 
-function Settings:clear_changed_settings(clear_bool)
-    self.__changed_settings = {}
-
-    if clear_bool then
-        self.__settings_changed = false
-    end
-end
-
---- Check whether there are any pending changes.
----@return boolean PendingSettingChanges Whether there's pending changes in the currently selected profile (ie. changing a single setting within Profile A).
----@return boolean PendingProfileChanges Whether there's a pending change in currently selected profile (ie. changing from Profile A -> B)
-function Settings:has_pending_changes()
-    logf("Checking Settings:has_pending_changes()")
-    return (next(self.__changed_settings) ~= nil)
-end
-
 function Profile:clear_tracking(mod_key, option_key)
     if is_string(mod_key) then
         if is_string(option_key) then
@@ -453,6 +423,8 @@ function Profile:clear_tracking(mod_key, option_key)
         end
     end
 end
+
+--- TODO remove Profile support, handle this through Registry / Campaign save.
 
 ---comment
 ---@param option_obj MCT.Option
@@ -466,105 +438,7 @@ function Settings:save_setting(option_obj, finalized_setting)
 end
 
 
--- this saves the changed-setting, called whenever @{mct_option:set_selected_setting} is called (except for creation).
-function Settings:set_changed_setting(mod_key, option_key, new_value, is_popup_open)
-    if not is_string(mod_key) then
-        err("set_changed_setting() called, but the mod_key provided ["..tostring(mod_key).."] is not a valid string!")
-        return false
-    end
 
-    if not is_string(option_key) then
-        err("set_changed_setting() called for mod_key ["..mod_key.."], but the option_key provided ["..tostring(option_key).."] is not a valid string!")
-        return false
-    end
-
-    local mct_mod = mct:get_mod_by_key(mod_key)
-    local mct_option = mct_mod:get_option_by_key(option_key)
-
-    -- add this as a table if it doesn't exist already
-    if not is_table(self.__changed_settings[mod_key]) then
-        self.__changed_settings[mod_key] = {}
-    end
-
-    -- ditto for the setting
-    if not is_table(self.__changed_settings[mod_key][option_key]) then
-        self.__changed_settings[mod_key][option_key] = {}
-    end
-
-    local old = mct_option:get_finalized_setting()
-
-    logf("Setting changed setting %s.%s to %s; former is %s", mod_key, option_key, tostring(new_value), tostring(old))
-
-    -- if the new value is the finalized setting, remove it, UNLESS the popup is open
-    if old == new_value and not is_popup_open then
-        self.__changed_settings[mod_key][option_key] = nil
-        -- check to see if the mod_key obj needs to be removed too
-        if self.__changed_settings[mod_key] and next(self.__changed_settings[mod_key]) == nil then
-            self.__changed_settings[mod_key] = nil
-        end
-    else
-        self.__changed_settings[mod_key][option_key]["old_value"] = old
-        self.__changed_settings[mod_key][option_key]["new_value"] = new_value
-
-        logf("%s.%s old = %s", mod_key, option_key, tostring(old))
-        logf("%s.%s new = %s", mod_key, option_key, tostring(new_value))
-    end
-end
-
-function Settings:get_changed_settings(mod_key, option_key)
-    if is_string(mod_key) then
-        if is_string(option_key) then
-            return self.__changed_settings[mod_key] and self.__changed_settings[mod_key][option_key] and self.__changed_settings[mod_key][option_key]["new_value"]
-        end
-        return self.__changed_settings[mod_key]
-    end
-
-    return self.__changed_settings
-end
-
----@param option_obj MCT.Option
-function Settings:get_selected_setting_for_option(option_obj)
-    local value
-
-    local mod_key = option_obj:get_mod_key()
-    local option_key = option_obj:get_key()
-
-    ---@type any
-    value = self:get_changed_settings(mod_key, option_key)
-    if not is_nil(value) then return value end
-
-    local current_profile = self:get_selected_profile()
-    value = current_profile:query_mod_option(mod_key, option_key)
-
-    if not is_nil(value) then 
-        return value
-    end
-end
-
----@param option_obj MCT.Option
-function Settings:get_finalized_setting_for_option(option_obj)
-    local mod_key = option_obj:get_mod_key()
-    local option_key = option_obj:get_key()
-
-    -- local ret
-
-    local profile = self:get_selected_profile()
-    local value = profile:query_mod_option(mod_key, option_key)
-
-    -- ret = value
-    return value
-end
-
-function Settings:get_settings_for_mod(mod_obj)
-    local options = mod_obj:get_options()
-    local retval = {}
-
-    for key, option in pairs(options) do
-        retval[key] = option:get_finalized_setting()
-    end
-
-    return retval
-end
 
 function Settings:get_profiles()
     return self.__profiles
@@ -668,37 +542,6 @@ function Settings:get_all_profile_keys()
 
     return ret
 end
-
---- Antiquated, only used for backwards compat.
-function Settings:read_profiles_file()
-    local ok, msg = pcall(function()
-    local file = io.open(self.profiles_file, "r")
-    
-    -- if no file exists, skip operation
-    if not file then
-        return false
-    end
-
-    file:close()
-
-    local content = loadfile(self.profiles_file)
-    
-    if not content then
-        err("read_profiles_file() called, but there is no valid profiles found in the profiles_file!")
-        return false
-    end
-
-    content = content()
-
-    for k,v in pairs(content) do
-        if k == "Default Profile" then k = "Old Default" end
-        self.__profiles[k] = v
-    end
-
-    setmetatable(self.__profiles, self.__profiles_mt)
-    self.__selected_profile = "Default Profile"
-
-end) if not ok then err(msg) end end
 
 
 function Settings:rename_profile(key, new_key, desc)
@@ -926,84 +769,6 @@ function Settings:remove_cached_setting(mod_key, option_keys)
     end
 end
 
---- ANTIQUATED. Here for backwards support.
-function Settings:save_mct_settings()
-    if io.open(self.__new_settings_file, "r") then
-        return self:save()
-    end
-
-    local file, load_err  = io.open(self.settings_file, "w+")
-
-    if not file then
-        err("Could not load settings file: "..load_err)
-        return false
-    end
-
-    self.tab = 0
-
-    local str = "return {\n"
-
-    local mods = mct:get_mods()
-    for _, mod_obj in pairs(mods) do
-        local addendum = mod_obj:save_mct_settings()
-
-        str = str .. addendum
-    end
-
-    local t = ""
-
-    -- append a loop for the cached mods
-    if self.__cached_settings and not is_nil(next(self.__cached_settings)) then
-        t = "\t[\"mct_cached_settings\"] = {\n"
-        for mod_key, mod_data in pairs(self.__cached_settings) do
-            t = t .. "\t\t[\""..mod_key.."\"] = {\n"
-
-            -- loop through the k/v table of "mod_data", which is `["option_key"] = "setting",`
-            for option_key, option_data in pairs(mod_data) do
-                if not option_key:starts_with("__") then
-                    t = t .. "\t\t\t[\""..option_key.."\"] = {\n"
-
-                    for _,saved_setting in pairs(option_data) do
-                        t = t .. "\t\t\t\t[\"_setting\"] = "
-                        if is_string(saved_setting) then
-                            t = t .. "\"" .. saved_setting .. "\",\n"
-                        elseif is_number(saved_setting) then
-                            t = t .. tostring(saved_setting) .. ",\n"
-                        elseif is_boolean(saved_setting) then
-                            t = t .. tostring(saved_setting) .. ",\n"
-                        else
-                            --log("not a string number or boolean?")
-                            --log(tostring(saved_setting))
-                            t = t .. "nil" .. ",\n"
-                        end
-
-                        --t = t .. "\t\t\t},\n"
-                    end
-
-                    t = t .. "\t\t\t},\n"
-                end
-            end
-
-            t = t .. "\t\t},\n"
-        end
-
-        t = t .. "\t},\n"
-    end
-
-    str = str .. t
-
-    --log("starting run through table")
-    --str = run_through_table(data, str)
-    --log("ending run through table")
-
-    str = str .. "}"
-
-    self.tab = 0
-
-    file:write(str)
-    file:close()
-end
-
 function Settings:local_only_finalize(sent_by_host)
     -- it's the client; only finalize local-only stuff
     log("Finalizing settings mid-campaign for MP, local-only.")
@@ -1051,10 +816,6 @@ function Settings:finalize_first_time(force)
     end
 
     self:save()
-end
-
-function Settings:clear_changed_settings_for_mod(mod_key)
-    self.__changed_settings[mod_key] = nil
 end
 
 ---@param mod_obj MCT.Mod
@@ -1176,266 +937,71 @@ function Settings:mp_load(selected_profile)
     end
 end
 
---- TODO on first time load, set default values
---- TODO check for empty tables in __mods, ie. some reason mixu_mixer is in profiles.__main.__mods as {}
---- This is the function that reads the mct_settings.lua file and loads up all the necessary components from it.
--- If no file is found, or the file has some sort of script break, MCT will make a new one using all defaults.
--- This is also where settings are "cached" for any mct_mods that aren't currently enabled but are in the mct_settings.lua file
-function Settings:load_old()
-    logf("Load Old!")
-    --- use the new path if we've already constructed the new MCT profiles page
-    if io.open(self.__new_settings_file, "r") then
-        logf("Old -> New Load!")
-        return self:load()
-    end
+--- Create the table needed for saving the settings into the campaign registry.
+---TODO implement set_read_only
+--- TODO pull in finalized_setting,read_only, maybe some other stuff?
+function Settings:get_save_table()
+    local mods = mct:get_mods()
+    local ret = {}
 
-    self:create_default_profile()
+    for mod_key,mod in pairs(mods) do
+        ret[mod_key] = {}
 
-    --- TODO move elsewhere too
-    -- if we're in the campaign, save the "mct_init" value as true
-    if __game_mode == __lib_type_campaign then
-        cm:set_saved_value("mct_init", true)
-    end
+        local options = mod:get_options()
 
-    local file, _ = io.open(self.settings_file, "r")
-    if not file then
-        -- create a file with all the defaults!
-        log("First time load - creating settings file! Using defaults for every option.")
-        mct._first_load = true
-        self:finalize_first_time(true)
-        log("Settings file created, all defaults applied!")
-    else
-        log("Loading settings file!")
-        mct._first_load = false
-        local content = loadfile(self.settings_file)
-
-        local ok,content = pcall(function() return content() end)
-
-        if not ok then
-            err("The mct_settings.lua file had a script error in it and couldn't be loaded. Investigate!")
-            err(content)
-            self:finalize_first_time(true)
-            return
-        end 
-
-        if not content then
-            errf("No content!")
-            self:finalize_first_time(true)
-            return
-        end
-
-        local ok, errmsg = pcall(function()
-
-        local any_added = false
-
-        --local content = table.load(self.settings_file)
-        local all_mods = mct:get_mods()
-
-        local cached_settings = content["mct_cached_settings"]
-        content["mct_cached_settings"] = nil
-
-        for mod_key, mod_obj in pairs(all_mods) do
-            --log("Loading settings for mod ["..mod_key.."].")
-
-            -- check if there's any saved data for this mod obj
-            local data = content[mod_key]
-            
-            if is_table(data) then
-                local last_patch = data.__patch
-                if last_patch then
-                    mod_obj:set_last_viewed_patch(last_patch)
-                    data.__patch = nil
-                end
-            end
-
-            -- loop through all of the actual options available in the mct_mod, not only ones in the settings file
-            local all_options = mod_obj:get_options()
-
-            for option_key, option_obj in pairs(all_options) do
-                local setting = nil
-
-                -- grab data attached to this option key in the .lua settings file
-                if not is_nil(data) then
-                    local saved_data = data[option_key]
-
-                    -- grab the saved data in the .lua file for this option!
-                    if not is_nil(saved_data) then
-                        setting = saved_data._setting
-                    else -- this is a new setting!
-                        --log("New setting found! ["..option_key.."]")
-
-                        --log("???")
-
-                        -- save the option key in the new_settings table, so we can look back later and see that it's new!
-                        -- skip this process if the option is a dummy!
-                        if option_obj:get_type() ~= "dummy" then
-                            if is_nil(self.__new_settings[mod_key]) then
-                                --log("?")
-                                self.__new_settings[mod_key] = {}
-                                --log("??")
-                            end
-
-                            self.__new_settings[mod_key][#self.__new_settings[mod_key]+1] = option_key
-                            any_added = true
-                        end
-                    end
-                end
-
-                -- if no setting was found, default to whatever the default_value is
-                if is_nil(setting) then
-                    -- this returns the default value
-                    setting = option_obj:get_finalized_setting()
-                end
-
-                -- if any setting is found in `mct_cached_settings`, check that for this mod key, for this option key, and then apply it over
-                if cached_settings then
-                    if cached_settings[mod_key] then
-                        if cached_settings[mod_key][option_key] then
-                            -- apply the new setting, and clear out the index in cached settings
-                            setting = cached_settings[mod_key][option_key]["_setting"]
-                            cached_settings[mod_key][option_key] = nil
-
-                            -- if that was the last cached setting in this mct_mod, then remove the mod from cached settings
-                            if cached_settings[mod_key] and next(cached_settings[mod_key]) == nil then
-                                cached_settings[mod_key] = nil
-
-                                -- if that was the last cached setting in any mct_mod, then just delete the table
-                                if cached_settings and next(cached_settings) == nil then
-                                    cached_settings = nil
-                                end
-                            end
-                        end
-                    end
-                end
+        for option_key,option in pairs(options) do
+            --- Don't save global options!
+            if not option:is_global() then
+                ret[mod_key][option_key] = {
+                    _setting = option:get_finalized_setting(),
+                }
                 
-                -- set the finalized setting and read only stuffs
-                option_obj:set_finalized_setting(setting, true)
-
-                --log("Finalizing option ["..option_key.."] with setting ["..tostring(setting).."]")
-
-                -- remove this from `data`, so non-existent settings will be cached
-                if is_table(data) then
-                    data[option_key] = nil
-                end
-            end
-            
-            mod_obj:load_finalized_settings()
-
-            -- only clear out this mod from content (from an empty table {} to nil) if it's completely empty from the previous operation
-            if content[mod_key] and next(content[mod_key]) == nil then
-                content[mod_key] = nil
-            end
-        end
-
-        -- loop through the "mct_cached_settings", if it exists, and add all of the stuff into the cached_settings table
-        if cached_settings then
-            for mod_key, mod_data in pairs(cached_settings) do
-                log("Re-caching settings for mct_mod with key ["..mod_key.."]")
-
-                if not self.__cached_settings[mod_key] then
-                    self.__cached_settings[mod_key] = {}
-                end
-
-                for k,v in pairs(mod_data) do
-                    self.__cached_settings[mod_key][k] = v
+                -- Only save it if it's true, to save some space!
+                -- --- TODO save the reason!
+                if option:get_read_only() == true then
+                    ret[mod_key][option_key]["_read_only"] = true
                 end
             end
         end
-
-        -- loop through the rest of "content", which is either empty entirely or has
-        -- any bits of information that need to be cached due to a disabled mct_mod
-        for mod_key, mod_data in pairs(content) do
-            
-            log("Caching settings for mct_mod with key ["..mod_key.."]")
-
-            if not self.__cached_settings[mod_key] then
-                self.__cached_settings[mod_key] = {}
-            end
-
-            for k,v in pairs(mod_data) do
-                self.__cached_settings[mod_key][k] = v
-            end
-        end
-
-        --self:finalize()
-
-        -- log("Any new settings added?: "..tostring(any_added))
-        if any_added then
-            --log("does this exist")
-            mct.ui:add_ui_created_callback(function()
-                local mod_keys = {}
-                for k, _ in pairs(self.__new_settings) do
-                    mod_keys[#mod_keys+1] = k
-                end
-
-                local key = "mct_new_settings"
-                local text = common.get_localised_string("mct_new_settings_start") .. "\n\n" .. common.get_localised_string("mct_new_settings_mid")
-
-                for i = 1, #mod_keys do
-                    local mod_obj = mct:get_mod_by_key(mod_keys[i])
-                    local title = mod_obj:get_title()
-
-                    -- there's only one changed mod
-                    if 1 == #mod_keys then
-                        text = text .. "\"" .. title .. "\"" .. ". "
-                    else
-                        if i == #mod_keys then
-                            text = text .. "and \"" .. title .. "\"" .. ". "
-                        else
-                            text = text .. "\"" .. title .. "\"" .. ", "
-                        end
-                    end
-                end
-
-                --text = text .. "\n" .. effect.get_localised_string("mct_new_settings_end")
-
-                mct.ui:create_popup(
-                    key,
-                    function()
-                        if not mct.ui.opened then 
-                            return text .. "\n" .. common.get_localised_string("mct_new_settings_created_end")
-                        else 
-                            return text
-                        end
-                    end,
-                    function()
-                        if not mct.ui.opened then
-                            return true
-                        else
-                            return false
-                        end
-                    end,
-                    function()
-                        if mct.ui.opened then
-                            -- do nothing
-                        else
-                            mct.ui:open_frame()
-                        end
-                    end,
-                    function()
-                        -- do nothing?
-                    end
-                )
-            end)
-        end
-
-    end) if not ok then errf(errmsg) end
-
-        self:finalize_first_time()
     end
 
-    --- trigger the create-new-profile "Default Profile" thing here
-    -- first time setup, either for a completely new user or a pre-port user.
-    self:setup_default_profile()
+    return ret
 end
 
+function Settings:load_save_table(tab)
+    local mods = mct:get_mods()
+    
+    for mod_key,mod in pairs(mods) do
+        local mod_data = tab[mod_key]
 
+        if mod_data then
+            local options = mod:get_options()
+
+            for option_key,option in pairs(options) do
+                local option_data = mod_data[option_key]
+
+                if option_data then
+                    local setting = option_data._setting
+                    local read_only = option_data._read_only
+
+                    option:set_finalized_setting(setting, true)
+                    if read_only then
+                        -- option:set_read_only(read_only)
+                    end
+                end
+            end
+        end
+    end
+end
 
 --- TODO handle MP stuff here!
 -- load saved details for all mods
 function Settings:load_game_callback(context)
     ---@type {selected_profile:string}
     local data = cm:load_named_value("mct", {selected_profile = "Default Profile"}, context)
+
+    --- TODO implement this!
+    local mct_mod_data = cm:load_named_value("mct_mod_data", {}, context)
 
     --- TODO grab the host's faction key, and run self:load() similarly to how it was run before in mp_load
     out("Load game callback for MCT! Selected profile is " .. data.selected_profile)
@@ -1461,6 +1027,9 @@ function Settings:save_game_callback(context)
         -- mct_host = "FACTION KEY", -- TODO save the host's faction key
         -- TODO anything else?
     }, context)
+    
+    --- TODO save a table with all mod objects -> option objects -> currently saved finalized settings.
+    cm:save_named_value("mct_mod_data", self:get_save_table(), context)
 end
 
 return Settings

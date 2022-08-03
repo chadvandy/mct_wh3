@@ -1,4 +1,7 @@
---- TODO add MCT to the Esc menu
+local mct = get_mct()
+
+---@class MCT.UI
+local ui = mct.ui
 
 --- Battle scripts are triggered after UI is already created
 core:get_tm():repeat_real_callback(function()
