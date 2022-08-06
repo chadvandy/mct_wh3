@@ -13,11 +13,8 @@ local log,logf,err,errf = get_vlog("[mct_registry]")
 
 ---@class MCT.Registry : Class
 local defaults = {
+    --- TODO
     __saved_profiles = {},
-
-    --- TODO this needs to hold is_locked / etc. too (?)
-    ---@type table Currently held settings, all global/local/campaign registry options held without prejudice
-    __data = {},
 
     ---@alias changed_settings {old_value:any,new_value:any}
 
@@ -28,8 +25,15 @@ local defaults = {
     ---@type table<string, table<string, changed_settings>> Changed-in-UI settings
     __changed_settings = {},
 
+    --- TODO rename this shit.
     ---@type boolean If any settings were changed during this "session", ie. one panel open/close
     __settings_changed = false,
+
+    __last_used_campaign_index = 0,
+
+    __this_campaign = 0,
+
+    __campaigns = {},
 }
 
 ---@class MCT.Registry : Class
@@ -62,19 +66,19 @@ function Registry:clear_changed_settings(clear_bool)
 end
 
 -- this saves the changed-setting, called whenever @{mct_option:set_selected_setting} is called (except for creation).
-function Registry:set_changed_setting(mod_key, option_key, new_value, is_popup_open)
-    if not is_string(mod_key) then
-        VLib.Error("set_changed_setting() called, but the mod_key provided ["..tostring(mod_key).."] is not a valid string!")
+---@param option_obj MCT.Option
+---@param new_value any
+---@param is_popup_open any
+---@return boolean
+function Registry:set_changed_setting(option_obj, new_value, is_popup_open)
+    if not mct:is_mct_option(option_obj) then
+        VLib.Error("set_changed_setting() called, but the option provided ["..tostring(option_obj).."] is not a valid MCT.Option!")
         return false
     end
 
-    if not is_string(option_key) then
-        VLib.Error("set_changed_setting() called for mod_key ["..mod_key.."], but the option_key provided ["..tostring(option_key).."] is not a valid string!")
-        return false
-    end
-
-    local mct_mod = mct:get_mod_by_key(mod_key)
-    local mct_option = mct_mod:get_option_by_key(option_key)
+    local mct_mod = option_obj:get_mod()
+    local mod_key = mct_mod:get_key()
+    local option_key = option_obj:get_key()
 
     -- add this as a table if it doesn't exist already
     if not is_table(self.__changed_settings[mod_key]) then
@@ -86,7 +90,7 @@ function Registry:set_changed_setting(mod_key, option_key, new_value, is_popup_o
         self.__changed_settings[mod_key][option_key] = {}
     end
 
-    local old = mct_option:get_finalized_setting()
+    local old = option_obj:get_finalized_setting()
 
     VLib.Log("Setting changed setting %s.%s to %s; former is %s", mod_key, option_key, tostring(new_value), tostring(old))
 
@@ -128,29 +132,31 @@ function Registry:get_selected_setting_for_option(option_obj)
     value = self:get_changed_settings(mod_key, option_key)
     if not is_nil(value) then return value end
 
-    value = self:query_option(option_obj)
+    value = option_obj:get_finalized_setting()
 
-    if not is_nil(value) then 
-        return value
-    end
-end
+    if not is_nil(value) then return value end
 
----@param option_obj MCT.Option
-function Registry:get_finalized_setting_for_option(option_obj)
-    local value = self:query_option(option_obj)
+    value = option_obj:get_default_value()
+
     return value
 end
 
-function Registry:get_settings_for_mod(mod_obj)
-    local options = mod_obj:get_options()
-    local retval = {}
+-- ---@param option_obj MCT.Option
+-- function Registry:get_finalized_setting_for_option(option_obj)
+--     local value = self:query_option(option_obj)
+--     return value
+-- end
 
-    for key, option in pairs(options) do
-        retval[key] = self:get_finalized_setting_for_option(option)
-    end
+-- function Registry:get_settings_for_mod(mod_obj)
+--     local options = mod_obj:get_options()
+--     local retval = {}
 
-    return retval
-end
+--     for key, option in pairs(options) do
+--         retval[key] = self:get_finalized_setting_for_option(option)
+--     end
+
+--     return retval
+-- end
 
 function Registry:clear_changed_settings_for_mod(mod_key)
     self.__changed_settings[mod_key] = nil
@@ -205,6 +211,7 @@ function Registry:finalize()
 
     self:save_file()
 
+    --- TODO rename this and put it into the UI object
     self.__settings_changed = true
 end
 
@@ -216,91 +223,11 @@ end
 --- Check whether there are any pending changes.
 ---@return boolean PendingSettingChanges Whether there's pending changes in the currently selected profile (ie. changing a single setting or more).
 function Registry:has_pending_changes()
+    logf("Testing if Registry has pending changes: " .. tostring(next(self.__changed_settings) ~= nil))
     return (next(self.__changed_settings) ~= nil)
 end
 
---- Check if an MCT.Mod with supplied key is currently held in the Registry.
----@param mod MCT.Mod Key of the MCT.Mod.
----@return boolean #True for exists, false for doesn't.
-function Registry:query_mod(mod)
-    local mod_key = mod:get_key()
-
-    return not is_nil(self.__data[mod_key])
-end
-
----comment
----@param option string|MCT.Option Option in question.
----@return any Val The value of the option's saved value (or nil, if there is no option)
-function Registry:query_option(option)
-    local mod = option:get_mod()
-    local mod_key, option_key = option:get_mod_key(), option:get_key()
-    VLib.Log("Querying %s & %s from Registry", tostring(mod_key), tostring(option_key))
-    return self:query_mod(mod) and not is_nil(self.__data[mod_key][option_key])
-end
-
----@param mod MCT.Mod
-function Registry:new_mod(mod)
-    local mod_key = mod:get_key()
-
-    if not self:query_mod(mod_key) then
-        self.__data[mod_key] = {}
-    end
-end
-
----@param option MCT.Option
----@param value any
-function Registry:new_option(option, value)
-    local mod = option:get_mod()
-    local mod_key = option:get_mod_key()
-    local option_key = option:get_key()
-
-    self:new_mod(mod)
-
-    if not self:query_option(option) then
-        self.__data[mod_key][option_key] = value
-    end 
-end
-
----@param option MCT.Option
----@param value any
-function Registry:save_setting(option, value)
-    local mod_key = option:get_mod_key()
-    local option_key = option:get_key()
-    if not self.__data[mod_key] then
-        self.__data[mod_key] = {}
-    end
-
-    self.__data[mod_key][option_key] = value
-end
-
----@param option MCT.Option
-function Registry:get_setting(option)
-    if not mct:is_mct_option(option) then
-        -- errmsg
-        return nil
-    end
-
-    local option_key,mod_key = option:get_key(), option:get_mod_key()
-    return self.__data[mod_key][option_key]
-end
-
---- Save all of the options for specified mod.
----@param mod_obj MCT.Mod
-function Registry:save_mod(mod_obj)
-    local mod_key = mod_obj:get_key()
-
-    if not self.__data[mod_key] then
-        self.__data[mod_key] = {}
-    end
-
-    local t = self.__data[mod_key]
-
-    for option_key, option_obj in pairs(mod_obj:get_options()) do
-        VLib.Log("Saving %s.%s.%s = %s", self.__data, mod_key, option_key, tostring(option_obj:get_finalized_setting()))
-        t[option_key] = option_obj:get_finalized_setting()
-    end
-end
-
+--- TODO get cached setting!
 ---@param option MCT.Option
 function Registry:get_default_setting(option)
     return option:get_default_value()
@@ -308,20 +235,20 @@ end
 
 --- Save every option from every mod into this profile with a default (or cached) setting
 function Registry:save_all_mods()
-    if not self.__data then self.__data = {} end
+    -- if not self.__data then self.__data = {} end
     
     --- TODO don't do this here or at all tbh
     --- TODO make sure EVERY option from EVERY mod is accounted for
     for mod_key,mod in pairs(mct:get_mods()) do
-        if not self.__data[mod_key] then self.__data[mod_key] = {} end
+        -- if not self.__data[mod_key] then self.__data[mod_key] = {} end
         for option_key,option in pairs(mod:get_options()) do
             -- logf("checking option %s", option_key)
-            if not self.__data[mod_key][option_key] then
+            -- if not self.__data[mod_key][option_key] then
                 
                 local value = Registry:get_default_setting(option)
                 -- logf("saving [%s].__mods[%s][%s] = %s", self.__data, mod_key, option_key, tostring(value))
-                self.__data[mod_key][option_key] = value
-            end
+                -- self.__data[mod_key][option_key] = value
+            -- end
         end
     end
 end
@@ -330,7 +257,7 @@ end
 function Registry:read_file()
     local file = io.open(self:get_file_path(), "r+")
 
-    if not file then return self:save_file_with_defaults() end
+    if not file then self:save_file_with_defaults() return self:read_file() end
 
     local str = file:read("*a")
 
@@ -338,42 +265,62 @@ function Registry:read_file()
 
     if not t or not t.global then
         --- Don't read - set values to default and save immediately.
-        return self:save_file_with_defaults()
+        self:save_file_with_defaults()
+        return self:read_file()
     end
 
     local all_mods = mct:get_mods()
     for mod_key, mod_obj in pairs(all_mods) do
         if t.global.saved_mods[mod_key] then
-            if not self:query_mod(mod_obj) then
-                self:new_mod(mod_key)
-            end
-
             for option_key, option_obj in pairs(mod_obj:get_options()) do
                 local test = t.global.saved_mods[mod_key].options[option_key]
+
+                -- if we have something saved in the global registry ...
                 if test and test.setting then
-                    option_obj._finalized_setting = test.setting or option_obj:get_default_value()
-                    option_obj._is_locked = (is_boolean(test.is_locked) and test.is_locked) or false
-                    option_obj._lock_reason = (is_string(test.lock_reason) and test.lock_reason) or ""
+
+                    -- if this option is global OR we're outside of a "campaign" context ...
+                    if option_obj:is_global() or mct:context() ~= "campaign" then
+
+                        -- assign finalized settings!
+                        option_obj._finalized_setting = test.setting or option_obj:get_default_value()
+                        option_obj._is_locked = (is_boolean(test.is_locked) and test.is_locked) or false
+                        option_obj._lock_reason = (is_string(test.lock_reason) and test.lock_reason) or ""
+                    end
                 end
             end
         end
     end
 
+    self.__last_used_campaign_index = t.last_used_campaign_index
+    self.__campaigns = t.campaigns
+
+    --- Loaded in save_game()
+    self.__this_campaign = 0
 
     file:close()
 end
 
-function Registry:load()
+function Registry:load(loading_game_context)
     self:save_all_mods()
     self:read_file()
+
+    if cm and loading_game_context then
+        --- TODO read the saved settings for current options!
+        self:load_game(loading_game_context)
+        cm:add_saving_game_callback(function(context) self:save_game(context) end)
+    end
 end
 
 function Registry:save_file_with_defaults()
     local file = io.open(self:get_file_path(), "w+")
+    ---@cast file file*
+
     local t = {
         global = {
             saved_mods = {}
-        }
+        },
+        campaigns = {},
+        last_used_campaign_index = 0,
     }
 
     local all_mods = mct:get_mods()
@@ -391,7 +338,7 @@ function Registry:save_file_with_defaults()
                 description = option_obj:get_tooltip_text(),
             }
 
-            if option_obj:is_global() then
+            -- if option_obj:is_global() or mct:context() ~= "campaign" then
                 this.options[option_key].setting = option_obj:get_default_value()
                 --- TODO
 
@@ -399,7 +346,7 @@ function Registry:save_file_with_defaults()
                     this.options[option_key].is_locked = true
                     this.options[option_key].lock_reason = option_obj:get_lock_reason()
                 end
-            end
+            -- end
         end
 
         this.data.name = mod_obj:get_title()
@@ -416,10 +363,13 @@ end
 
 function Registry:save_file()
     local file = io.open(self:get_file_path(), "w+")
+    ---@cast file file*
     local t = {
         ["global"] = {
             ["saved_mods"] = {},
-        }
+        },
+        ["campaign"] = self.__campaigns,
+        ["last_used_campaign_index"] = self.__last_used_campaign_index,
     }
 
     --- TODO make sure we're taking into account things not held in active memory (ie. reading the .campaign field from the registry file so that stays true (should the .campaign field be a foreign file? (yes!)))
@@ -434,6 +384,13 @@ function Registry:save_file()
         }
 
         local this = t.global.saved_mods[mod_key]
+        local this_campaign = t.campaign[self.__this_campaign]
+
+        if mct:context() == "campaign" then
+            this_campaign[mod_key] = {
+                options = {},
+            }
+        end
 
         for option_key, option_obj in pairs(mod_obj:get_options()) do
             this.options[option_key] = {
@@ -448,6 +405,19 @@ function Registry:save_file()
                 if option_obj:is_locked() then
                     this.options[option_key].is_locked = true
                     this.options[option_key].lock_reason = option_obj:get_lock_reason()
+                end
+            else
+
+                -- this.options[option_key].setting = 
+                if mct:context() == "campaign" then
+                    this_campaign[mod_key].options[option_key] = {
+                        setting = option_obj:get_finalized_setting(),
+                    }
+
+                    if option_obj:is_locked() then
+                        this_campaign[mod_key].options.is_locked = true
+                        this_campaign[mod_key].options.lock_reason = option_obj:get_lock_reason()
+                    end
                 end
             end
         end
@@ -470,13 +440,17 @@ function Registry:save_campaign_info()
 end
 
 --- TODO read the info of a previously saved campaign savegame
-function Registry:read_campaign_info(save_id)
+function Registry:read_campaign_info(save_index)
 
 end
 
---- TODO save the settings info into this campaign's SaveGameHeader
+--- save the settings info into this campaign's SaveGameHeader
+--- for the first time through, this will save the last-used settings in the frontend.
 function Registry:save_game(context)
-    local t = {["saved_mods"] = {}}
+    local t = {
+        ["saved_mods"] = {}, 
+        ["this_campaign_index"] = self.__this_campaign
+    }
 
     local all_mods = mct:get_mods()
     for mod_key,mod_obj in pairs(all_mods) do
@@ -484,21 +458,17 @@ function Registry:save_game(context)
             options = {},
         }
 
-        local this = t.saved_mods[mod_key]
+        local this = t.saved_mods[mod_key].options
 
         for option_key, option_obj in pairs(mod_obj:get_options()) do
-            this.options[option_key] = {
-                name = option_obj:get_text(),
-                description = option_obj:get_tooltip_text(),
-            }
-
+            this[option_key] =  {}
             if not option_obj:is_global() then
-                this.options[option_key].setting = option_obj:get_finalized_setting()
+                this[option_key].setting = option_obj:get_finalized_setting()
                 --- TODO
 
                 if option_obj:is_locked() then
-                    this.options[option_key].is_locked = true
-                    this.options[option_key].lock_reason = option_obj:get_lock_reason()
+                    this[option_key].is_locked = true
+                    this[option_key].lock_reason = option_obj:get_lock_reason()
                 end
             end
         end
@@ -509,17 +479,39 @@ end
 
 --- TODO load the settings for this campaign into memory
 function Registry:load_game(context)
+    local registry_data = cm:load_named_value("mct_registry", {}, context)
+    ---@cast registry_data table
 
+    if is_nil(next(registry_data)) then
+        --- assign this_campaign to the next index, and iterate that counter. (ie. if last index is 0, assign this campaign to 1, and save 1 in MCT so we iterate it next time)
+        local index = self.__last_used_campaign_index + 1
+        self.__this_campaign = index
+        self.__last_used_campaign_index = index
+    end
+
+    for mod_key, mod_data in pairs(registry_data.saved_mods) do
+        local mod_obj = mct:get_mod_by_key(mod_key)
+        if mod_obj then
+            for option_key, option_data in pairs(mod_data.options) do
+                local option_obj = mod_obj:get_option_by_key(option_key)
+                if option_obj then
+                    option_obj._finalized_setting = option_data.setting
+
+                    if option_data.is_locked then
+                        option_obj._is_locked = true
+                        option_obj._lock_reason = option_data.lock_reason
+                    end
+                end
+            end
+        end
+    end
+
+    self.__this_campaign = registry_data.this_campaign_index
 end
 
 --- TODO forward compatibility
 function Registry:adapt_old_file()
 
-end
-
-if cm then
-    cm:add_loading_game_callback(function(context) Registry:load_game(context) end)
-    cm:add_saving_game_callback(function(context) Registry:save_game(context) end)
 end
 
 

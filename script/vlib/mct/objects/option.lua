@@ -145,9 +145,7 @@ function mct_option:set_locked(is_locked, lock_reason)
 
     if is_locked then self._lock_reason = lock_reason end
 
-    if is_uicomponent(self:get_uic_with_key("option")) then
-        self:ui_change_state()
-    end
+    self:ui_refresh()
 end
 
 function mct_option:is_locked()
@@ -155,6 +153,7 @@ function mct_option:is_locked()
 end
 
 function mct_option:get_lock_reason()
+    return self._lock_reason
 end
 
 --- TODO make an option context-specific (ie. battle) so 
@@ -200,26 +199,6 @@ end
 ---@param b_read_only boolean True for non-editable, false for editable.
 ---@param reason string
 function mct_option:set_read_only(b_read_only, reason)
-    -- if is_nil(b_read_only) then
-    --     b_read_only = true
-    -- end
-
-    -- if is_nil(reason) then
-    --     reason = "mct_lock_reason_read_only"
-    -- end
-
-    -- if not is_boolean(b_read_only) then
-    --     -- issue
-    --     return false
-    -- end
-
-    -- if not is_string(reason) then return false end
-
-    -- self._read_only = {
-    --     b = b_read_only,
-    --     reason = reason,
-    -- }
-
     self:set_locked(b_read_only, reason)
 end
 
@@ -507,7 +486,7 @@ end
 
 --- Triggered via the UI object. Change the mct_option's selected value, and trigger the script event "MctOptionSelectedSettingSet". Can be listened through a listener, or by using @{mct_option:add_option_set_callback}.
 ---@param val any Set the selected setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
-function mct_option:set_selected_setting(val)
+function mct_option:set_selected_setting(val, is_from_popup)
     local valid, new_value = self:is_val_valid_for_type(val)
     if not valid then
         if new_value ~= nil then
@@ -520,7 +499,7 @@ function mct_option:set_selected_setting(val)
     end
 
     -- check if the UI is currently locked for this option; if it is, don't change the selected setting
-    if self:get_uic_locked() then
+    if self:is_locked() then
         return
     end
     
@@ -533,13 +512,17 @@ function mct_option:set_selected_setting(val)
     if not mct.ui:is_open() then
         return
     end
-    
-    Registry:set_changed_setting(self:get_mod_key(), self:get_key(), val)
-    
-    -- call ui_select_value if the UI exists
-    if is_uicomponent(self:get_uic_with_key("option")) then
-        self:ui_select_value(val, true)
+
+    logf("Changing option %s of type %q to val %s", self:get_key(), self:get_type(), tostring(val))
+
+    --- If we have a confirmation popup, abort the operation and go through that. 
+    if not is_from_popup and self:test_confirmation_popup(val, self:get_selected_setting()) then
+        return
     end
+    
+    Registry:set_changed_setting(self, val)
+    
+    self:ui_refresh()
     
     core:trigger_custom_event("MctOptionSelectedSettingSet", {mct = mct, option = self, setting = val} )
 
@@ -599,44 +582,55 @@ function mct_option:check_validity(val)
     --- TODO abstract this method
 end
 
---- Sets an automatic default for this mct_option, if a modder didn't.
---- Automatic default depends on the type of the mct_option; ie., booleans automatically default to false.
-function mct_option:set_default()
-    -- return self:get_wrapped_type():set_default()
+function mct_option:ui_select_value(val)
+    -- mct.ui:set_actions_states()
 end
 
-function mct_option:ui_select_value(val, is_new_version)
-    if not is_new_version then
-        self:set_selected_setting(val)
+--- TODO hook up, cache, campaign-only, etc.
+--- Require the game to be reloaded on changing this setting.
+---@param callback any
+function mct_option:force_reload_on_change(callback)
+
+end
+
+--- Enable a Confirmation Popup for this MCT.Option. When an option is edited in the UI with a confirmation popup, the panel will trigger a popup saying the supplied text and an ok/cancel set of buttons.
+---@param confirmation_callback fun(new_val:any):boolean,string #An optional callback - if the boolean returned is "true", then the popup will trigger with the supplied text.
+function mct_option:add_confirmation_popup(confirmation_callback)
+    if not is_function(confirmation_callback) then
+        confirmation_callback = function() return true, "Are you sure you wish to edit this option?" end
     end
 
-    mct.ui:set_actions_states()
+    self._confirmation_popup_callback = confirmation_callback
 end
 
+function mct_option:test_confirmation_popup(new_val, old_val)
+    if not self._confirmation_popup_callback then
+        return false
+    end
 
--- function mct_option:ui_select_value(val, is_new_version)
---     local valid, new_value = self:check_validity(val)
---     if not valid then
---         if val ~= nil then
---             err("ui_select_value() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type. Replacing with ["..tostring(new_value).."].")
---             val = new_value
---         else
---             err("ui_select_value() called for option with key ["..self:get_key().."], but the val supplied ["..tostring(val).."] is not valid for the type!")
---             return false
---         end
---     end
+    local trigger,trigger_text = self._confirmation_popup_callback(new_val)
 
-
---     local option_uic = self:get_uic_with_key("option")
-
---     if not is_uicomponent(option_uic) then
---         err("ui_select_value() called for option with key ["..self:get_key().."], in mct_mod ["..self:get_mod():get_key().."], but this option doesn't currently exist in the UI! Aborting change.")
---         return false
---     end
-
---     --- TODO, err?
-
--- end
+    if trigger == true then
+        VLib.TriggerPopup(
+            "confirmation_popup", 
+            trigger_text, 
+            true, 
+            function() --- "ok" button
+                -- keep the new selected setting, so do nothing I think?
+                logf("Pressed OK - keeping the new setting!")
+                self:set_selected_setting(new_val, true)
+            end,
+            function() --- "cancel" button
+                -- return to the previously selected setting
+                logf("Pressed Cancel - returning to the old setting!")
+                self:set_selected_setting(old_val, true)
+            end,
+            nil,
+            mct.ui.panel
+        )
+        return true
+    end
+end
 
 ---- Internal function to set the option UIC as disabled or enabled, for read-only/mp-disabled.
 --- Use `mct_option:set_uic_locked()` for the external version of this; this just reads the uic_locked boolean and changes the UI.
@@ -647,64 +641,160 @@ end
 
 --- Creates the UI component in the UI. Shouldn't be used externally!
 ---@param dummy_parent UIC The parent component for the new option.
+---@return UIC #
 function mct_option:ui_create_option(dummy_parent)
-    -- return self:get_wrapped_type():ui_create_option(dummy_parent)
+
 end
 
--- type-specifics
+--- TODO add in the extra goodies ie. "revert to defaults" button or "info" button
+--- Creates the Option in the UI. Pass along the parent UIC and the preferred w/h of the option row.
+---@param parent any
+---@param w any
+---@param h any
+function mct_option:ui_create_option_base(parent, w, h)
+    local dummy_option = core:get_or_create_component(self:get_key(), "ui/campaign ui/script_dummy", parent)
 
----- sliders ----
+    dummy_option:SetCanResizeHeight(true) dummy_option:SetCanResizeWidth(true)
+    dummy_option:Resize(w, h)
+    dummy_option:SetCanResizeHeight(false) dummy_option:SetCanResizeWidth(false)
 
--- --- Slider-specific function. Calls @{mct_slider:slider_get_precise_value}.
--- function mct_option:slider_get_precise_value(...)
--- ---@diagnostic disable-next-line: redundant-parameter
--- -- return self:get_wrapped_type():slider_get_precise_value(...)
--- end
+    dummy_option:SetVisible(true)
+    
+    -- set to dock center
+    dummy_option:SetDockingPoint(5)
 
--- --- Slider-specific function. Calls @{mct_slider:slider_set_step_size}.
--- function mct_option:slider_set_step_size(...)
---     -- ---@diagnostic disable-next-line: redundant-parameter
---     -- return self:get_wrapped_type():slider_set_step_size(...)
--- end
+    -- give priority over column
+    dummy_option:PropagatePriority(parent:Priority() +1)
 
--- --- Slider-specific function. Calls @{mct_slider:slider_set_precision}.
--- function mct_option:slider_set_precision(...)
---     -- ---@diagnostic disable-next-line: redundant-parameter
---     -- return self:get_wrapped_type():slider_set_precision(...)
--- end
+    --- Create the border if necessary
+    local dummy_border = core:get_or_create_component("border", "ui/vandy_lib/image", dummy_option)
+    dummy_border:SetCanResizeHeight(true) dummy_border:SetCanResizeWidth(true)
+    dummy_border:Resize(w, h)
+    dummy_border:SetCanResizeHeight(false) dummy_border:SetCanResizeWidth(false)
 
--- --- Slider-specific function. Calls @{mct_slider:slider_set_min_max}.
--- function mct_option:slider_set_min_max(...)
---     -- ---@diagnostic disable-next-line: redundant-parameter
---     -- return self:get_wrapped_type():slider_set_min_max(...)
--- end
+    dummy_border:SetState("tiled")
 
----- dropdowns ----
+    local border_path = self:get_border_image_path()
+    local border_visible = self:get_border_visibility()
 
--- --- Dropdown-specific function. Calls @{mct_dropdown:add_dropdown_values}
--- function mct_option:add_dropdown_values(...)
---     -- ---@diagnostic disable-next-line: redundant-parameter
---     -- return self:get_wrapped_type():add_dropdown_values(...)
--- end
+    if is_string(border_path) and border_path ~= "" then
+        dummy_border:SetImagePath(border_path, 1)
+    else -- some error; default to default
+        dummy_border:SetImagePath("ui/skins/default/panel_back_border.png", 1)
+    end
 
--- --- Dropdown-specific function. Calls @{mct_dropdown:add_dropdown_value}
--- function mct_option:add_dropdown_value(...)
---     -- ---@diagnostic disable-next-line: redundant-parameter
---     -- return self:get_wrapped_type():add_dropdown_value(...)
--- end
+    dummy_border:SetVisible(border_visible)
 
--- --- Dropdown-specific function. Calls @{mct_dropdown:refresh_dropdown_box}
--- function mct_option:refresh_dropdown_box()
---     -- return self:get_wrapped_type():refresh_dropdown_box()
--- end
+    self:set_uic_with_key("border", dummy_border, true)
 
----- text-input ----
+    -- make some text to display deets about the option
+    local option_text = core:get_or_create_component("text", "ui/vandy_lib/text/dev_ui", dummy_option)
+    _SetVisible(option_text, true)
+    option_text:SetDockingPoint(4)
+    option_text:SetDockOffset(15, 0)
 
+    -- set the tooltip on the "dummy", and remove anything from the option text
+    dummy_option:SetInteractive(true)
+    option_text:SetInteractive(false)
+
+    if self:get_tooltip_text() ~= "No tooltip assigned" then
+        _SetTooltipText(dummy_option, self:get_tooltip_text(), true)
+    end
+
+    -- create the interactive option
+    local new_option = self:ui_create_option(dummy_option)
+
+    self:set_uic_with_key("text", option_text, true)
+
+    -- resize the text so it takes up the space of the dummy column that is not used by the option
+    local n_w = new_option:Width()
+    local t_w = dummy_option:Width()
+    local ow = t_w - n_w - 35 -- -25 is for some spacing! -15 for the offset, -10 for spacing between the option to the right
+    local oh = dummy_option:Height() * 0.95
+    
+    option_text:Resize(ow, oh)
+    option_text:SetTextVAlign("centre")
+    option_text:SetTextHAlign("left")
+    option_text:SetTextXOffset(5, 0)
+
+    do
+        -- local w, h = option_text:TextDimensionsForText(option_obj:get_text())
+        option_text:ResizeTextResizingComponentToInitialSize(ow, oh)
+
+        _SetStateText(option_text, self:get_text())
+
+        -- w,h = option_text:TextDimensionsForText(option_obj:get_text())
+        -- option_text:ResizeTextResizingComponentToInitialSize(ow, oh)
+    end
+
+    new_option:SetDockingPoint(6)
+    new_option:SetDockOffset(0, 0)
+
+    --- TODO absolutely don't handle this here
+    -- read if the option is read-only in campaign (and that we're in campaign)
+    if __game_mode == __lib_type_campaign then
+
+        -- if game is MP, and the local faction isn't the host, lock any non-local settings
+        if cm:is_multiplayer() and cm:get_local_faction_name(true) ~= cm:get_saved_value("mct_host") then
+            log("local faction: "..cm:get_local_faction_name(true))
+            log("host faction: "..cm:get_saved_value("mct_host"))
+            -- if the option isn't local only, disable it
+            log("mp and client")
+            if not self:get_local_only() then
+                log("option ["..self:get_key().."] is not local only, locking!")
+                self:set_locked(true, "mct_lock_reason_mp_client")
+            end
+        end
+    end
+
+    --- TODO if we have an info button to show, show it!
+
+    --- if we have a default value set, create the revert-to-defaults button!
+    if not is_nil(self:get_default_value(true)) then
+        local revert_to_defaults = core:get_or_create_component("mct_revert_to_defaults", "ui/vandy_lib/image_button", dummy_option)
+
+        revert_to_defaults:SetProperty("mct_option", self:get_key())
+        revert_to_defaults:SetProperty("mct_mod", self:get_mod_key())
+        revert_to_defaults:SetImagePath("ui/skins/default/icon_reset.png", 0)
+        
+        revert_to_defaults:SetCanResizeHeight(true)
+        revert_to_defaults:SetCanResizeWidth(true)
+        revert_to_defaults:Resize(20, 20)
+        revert_to_defaults:SetDockingPoint(6)
+        revert_to_defaults:SetDockOffset(-new_option:Width() - 5, 0)
+        
+        revert_to_defaults:SetTooltipText("Revert this option to its default value.", true)
+
+        self:set_uic_with_key("revert_to_defaults", revert_to_defaults, true)
+    end
+
+    self:ui_refresh()
+end
+
+--- set the state, value, visibility, and actions (ie. revert to defaults)
+function mct_option:ui_refresh()
+    self:ui_select_value(self:get_selected_setting())
+    self:ui_change_state()
+    self:set_uic_visibility(self:get_uic_visibility())
+
+    local revert = self:get_uic_with_key("revert_to_defaults")
+    if revert then
+        --- only set visible if the selected setting is different than default AND we're not locked
+        local vis =  false
+        if not self:is_locked() then
+            if self:get_selected_setting() ~= self:get_default_value(true) then
+                vis = true
+            end
+        end
+
+        revert:SetVisible(vis)
+    end
+end
 
 ---- Getter for the "finalized_setting" for this `mct_option`.
 --- @treturn any finalized_setting Finalized setting for this `mct_option` - either the default value set via @{mct_option:set_default_value}, or the latest saved value if in a campaign, or the latest mct_settings.lua - value if in a new campaign or in frontend.
 function mct_option:get_finalized_setting()
-    return Registry:get_finalized_setting_for_option(self)
+    return self._finalized_setting
 end
 
 
@@ -723,7 +813,7 @@ function mct_option:set_finalized_setting(val, is_first_load)
         end
     end
 
-    Registry:save_setting(self, val)
+    self._finalized_setting = val
 
     -- trigger an event to listen for externally (skip if it's first load)
     if not is_first_load then
@@ -740,61 +830,19 @@ function mct_option:set_default_value(val)
 end
 
 ---- Getter for the default setting for this mct_option.
---- @treturn any The modder-set default value.
-function mct_option:get_default_value()
-    -- if no default value was set, pick one automatically.
-    local default_val = self._default_setting
-
-    if is_nil(default_val) then
-        self:set_default()
+---@param only_set boolean? Set to true if you only want to get a modder-set :set_default_value(); if set to false or nil, you'll get the fallback values. 
+---@return any The modder-set default value.
+function mct_option:get_default_value(only_set)
+    if only_set then
+        return self._default_setting
     end
 
-    return self._default_setting
+    if not is_nil(self._default_setting) then return self._default_setting end
+    return self:get_fallback_value()
 end
 
----- Getter for whether this UIC is currently locked.
---- @return boolean uic_locked Whether the UIC is set as locked.
-function mct_option:get_uic_locked()
-    return self._uic_locked
-end
-
----- Set this option as disabled in the UI, so the user can't interact with it.
---- This will result in `mct_option:ui_change_state()` being called later on.
----@param should_lock boolean Lock this UI option, preventing it from being interacted with.
----@param lock_reason string? The text to supply to the tooltip, to show the player why this is locked. This argument is ignored if should_lock is false.
-function mct_option:set_uic_locked(should_lock, lock_reason)
-    self:set_locked(should_lock, lock_reason)
-    -- if is_nil(should_lock) then
-    --     should_lock = true
-    -- end
-
-    -- if not is_boolean(should_lock) then 
-    --     err("set_uic_locked() called for mct_option with key ["..self:get_key().."], but the should_lock argument passed is not a boolean or nil!")
-    --     return false 
-    -- end
-
-    -- -- only care about localisation if it's being locked!
-    -- if should_lock then
-    --     if is_nil(lock_reason) then
-    --         lock_reason = "Locked."
-    --     end
-
-    --     if not is_string(lock_reason) then
-    --         err("set_uic_locked() called for mct_option ["..self:get_key().."], but the lock_reason passed is not a string or nil! Returning false.")
-    --         return false
-    --     end
-
-    --     self._uic_lock_reason = lock_reason
-    -- else
-    --     self._uic_lock_reason = ""
-    -- end
-
-    -- self._uic_locked = should_lock
-
-    -- -- if the option already exists in UI, update its state
-    -- if is_uicomponent(self:get_uic_with_key("option")) then
-    --     self:ui_change_state()
-    -- end
+function mct_option:get_fallback_value()
+    -- return self:get_default_value() or self:get_fallback_value()
 end
 
 ---- Getter for the current selected setting. This is the value set in @{mct_option:set_default_value} if nothing has been selected yet in the UI.
@@ -811,7 +859,7 @@ end
 
 ---- Getter for this mct_option's type; slider, dropdown, checkbox
 function mct_option:get_type()
-    return self._type
+    return self.className
 end
 
 ---- Getter for this option's UIC template for quick reference.
@@ -823,6 +871,10 @@ end
 --- @treturn string key mct_option's unique identifier
 function mct_option:get_key()
     return self._key
+end
+
+function mct_option:revert_to_default()
+    self:set_selected_setting(self:get_default_value(true))
 end
 
 ---- Setter for this option's text, which displays next to the dropdown box/checkbox.

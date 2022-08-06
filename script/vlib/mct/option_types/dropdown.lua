@@ -6,7 +6,7 @@ local log,logf,err,errf = get_vlog("[mct]")
 
 ---@type MCT.Option.Dropdown
 local defaults = {
-    _template = {"ui/vandy_lib/dropdown_button", "ui/vandy_lib/dropdown_option"},
+    -- _template = {"ui/vandy_lib/dropdown_button", "ui/vandy_lib/dropdown_option"},
 }
 
 ---@class MCT.Option.Dropdown : MCT.Option A Dropdown object.
@@ -28,20 +28,18 @@ end
 --- Checks the validity of the value passed.
 ---@param val any Tested value.
 --- @return boolean valid Returns true if the value passed is valid, false otherwise.
---- @return boolean valid_return If the value passed isn't valid, a second return is sent, for a valid value to replace the tested one with.
+--- @return boolean? valid_return If the value passed isn't valid, a second return is sent, for a valid value to replace the tested one with.
 function Dropdown:check_validity(val)
-    if not is_string(val) then
-        return false
-    end
-
     local values = self:get_values()
+  
+    if is_string(val) then
+        -- check if this key exists as a dropdown option
+        for i = 1, #values do
+            local test = values[i].key
     
-    -- check if this key exists as a dropdown option
-    for i = 1, #values do
-        local test = values[i].key
-
-        if val == test then
-            return true
+            if val == test then
+                return true
+            end
         end
     end
 
@@ -50,17 +48,15 @@ function Dropdown:check_validity(val)
     return false, values[1].key
 end
 
---- Sets the default value for this dropdown, if none is selected by the modder.
---- Defaults to the first dropdown value added.
-function Dropdown:set_default()
-
-    local values = self:get_values()
+--- Gets a fallback value, if no default value is set by the modder.
+function Dropdown:get_fallback_value()
     -- set the default value as the first added dropdown option
-    self:set_default_value(values[1])
+    local values = self:get_values()
+    return values[1]
 end
 
 --- Select a value within the UI; ie., change from the first dropdown value to the second.
-function Dropdown:ui_select_value(val, is_new_version)
+function Dropdown:ui_select_value(val)
     local valid,new = self:check_validity(val)
     if not valid then
         if val ~= nil then
@@ -120,7 +116,7 @@ function Dropdown:ui_select_value(val, is_new_version)
     popup_menu:SetVisible(false)
     popup_menu:RemoveTopMost()
 
-    Super.ui_select_value(self, val, is_new_version)
+    Super.ui_select_value(self, val)
 end
 
 --- Change the state of the mct_option in UI; ie., lock the option from being used.
@@ -128,7 +124,7 @@ function Dropdown:ui_change_state()
     local option_uic = self:get_uic_with_key("option")
     local text_uic = self:get_uic_with_key("text")
 
-    local locked = self:get_uic_locked()
+    local locked = self:is_locked()
     local lock_reason = self:get_lock_reason()
 
     -- disable the dropdown box
@@ -266,6 +262,8 @@ function Dropdown:refresh_dropdown_box()
     popup_list:DestroyChildren()
 
     local selected_tx = UIComponent(uic:Find("dy_selected_txt"))
+    selected_tx:SetTextHAlign('left')
+    selected_tx:SetTextVAlign('centre')
     
     local selected_value = self:get_selected_setting()
 
@@ -357,6 +355,7 @@ core:add_listener(
         return context.string == "mct_dropdown_box"
     end,
     function(context)
+        local ok, err = pcall(function()
         local box = UIComponent(context.component)
         local menu = find_uicomponent(box, "popup_menu")
 
@@ -364,10 +363,14 @@ core:add_listener(
         local option_key = box:GetProperty("mct_option")
         local option_obj = mod_obj:get_option_by_key(option_key)
 
+        logf("Clickingt dropdown box %s in mod %s", option_key, mod_obj:get_key())
+
         if is_uicomponent(menu) then
-            if menu:Visible(false) then
+            if menu:Visible() then
+                logf("Menu is visible, hiding!")
                 menu:SetVisible(false)
             else
+                logf("Menu is invisible, showing!")
                 menu:SetVisible(true)
                 menu:RegisterTopMost()
                 -- next time you click something, close the menu!
@@ -410,6 +413,7 @@ core:add_listener(
                 )
             end
         end
+    end) if not ok then VLib.Error(err) end
     end,
     true
 )

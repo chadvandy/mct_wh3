@@ -99,30 +99,45 @@ debug:set_text("Debug Logging")
 debug:set_tooltip_text("This option removes the performative nature of the Vandy Library logging. Using Debug mode will mean more accurate log files, but you may notice a slowdown at points as the mod writes the logs. [[col:red]]Only use if you're getting crashes![[/col]]")
 debug:set_local_only(true)
 
--- local check = mct_mod:add_new_option("check", 'checkbox')
--- check:set_text("Checkbox")
--- check:set_tooltip_text("Test checkbox")
+local check = mct_mod:add_new_option("check", 'checkbox')
+check:set_text("Global Locked Checkbox")
+check:set_tooltip_text("Test checkbox")
+check:set_is_global(true)
+check:set_locked(true)
 
--- ---@type MCT.Option.Dropdown
--- local drop = mct_mod:add_new_option("dropdown", "dropdown")
--- drop:set_text("Dropdown")
--- drop:add_dropdown_values({
---     {
---         key = "Test",
---         text = "Testing text!",
---         is_default = false,
---     },
---     {
---         key = "Other Test",
---         text = "Use this!",
---         is_default = true,
---     },
---     {
---         key = "test",
---         text = "Hello",
---     }
--- })
--- -- drop:add_drop
+local chek = mct_mod:add_new_option("check_unlock", 'checkbox')
+chek:set_text("Global Unlocked Checkbox")
+chek:set_tooltip_text("Test checkbox")
+chek:set_is_global(true)
+chek:add_confirmation_popup(
+    function(new_val)
+        if new_val == false then
+            return true, "Are you sure you want to change this Global Unlocked Checkbox to false?"
+        end
+
+        return false
+    end
+)
+
+---@type MCT.Option.Dropdown
+local drop = mct_mod:add_new_option("dropdown", "dropdown")
+drop:set_text("Dropdown")
+drop:add_dropdown_values({
+    {
+        key = "Test",
+        text = "Testing text!",
+        is_default = false,
+    },
+    {
+        key = "Other Test",
+        text = "Use this!",
+        is_default = true,
+    },
+    {
+        key = "test",
+        text = "Hello",
+    }
+})
 
 -- ---@type MCT.Option.Slider
 -- local slider = mct_mod:add_new_option("slider", 'slider')

@@ -30,7 +30,7 @@ end
 --- Checks the validity of the value passed.
 ---@param value any Tested value.
 --- @return boolean valid Returns true if the value passed is valid, false otherwise.
---- @return boolean valid_return If the value passed isn't valid, a second return is sent, for a valid value to replace the tested one with.
+--- @return boolean? valid_return If the value passed isn't valid, a second return is sent, for a valid value to replace the tested one with.
 function Checkbox:check_validity(value)
     if not is_boolean(value) then
         return false, false
@@ -40,17 +40,14 @@ function Checkbox:check_validity(value)
 end
 
 --- Sets a default value for this mct_option. Defaults to "false" for checkboxes.
-function Checkbox:set_default()
-
-    -- if there's no default, set it to false.
-    self:set_default_value(false)
+function Checkbox:get_fallback_value()
+    return false
 end
 
 ---- Internal function that calls the operation to change an option's selected value. Exposed here so it can be called through presets and the like. Use `set_selected_setting` instead, please!
 --- Selects a value in UI for this mct_option.
 ---@param val any Set the selected setting as the passed value, tested with check_validity()
----@param is_new_version true? Set this to true to skip calling mct_option:set_selected_setting from within. This is done to keep the mod backwards compatible with the last patch, where the Order of Operations went ui_select_value -> set_selected_setting; the new Order of Operations is the inverse.
-function Checkbox:ui_select_value(val, is_new_version)
+function Checkbox:ui_select_value(val)
     local valid,new = self:check_validity(val)
     if not valid then
         if val ~= nil then
@@ -77,17 +74,16 @@ function Checkbox:ui_select_value(val, is_new_version)
 
     option_uic:SetState(state)
 
-    Super.ui_select_value(self, val, is_new_version)
+    Super.ui_select_value(self, val)
 end
 
 --- Changes the state for the mct_option in UI, ie. locked/unlocked.
-function Checkbox:ui_change_state(val)
+function Checkbox:ui_change_state()
     local option_uic = self:get_uic_with_key("option")
     if not option_uic then return end
     
     local text_uic = self:get_uic_with_key("text")
 
-    local locked = self:get_uic_locked()
     local lock_reason = self:get_lock_reason()
     
     local value = self:get_selected_setting()
@@ -95,7 +91,7 @@ function Checkbox:ui_change_state(val)
     local state = "active"
     local tt = self:get_tooltip_text()
 
-    if locked then
+    if self:is_locked() then
         -- disable the checkbox, set it as checked if the finalized setting is true
         if value == true then
             state = "selected_inactive"
@@ -106,8 +102,6 @@ function Checkbox:ui_change_state(val)
     else
         if value == true then
             state = "selected"
-        -- else
-        --     state = "active"
         end
     end
 

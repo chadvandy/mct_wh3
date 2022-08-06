@@ -68,7 +68,7 @@ end
 
 --- Sets the default value for this mct_option.
 --- Returns the exact median value for this slider, with precision in mind.
-function Slider:set_default()
+function Slider:get_fallback_value()
     local values = self:get_values()
 
     local min = values.min
@@ -78,14 +78,13 @@ function Slider:set_default()
     -- TODO set this with respect for the step sizes, precision, etc
     local mid = (min+max)/2
     mid = self:slider_get_precise_value(mid, false)
-    self:set_default_value(mid)
+    return mid
 end
 
 ---- Internal function that calls the operation to change an option's selected value. Exposed here so it can be called through presets and the like. Use `set_selected_setting` instead, please!
 --- Selects a value in UI for this mct_option.
 ---@param val any Set the selected setting as the passed value, tested with check_validity()
----@param is_new_version true? Set this to true to skip calling mct_option:set_selected_setting from within. This is done to keep the mod backwards compatible with the last patch, where the Order of Operations went ui_select_value -> set_selected_setting; the new Order of Operations is the inverse.
-function Slider:ui_select_value(val, is_new_version)
+function Slider:ui_select_value(val)
     local text_input = self:get_uic_with_key("option")
     if not is_uicomponent(text_input) then
         err("ui_select_value() triggered for mct_option with key ["..self:get_key().."], but no option_uic was found internally. Aborting!")
@@ -130,7 +129,7 @@ function Slider:ui_select_value(val, is_new_version)
     text_input:SetStateText(tostring(current_str))
     -- text_input:SetInteractive(false)
 
-    Super.ui_select_value(self, val, is_new_version)
+    Super.ui_select_value(self, val)
 end
 
 --- Change the UI state; ie., lock if it's set to lock.
@@ -139,7 +138,7 @@ function Slider:ui_change_state()
     local option_uic = self:get_uic_with_key("option")
     local text_uic = self:get_uic_with_key("text")
 
-    local locked = self:get_uic_locked()
+    local locked = self:is_locked()
     local lock_reason = self:get_lock_reason()
 
     local left_button = self:get_uic_with_key("left_button")
@@ -475,7 +474,7 @@ core:add_listener(
                         option_obj:set_selected_setting(t)
                     else
                         --- TODO this is so the left/right buttons are reactivated, but I don't really like that.
-                        option_obj:ui_select_value(option_obj:get_selected_setting(), true)
+                        option_obj:ui_select_value(option_obj:get_selected_setting())
                     end
                 else
                     --- TODO if the current text is invalid, revert it to the value it was before it all

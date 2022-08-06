@@ -34,8 +34,8 @@ function Dummy:check_validity(val)
 end
 
 --- Set the default value. `nil`.
-function Dummy:set_default()
-    self:set_default_value(nil)
+function Dummy:get_fallback_value()
+    return nil
 end
 
 --- Does nothing.

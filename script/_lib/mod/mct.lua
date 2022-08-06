@@ -141,7 +141,7 @@ end
 ---@overload fun(key:"dropdown"):MCT.Option.Dropdown
 ---@overload fun(key:"dummy"):MCT.Option.Dummy
 ---@param key string
----@return MCT.Option
+---@return MCT.Option?
 function mct:get_option_type(key)
     if not is_string(key) then
         --- errmsg
@@ -232,16 +232,8 @@ function mct:load_and_start(loading_game_context, is_mp)
 
 
             cm:add_saving_game_callback(function(context) out("save game callback pre") self.registry:save_game(context) end)
-        else
-            --- if it's a new game, save the currently selected profile into the save file, and load up that profile
-            if cm:is_new_game() then
-                vlogf("New game - loading!")
-                self.registry:load()
-            else
-                self.registry:load_game(loading_game_context)
-            end
-
-            cm:add_saving_game_callback(function(context) self.registry:save_game(context) end)
+        else           
+            self.registry:load(loading_game_context)
 
             trigger(false)
         end
@@ -379,7 +371,7 @@ end
 
 --- Getter for the @{mct_mod} with the supplied key.
 ---@param mod_name string Unique identifier for the desired mct_mod.
----@return MCT.Mod
+---@return MCT.Mod?
 function mct:get_mod_by_key(mod_name)
     if not is_string(mod_name) then
         verr("get_mod_by_key() called, but the mod_name provided ["..tostring(mod_name).."] is not a string!")
@@ -433,9 +425,9 @@ function mct:register_mod(mod_name)
 
     if mod_name == "mct_cached_settings" then
         verr("mct:register_mod() called with key \"mct_cached_settings\". Why have you tried to do this? Use a different key.")
-        return false
+            ---@diagnostic disable-next-line
+        return
     end
-
 
 
     local new_mod = self._MCT_MOD:new(mod_name)
@@ -446,6 +438,23 @@ function mct:register_mod(mod_name)
     vlogf("Registered mod %s", mod_name)
 
     return new_mod
+end
+
+function mct:context(test_context)
+    --- TODO 
+    if not is_nil(cm) then
+        return "campaign"
+    end
+
+    if not is_nil(bm) then
+        if bm:get_campaign_key() == "" then 
+            return "battle"
+        else
+            return "campaign"
+        end
+    end
+
+    return "frontend"
 end
 
 --- Type-checker for @{mct_mod}s

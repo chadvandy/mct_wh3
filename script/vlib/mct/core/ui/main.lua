@@ -388,6 +388,11 @@ function ui_obj:open_frame()
                 
                 local mod_obj = mct:get_mod_by_key(mod_key)
                 local layout_key = uic:GetProperty("mct_layout")
+
+                if not mod_obj then
+                    --- errmsg
+                    return
+                end
                 
                 logf("mct_mod: %s", mod_key)
                 logf("mct_page: %s", layout_key)
@@ -1204,135 +1209,14 @@ end
 ---@param option_obj MCT.Option
 ---@param this_layout UIC
 function ui_obj:new_option_row_at_pos(option_obj, this_layout)
-    local dummy_option = core:get_or_create_component(option_obj:get_key(), "ui/campaign ui/script_dummy", this_layout)
     local panel = self.mod_settings_panel
 
     local w,h = this_layout:Width(), panel:Height()
-
     --- TODO better dynamic height! Handle Arrays and the like!
     w = w * 0.95
     h = h * 0.12
 
-        -- set to be flush with the column dummy
-        dummy_option:SetCanResizeHeight(true) dummy_option:SetCanResizeWidth(true)
-        dummy_option:Resize(w, h)
-        dummy_option:SetCanResizeHeight(false) dummy_option:SetCanResizeWidth(false)
-
-        _SetVisible(dummy_option, true)
-        
-        --self:SetState(dummy_option, "custom_state_2")
-        --dummy_option:SetImagePath("ui/skins/default/panel_back_border.png", 1)
-
-        -- set to dock center
-        dummy_option:SetDockingPoint(5)
-
-        -- give priority over column
-        dummy_option:PropagatePriority(this_layout:Priority() +1)
-
-        local dummy_border = core:get_or_create_component("border", "ui/vandy_lib/image", dummy_option)
-        dummy_border:SetCanResizeHeight(true) dummy_border:SetCanResizeWidth(true)
-        dummy_border:Resize(w, h)
-        dummy_border:SetCanResizeHeight(false) dummy_border:SetCanResizeWidth(false)
-
-        dummy_border:SetState("tiled")
-
-        local border_path = option_obj:get_border_image_path()
-        local border_visible = option_obj:get_border_visibility()
-
-        if is_string(border_path) and border_path ~= "" then
-            dummy_border:SetImagePath(border_path, 1)
-        else -- some error; default to default
-            dummy_border:SetImagePath("ui/skins/default/panel_back_border.png", 1)
-        end
-
-        dummy_border:SetVisible(border_visible)
-
-        option_obj:set_uic_with_key("border", dummy_border, true)
-
-        -- make some text to display deets about the option
-        local option_text = core:get_or_create_component("text", "ui/vandy_lib/text/dev_ui", dummy_option)
-        _SetVisible(option_text, true)
-        option_text:SetDockingPoint(4)
-        option_text:SetDockOffset(15, 0)
-
-        -- set the tooltip on the "dummy", and remove anything from the option text
-        dummy_option:SetInteractive(true)
-        option_text:SetInteractive(false)
-
-        if option_obj:get_tooltip_text() ~= "No tooltip assigned" then
-            _SetTooltipText(dummy_option, option_obj:get_tooltip_text(), true)
-        end
-
-        -- create the interactive option
-        local new_option = option_obj:ui_create_option(dummy_option)
-
-        option_obj:set_uic_with_key("text", option_text, true)
-
-        -- resize the text so it takes up the space of the dummy column that is not used by the option
-        local n_w = new_option:Width()
-        local t_w = dummy_option:Width()
-        local ow = t_w - n_w - 35 -- -25 is for some spacing! -15 for the offset, -10 for spacing between the option to the right
-        local oh = dummy_option:Height() * 0.95
-        
-        option_text:Resize(ow, oh)
-        option_text:SetTextVAlign("centre")
-        option_text:SetTextHAlign("left")
-        option_text:SetTextXOffset(5, 0)
-
-        do
-            -- local w, h = option_text:TextDimensionsForText(option_obj:get_text())
-            option_text:ResizeTextResizingComponentToInitialSize(ow, oh)
-
-            _SetStateText(option_text, option_obj:get_text())
-
-            -- w,h = option_text:TextDimensionsForText(option_obj:get_text())
-            -- option_text:ResizeTextResizingComponentToInitialSize(ow, oh)
-        end
-
-        new_option:SetDockingPoint(6)
-        new_option:SetDockOffset(0, 0)
-
-        option_obj:set_uic_visibility(option_obj:get_uic_visibility())
-
-        local setting
-        local ok, errmsg = pcall(function()
-        setting = option_obj:get_selected_setting() end) if not ok then logerrf(errmsg) end
-        option_obj:ui_select_value(setting, true)
-
-        --- TODO make sure the option_obj is locked in the UI if it's locked
-        
-        -- TODO do all this shit through /script/campaign/mod/ or similar
-
-        -- read if the option is read-only in campaign (and that we're in campaign)
-        if __game_mode == __lib_type_campaign then
-
-            -- if game is MP, and the local faction isn't the host, lock any non-local settings
-            if cm:is_multiplayer() and cm:get_local_faction_name(true) ~= cm:get_saved_value("mct_host") then
-                log("local faction: "..cm:get_local_faction_name(true))
-                log("host faction: "..cm:get_saved_value("mct_host"))
-                -- if the option isn't local only, disable it
-                log("mp and client")
-                if not option_obj:get_local_only() then
-                    log("option ["..option_obj:get_key().."] is not local only, locking!")
-                    option_obj:set_uic_locked(true, "mct_lock_reason_mp_client")
-                    --[[local state = new_option:CurrentState()f
-
-                    --log("UIc state is ["..state.."]")
-
-                    -- selected_inactive for checkbox buttons
-                    if state == "selected" then
-                        new_option:SetState("selected_inactive")
-                    else
-                        new_option:SetState("inactive")
-                    end]]
-                end
-            end
-        end
-
-        -- TODO why the fuck do I do this?
-        if option_obj:get_uic_locked() then
-            option_obj:set_uic_locked(true)
-        end
+    option_obj:ui_create_option_base(this_layout, w, h)
 end
 
 ---@param mod_obj MCT.Mod
@@ -1468,6 +1352,32 @@ core:add_listener(
         ---@type timer_manager
         local tm = core:get_static_object("timer_manager")
         tm:real_callback(f, i, k)
+    end,
+    true
+)
+
+
+core:add_listener(
+    "mct_revert_to_defaults_pressed",
+    "ComponentLClickUp",
+    function(context)
+        local uic = UIComponent(context.component)
+        return context.string == "mct_revert_to_defaults" and uic:GetProperty("mct_mod") and uic:GetProperty("mct_option")
+    end,
+    function(context)
+        local uic = UIComponent(context.component)
+        local mod_key = uic:GetProperty("mct_mod")
+        local option_key = uic:GetProperty("mct_option")
+
+        local mod_obj = mct:get_mod_by_key(mod_key)
+
+        if mod_obj then
+            local option_obj = mod_obj:get_option_by_key(option_key)
+            if option_obj then
+                option_obj:revert_to_default()
+                -- option_obj:set_de 
+            end
+        end
     end,
     true
 )

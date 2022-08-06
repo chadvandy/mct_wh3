@@ -42,15 +42,13 @@ end
 
 --- Set a default value for this type, if none is set by the modder.
 --- Defaults to `""`
-function TextInput:set_default()
-
+function TextInput:get_fallback_value()
     -- TODO do this better mebs?
-    self:set_default_value("")
-    --self._default_setting = ""
+    return ""
 end
 
 --- Selects a passed value in UI.
-function TextInput:ui_select_value(val, is_new_version)
+function TextInput:ui_select_value(val)
     local option_uic = self:get_uic_with_key("option")
     if not is_uicomponent(option_uic) then
         err("ui_select_value() triggered for mct_option with key ["..self:get_key().."], but no option_uic was found internally. Aborting!")
@@ -60,7 +58,7 @@ function TextInput:ui_select_value(val, is_new_version)
     -- auto-type the text
     _SetStateText(option_uic, val)
 
-    Super.ui_select_value(self, val, is_new_version)
+    Super.ui_select_value(self, val)
 end
 
 --- Changes the state of the option in UI.
@@ -70,7 +68,7 @@ function TextInput:ui_change_state()
     local text_uic = self:get_uic_with_key("text")
     -- local edit_button = self:get_uic_with_key("edit_button")
 
-    local locked = self:get_uic_locked()
+    local locked = self:is_locked()
     local lock_reason = self:get_lock_reason()
 
     local tt = self:get_tooltip_text()
@@ -237,7 +235,9 @@ core:add_listener(
                     option_obj:set_selected_setting(option_obj:get_finalized_setting())
 
                     local uic = option_obj:get_uic_with_key("error_popup")
-                    uic:SetVisible(false)
+                    if uic then
+                        uic:SetVisible(false)
+                    end
                 end
             end,
             false

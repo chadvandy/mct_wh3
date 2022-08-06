@@ -8,12 +8,12 @@
         // ".vscode/def.lua",
         "S:/modding/tw_autogen/output/wh3/",
     ],
-    "Lua.diagnostics.disable": [
-        "lowercase-global",
-        "need-check-nil",
-        "return-type-mismatch",
-        "param-type-mismatch",
-        "assign-type-mismatch",
-        "missing-return-value"
-    ],
+    // "Lua.diagnostics.disable": [
+    //     "lowercase-global",
+    //     "need-check-nil",
+    //     "return-type-mismatch",
+    //     "param-type-mismatch",
+    //     "assign-type-mismatch",
+    //     "missing-return-value"
+    // ],
 }

@@ -2,9 +2,6 @@
 --- This holds all of the details for one mod - name, author, available options, UI appearances, etc.
 --- @class MCT.Mod
 
--- TODO make "Finalize settings" validate all MCT options; if some are invalid, give some UX notifs that they're not valid. esp. for the textboxes.
---- TODO move all local functions to *actual* locals? Or something similar?
---- TODO emmylua
 
 local mct = get_mct()
 
@@ -115,7 +112,6 @@ local mct_mod_defaults = {
     ---@type number The last patch num viewed by the current user. Saved by MCT.
     _last_viewed_patch = 0,
 
-    -- TODO fill in.
     ---@type table<string, MCT.Option>
     _options = {},
 
@@ -142,7 +138,6 @@ local mct_mod_defaults = {
     _tooltip_text = "",
     -- _workshop_url = "",
 
-    --- TODO create the Main page by default.
     ---@type table<string, MCT.Page> All of the Pages defined for this mod.
     _pages = {},
 
@@ -195,65 +190,6 @@ end
 function mct_mod:set_main_page(page)
     logf("Setting main page of %s to %s", self:get_key(), page:get_key())
     self._main_page = page
-end
-
--- TODO move this back to settings?
---- INTERNAL USE ONLY.
--- This constructs the string used in mct_settings.lua, for this mod.
--- Done as a method of mct_mod so we can read mct_mod/mct_option where necessary.
--- For instance, used to enact precision on slider floats.
--- @treturn string The mct_settings.lua string for this mod, ie. `["mod_key"] = {["option_key"] = "setting", ...}`
-function mct_mod:save_mct_settings()
-    local retstr = ""
-
-    -- start with the key and start line
-    retstr = "\t[\""..self:get_key().."\"] = {\n"
-
-    -- loop through all options
-    local all_options = self:get_options()
-
-    -- Save the last patch viewed!
-    do
-        local last_view = self:get_last_viewed_patch()
-        if last_view then
-            retstr = retstr .. "\t\t[\"__patch\"] = " .. last_view .. ",\n"
-        end
-    end
-
-    for option_key, option_obj in pairs(all_options) do
-        if option_obj:get_type() == "dummy" then
-            -- skip dummy's
-        else
-            retstr = retstr .. "\t\t[\""..option_key.."\"] = {\n"
-
-            retstr = retstr .. "\t\t\t[\"_setting\"] = "
-
-            local v = option_obj:get_finalized_setting()
-
-            if is_string(v) then
-                retstr = retstr .. "\"" .. v .. "\"" .. ",\n"
-            elseif is_number(v) then
-                if option_obj:get_type() == "slider" then
-                    local precision = option_obj:get_values().precision or 0
-
-                    v = string.format("%."..precision.."f", v)
-                    
-                    retstr = retstr .. v .. ",\n"
-                else
-                    -- issue? what?
-                    retstr = retstr .. tostring(v) .. ",\n"
-                end            
-            elseif is_boolean(v) then
-                retstr = retstr .. tostring(v) .. ",\n"
-            end
-            
-            retstr = retstr .. "\t\t},\n"
-        end
-    end
-
-    retstr = retstr .. "\t},\n"
-
-    return retstr
 end
 
 
@@ -519,9 +455,9 @@ function mct_mod:finalize()
     end
 
     core:trigger_custom_event("MctModCreated", {mct = mct, mod = self})
-    --self:set_positions_for_options()
 end
 
+--- TODO clean this up?
 --- Loops through all sections, and checks all options within each section, to save the x/y coordinates of each option.
 --- Order the options by key within each section, giving sliders a full row to their own self
 --- @local
@@ -630,7 +566,6 @@ function mct_mod:set_positions_for_options()
     end
 end
 
--- TODO change this to use changed_settings? 
 --- Set all options to their default value in the UI
 function mct_mod:revert_to_defaults()
     --log("Reverting to defaults for mod ["..self:get_key().."]")
@@ -638,9 +573,9 @@ function mct_mod:revert_to_defaults()
 
     for option_key, option_obj in pairs(all_options) do
         local current_val = option_obj:get_selected_setting()
-        local default_val = option_obj:get_default_value()
+        local default_val = option_obj:get_default_value(true)
 
-        if current_val ~= default_val then
+        if not is_nil(default_val) and current_val ~= default_val then
             option_obj:set_selected_setting(default_val)
             --option_obj:ui_select_value(default_val)
         else
@@ -665,7 +600,7 @@ function mct_mod:are_any_settings_not_default()
     return false
 end
 
---- TODO implement this
+--- TODO re-implement this through Pages
 --- Create a new patch. This allows you to slightly-better communicate with your users, by adding patches to a tab within the UI and potentially forcing a popup to inform your users of important stuff.
 ---@param patch_name string The name of your patch. Will display in larger text in the patch notes section.
 ---@param patch_description string Description for your patch. Accepts any existing localisation tags - [[col]] tags or whatever. Will get automatic linebreaks in it, to make it fit properly.
@@ -716,39 +651,6 @@ end
 
 function mct_mod:get_patch(index)
     return self._patches[index]
-end
-
---- TODO switch to Settings object
---- Used when finalizing the settings in MCT.
---- @local
-function mct_mod:finalize_settings()
-    -- local changed_options = mct.settings:get_changed_settings(self:get_key())
-    -- if not is_table(changed_options) then
-    --     -- this mod hasn't had any changed settings - skip!
-    --     log("Finalizing settings for mod ["..self:get_key().."], but nothing was changed in this mod! Cool!")
-    --     return false
-    -- end
-
-    -- log("Finalizing settings for mod ["..self:get_key().."]")
-
-    -- for option_key, option_data in pairs(changed_options) do
-    --     local option_obj = self:get_option_by_key(option_key)
-
-    --     if not mct:is_mct_option(option_obj) then
-    --         log("Trying to finalize settings for mct_mod ["..self:get_key().."], but there's no option with the key ["..option_key.."].")
-    --         --return false
-    --     else
-    --         local new_setting = option_data.new_value
-    --         local old_setting = option_data.old_value
-    
-    --         log("Finalizing setting for option ["..option_key.."], changing ["..tostring(old_setting).."] to ["..tostring(new_setting).."].")
-    
-    --         option_obj:set_finalized_setting(new_setting)
-    --     end
-    -- end
-
-    -- --- TODO wrap this
-    -- mct.settings.__changed_settings[self:get_key()] = nil
 end
 
 function mct_mod:get_settings_table()

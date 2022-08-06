@@ -4,7 +4,7 @@
 
 
 ---@type MCT.Option.Dropdown
-local Super = VLib.LoadModule("dropdown", "script/vlib/mct/option_types/")
+local Super = get_mct()._MCT_TYPES.dropdown
 
 local mct = get_mct()
 local log,logf,err,errf = get_vlog("[mct]")
@@ -229,7 +229,7 @@ core:add_listener(
                     function(context)
                         local uic = UIComponent(context.component)
                         
-                        return UIComponent(uic:Parent()):Id() == "popup_list" and uicomponent_descended_from(uic, "mct_dropdown_box")
+                        return UIComponent(uic:Parent()):Id() == "popup_list" and uicomponent_descended_from(uic, "mct_dropdown_game_object_box")
                     end,
                     function(context)
                         -- core:remove_listener("mct_dropdown_box_close")
