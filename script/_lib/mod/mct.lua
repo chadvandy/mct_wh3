@@ -164,8 +164,6 @@ end
 function mct:load_and_start(loading_game_context, is_mp)
     self._initialized = true
 
-    vlogf("LOAD AND START - Is this literally ever called?")
-
     core:add_listener(
         "who_is_the_host_tell_me_now_please",
         "UITrigger",

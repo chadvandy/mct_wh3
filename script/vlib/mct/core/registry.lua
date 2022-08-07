@@ -69,7 +69,6 @@ end
 ---@param option_obj MCT.Option
 ---@param new_value any
 ---@param is_popup_open any
----@return boolean
 function Registry:set_changed_setting(option_obj, new_value, is_popup_open)
     if not mct:is_mct_option(option_obj) then
         VLib.Error("set_changed_setting() called, but the option provided ["..tostring(option_obj).."] is not a valid MCT.Option!")
@@ -213,6 +212,11 @@ function Registry:finalize()
 
     --- TODO rename this and put it into the UI object
     self.__settings_changed = true
+
+    -- Automatically save the game whenever the settings are edited.
+    if cm then
+        cm:save()
+    end
 end
 
 --- TODO combine with :finalize()!
@@ -269,22 +273,36 @@ function Registry:read_file()
         return self:read_file()
     end
 
+    logf("Loading MCT.Registry file!")
+
     local all_mods = mct:get_mods()
     for mod_key, mod_obj in pairs(all_mods) do
         if t.global.saved_mods[mod_key] then
+            logf("Checking saved settings for %s", mod_key)
             for option_key, option_obj in pairs(mod_obj:get_options()) do
                 local test = t.global.saved_mods[mod_key].options[option_key]
-
+                
                 -- if we have something saved in the global registry ...
                 if test and test.setting then
+                    logf("Checking saved settings for %s.%s", mod_key, option_key)
 
-                    -- if this option is global OR we're outside of a "campaign" context ...
-                    if option_obj:is_global() or mct:context() ~= "campaign" then
-
+                    -- if this option is global OR it's local and we're outside of a "campaign" context ...
+                    if option_obj:is_global() or (not option_obj:is_global() and mct:context() ~= "campaign") then
+                        if option_obj:is_global() then
+                            logf("%s.%s is global - setting the setting to %s", mod_key, option_key, tostring(test.setting))
+                        end
                         -- assign finalized settings!
-                        option_obj._finalized_setting = test.setting or option_obj:get_default_value()
+                        option_obj._finalized_setting = not is_nil(test.setting) and test.setting or option_obj:get_default_value()
                         option_obj._is_locked = (is_boolean(test.is_locked) and test.is_locked) or false
                         option_obj._lock_reason = (is_string(test.lock_reason) and test.lock_reason) or ""
+                    else
+                        -- if this option is local, we're in a campaign and it's a new save ...
+                        if not option_obj:is_global() and not is_nil(cm) and cm:is_new_game() then
+                            -- assign finalized settings!
+                            option_obj._finalized_setting = not is_nil(test.setting) and test.setting or option_obj:get_default_value()
+                            option_obj._is_locked = (is_boolean(test.is_locked) and test.is_locked) or false
+                            option_obj._lock_reason = (is_string(test.lock_reason) and test.lock_reason) or ""
+                        end
                     end
                 end
             end
@@ -305,9 +323,12 @@ function Registry:load(loading_game_context)
     self:read_file()
 
     if cm and loading_game_context then
-        --- TODO read the saved settings for current options!
+        --- read the saved settings for current options!
         self:load_game(loading_game_context)
         cm:add_saving_game_callback(function(context) self:save_game(context) end)
+    elseif mct:context() == "campaign" and not cm then
+        --- We're in a campaign battle - pull the info from the campaign registry!
+        self:load_campaign_battle()
     end
 end
 
@@ -336,89 +357,12 @@ function Registry:save_file_with_defaults()
             this.options[option_key] = {
                 name = option_obj:get_text(),
                 description = option_obj:get_tooltip_text(),
+                setting = option_obj:get_default_value(),
             }
 
-            -- if option_obj:is_global() or mct:context() ~= "campaign" then
-                this.options[option_key].setting = option_obj:get_default_value()
-                --- TODO
-
-                if option_obj:is_locked() then
-                    this.options[option_key].is_locked = true
-                    this.options[option_key].lock_reason = option_obj:get_lock_reason()
-                end
-            -- end
-        end
-
-        this.data.name = mod_obj:get_title()
-        this.data.description = mod_obj:get_description()
-
-        --- TODO save mod_userdata in the global registry!
-    end
-
-    local t_str = table_printer:print(t)
-
-    file:write("return " .. t_str)
-    file:close()
-end
-
-function Registry:save_file()
-    local file = io.open(self:get_file_path(), "w+")
-    ---@cast file file*
-    local t = {
-        ["global"] = {
-            ["saved_mods"] = {},
-        },
-        ["campaign"] = self.__campaigns,
-        ["last_used_campaign_index"] = self.__last_used_campaign_index,
-    }
-
-    --- TODO make sure we're taking into account things not held in active memory (ie. reading the .campaign field from the registry file so that stays true (should the .campaign field be a foreign file? (yes!)))
-
-    --- Loop through all mod objects, add a field in .saved_mods.
-
-    local all_mods = mct:get_mods()
-    for mod_key,mod_obj in pairs(all_mods) do
-        t.global.saved_mods[mod_key] = {
-            options = {},
-            data = {},
-        }
-
-        local this = t.global.saved_mods[mod_key]
-        local this_campaign = t.campaign[self.__this_campaign]
-
-        if mct:context() == "campaign" then
-            this_campaign[mod_key] = {
-                options = {},
-            }
-        end
-
-        for option_key, option_obj in pairs(mod_obj:get_options()) do
-            this.options[option_key] = {
-                name = option_obj:get_text(),
-                description = option_obj:get_tooltip_text(),
-            }
-
-            if option_obj:is_global() then
-                this.options[option_key].setting = option_obj:get_finalized_setting()
-                --- TODO
-
-                if option_obj:is_locked() then
-                    this.options[option_key].is_locked = true
-                    this.options[option_key].lock_reason = option_obj:get_lock_reason()
-                end
-            else
-
-                -- this.options[option_key].setting = 
-                if mct:context() == "campaign" then
-                    this_campaign[mod_key].options[option_key] = {
-                        setting = option_obj:get_finalized_setting(),
-                    }
-
-                    if option_obj:is_locked() then
-                        this_campaign[mod_key].options.is_locked = true
-                        this_campaign[mod_key].options.lock_reason = option_obj:get_lock_reason()
-                    end
-                end
+            if option_obj:is_locked() then
+                this.options[option_key].is_locked = true
+                this.options[option_key].lock_reason = option_obj:get_lock_reason()
             end
         end
 
@@ -434,6 +378,109 @@ function Registry:save_file()
     file:close()
 end
 
+function Registry:save_file()
+    local old = io.open(self:get_file_path(), "r+")
+    ---@cast old file*
+    local str = old:read("*a")
+    local t = loadstring(str)()
+
+    old:close()
+
+    if not is_table(t) then
+        t = {
+            ["global"] = {
+                ["saved_mods"] = {},
+            },
+            ["campaigns"] = {},
+            ["last_used_campaign_index"] = self.__last_used_campaign_index,
+        }
+    end
+
+    t.last_used_campaign_index = self.__last_used_campaign_index
+
+    if not t.global then
+        t.global = {saved_mods = {},}
+    end
+
+    --- TODO make sure we're taking into account things not held in active memory (ie. reading the .campaign field from the registry file so that stays true (should the .campaign field be a foreign file? (yes!)))
+    
+    --- Loop through all mod objects, add a field in .saved_mods.
+    if not t.campaigns then
+        t.campaigns = {}
+    end
+    if not t.campaigns[self.__this_campaign] and self.__this_campaign > 0 then
+        t.campaigns[self.__this_campaign] = {saved_mods = {}}
+    end
+
+    local all_mods = mct:get_mods()
+    for mod_key,mod_obj in pairs(all_mods) do
+        if not t.global.saved_mods[mod_key] then
+            t.global.saved_mods[mod_key] = {
+                options = {},
+                data = {},
+            }
+        end
+
+        local this = t.global.saved_mods[mod_key]
+        local this_campaign
+
+        if mct:context() == "campaign" then
+            if not t.campaigns[self.__this_campaign].saved_mods[mod_key] then
+                t.campaigns[self.__this_campaign].saved_mods[mod_key] = {
+                    options = {},
+                }
+            end
+
+            this_campaign = t.campaigns[self.__this_campaign].saved_mods[mod_key]
+        end
+
+        for option_key, option_obj in pairs(mod_obj:get_options()) do
+            if not this.options[option_key] then
+                this.options[option_key] = {
+                    name = option_obj:get_text(),
+                    description = option_obj:get_tooltip_text(),
+                    setting = option_obj:get_finalized_setting(),
+                }
+            end
+
+            -- if this option is global, or it's campaign-specific but we're outside a campaign, save its changes in the global registry
+            if option_obj:is_global() or not option_obj:is_global() and mct:context() ~= "campaign" then
+                this.options[option_key].setting = option_obj:get_finalized_setting()
+
+                if option_obj:is_locked() then
+                    this.options[option_key].is_locked = true
+                    this.options[option_key].lock_reason = option_obj:get_lock_reason()
+                end
+            else
+                -- otherwise, this option is campaign-specific and we're in a campaign
+                -- this.options[option_key].setting = 
+                if mct:context() == "campaign" and not option_obj:is_global() then
+                    this_campaign.options[option_key] = {
+                        setting = option_obj:get_finalized_setting(),
+                    }
+
+                    if option_obj:is_locked() then
+                        this_campaign.options[option_key].is_locked = true
+                        this_campaign.options[option_key].lock_reason = option_obj:get_lock_reason()
+                    end
+                end
+            end
+        end
+
+        this.data.name = mod_obj:get_title()
+        this.data.description = mod_obj:get_description()
+
+        --- TODO save mod_userdata in the global registry!
+    end
+
+    local t_str = table_printer:print(t)
+
+    local file = io.open(self:get_file_path(), "w+")
+    ---@cast file file*
+    file:write("return " .. t_str)
+    file:close()
+end
+
 --- TODO save the info of this campaign into a registry file so we can get the options and settings in the Frontend easily.
 function Registry:save_campaign_info()
 
@@ -442,6 +489,36 @@ end
 --- TODO read the info of a previously saved campaign savegame
 function Registry:read_campaign_info(save_index)
 
+end
+
+--- TODO if we're in a campaign battle, read the SVR String to get the campaign's index and pull the settings therein.
+function Registry:load_campaign_battle()
+    local this_campaign_index = core:get_svr():LoadString("mct_registry_campaign_index")
+    this_campaign_index = tonumber(this_campaign_index)
+    if not this_campaign_index then
+        -- errmsg?
+        return false
+    end
+
+    local file = io.open(self:get_file_path(), "r+")
+    if file then
+        local t = loadstring(file:read("*a"))()
+        local this_campaign = t.campaigns[this_campaign_index]
+
+        for mod_key, mod_data in pairs(this_campaign.saved_mods) do
+            local mod_obj = mct:get_mod_by_key(mod_key)
+            if mod_obj then
+                for option_key, option_data in pairs(mod_data.options) do
+                    local option_obj = mod_obj:get_option_by_key(option_key)
+                    if option_obj and not is_nil(option_data.setting) then
+                        option_obj._finalized_setting = option_data.setting
+                        option_obj._is_locked = option_data.is_locked
+                        option_obj._lock_reason = option_data.lock_reason
+                    end
+                end
+            end
+        end
+    end
 end
 
 --- save the settings info into this campaign's SaveGameHeader
@@ -461,10 +538,11 @@ function Registry:save_game(context)
         local this = t.saved_mods[mod_key].options
 
         for option_key, option_obj in pairs(mod_obj:get_options()) do
-            this[option_key] =  {}
             if not option_obj:is_global() then
-                this[option_key].setting = option_obj:get_finalized_setting()
-                --- TODO
+                this[option_key] =  {
+                    setting = option_obj:get_finalized_setting()
+                }
+                logf("Saving %s.%s in Campaign Registry as %s", mod_key, option_key, tostring(option_obj:get_finalized_setting()))
 
                 if option_obj:is_locked() then
                     this[option_key].is_locked = true
@@ -475,10 +553,13 @@ function Registry:save_game(context)
     end
 
     cm:save_named_value("mct_registry", t, context)
+
+    core:get_svr():SaveString("mct_registry_campaign_index", tostring(self.__this_campaign))
 end
 
 --- TODO load the settings for this campaign into memory
 function Registry:load_game(context)
+    logf("Registry loading game!")
     local registry_data = cm:load_named_value("mct_registry", {}, context)
     ---@cast registry_data table
 
@@ -487,6 +568,8 @@ function Registry:load_game(context)
         local index = self.__last_used_campaign_index + 1
         self.__this_campaign = index
         self.__last_used_campaign_index = index
+
+        return
     end
 
     for mod_key, mod_data in pairs(registry_data.saved_mods) do
@@ -494,7 +577,8 @@ function Registry:load_game(context)
         if mod_obj then
             for option_key, option_data in pairs(mod_data.options) do
                 local option_obj = mod_obj:get_option_by_key(option_key)
-                if option_obj then
+                if option_obj and not is_nil(option_data.setting) then
+                    logf("Loading saved setting for %s.%s as %s", mod_key, option_key, tostring(option_data.setting))
                     option_obj._finalized_setting = option_data.setting
 
                     if option_data.is_locked then
@@ -507,6 +591,8 @@ function Registry:load_game(context)
     end
 
     self.__this_campaign = registry_data.this_campaign_index
+
+    core:get_svr():SaveString("mct_registry_campaign_index", tostring(self.__this_campaign))
 end
 
 --- TODO forward compatibility

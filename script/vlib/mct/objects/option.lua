@@ -773,6 +773,8 @@ end
 
 --- set the state, value, visibility, and actions (ie. revert to defaults)
 function mct_option:ui_refresh()
+    if not self:get_uic_with_key("option") then return end
+    
     self:ui_select_value(self:get_selected_setting())
     self:ui_change_state()
     self:set_uic_visibility(self:get_uic_visibility())

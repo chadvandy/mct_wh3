@@ -98,11 +98,15 @@ function Checkbox:ui_change_state()
         else
             state = "inactive"
         end
-        tt = lock_reason .. "\n" .. tt
+
+        logf("Locking checkbox %s.%s, lock reason is %s", self:get_mod_key(), self:get_key(), tostring(lock_reason))
+        option_uic:SetTooltipText(lock_reason, true)
     else
         if value == true then
             state = "selected"
         end
+
+        option_uic:SetTooltipText(tt, true)
     end
 
     option_uic:SetState(state)

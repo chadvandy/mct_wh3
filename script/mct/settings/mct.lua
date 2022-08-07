@@ -70,10 +70,11 @@ mct_mod:create_infobox_page("Testing Page", "My Description", "ui/skins/default/
 --- TODO new section for specifically logging!
 local logging = mct_mod:add_new_option("enable_logging", "checkbox")
 --test:set_default_value(false)
-logging:set_read_only(true, "[[col:red]]This option is currently broken as heck!")
+logging:set_locked(true, "[[col:red]]This option is currently broken as heck![[/col]]")
 logging:set_text("[DISABLED]") -- Logging: Vanilla/Mods
 logging:set_tooltip_text("This option doesn't do anything right now, I have to fix it. :)")
 logging:set_local_only(true)
+logging:set_is_global(true)
 
 local mct_logging = mct_mod:add_new_option("mct_logging", "checkbox")
 mct_logging:set_default_value(true)
