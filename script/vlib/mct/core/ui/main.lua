@@ -1169,21 +1169,21 @@ function ui_obj:create_right_panel()
 
     local mod_settings_listview = core:get_or_create_component("list_view", "ui/mct/listview", mod_settings_panel)
     mod_settings_listview:SetDockingPoint(1)
-    mod_settings_listview:SetDockOffset(0, 10)
+    mod_settings_listview:SetDockOffset(0, 0)
     mod_settings_listview:SetCanResizeWidth(true) mod_settings_listview:SetCanResizeHeight(true)
-    mod_settings_listview:Resize(w,h-20)
+    mod_settings_listview:Resize(w,h)
 
     local list_clip = find_uicomponent(mod_settings_listview, "list_clip")
     list_clip:SetCanResizeWidth(true) list_clip:SetCanResizeHeight(true)
     list_clip:SetDockingPoint(1)
     list_clip:SetDockOffset(0, 0)
-    list_clip:Resize(w,h-20)
+    list_clip:Resize(w,h)
 
     local list_box = find_uicomponent(list_clip, "list_box")
     list_box:SetCanResizeWidth(true) list_box:SetCanResizeHeight(true)
     list_box:SetDockingPoint(1)
     list_box:SetDockOffset(0, 0)
-    list_box:Resize(w,h-20)
+    list_box:Resize(w,h)
 
     list_box:Layout()
 
