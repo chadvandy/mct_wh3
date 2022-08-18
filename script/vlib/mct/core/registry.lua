@@ -412,6 +412,8 @@ function Registry:save_file()
         t.campaigns[self.__this_campaign] = {saved_mods = {}}
     end
 
+    logf("Saving the MCT.Registry!")
+
     local all_mods = mct:get_mods()
     for mod_key,mod_obj in pairs(all_mods) do
         if not t.global.saved_mods[mod_key] then
@@ -420,6 +422,8 @@ function Registry:save_file()
                 data = {},
             }
         end
+
+        logf("\tIn mod [%s]", mod_key)
 
         local this = t.global.saved_mods[mod_key]
         local this_campaign
@@ -435,6 +439,7 @@ function Registry:save_file()
         end
 
         for option_key, option_obj in pairs(mod_obj:get_options()) do
+            logf("\t\tIn option [%s]", option_key)
             if not this.options[option_key] then
                 this.options[option_key] = {
                     name = option_obj:get_text(),
@@ -445,7 +450,10 @@ function Registry:save_file()
 
             -- if this option is global, or it's campaign-specific but we're outside a campaign, save its changes in the global registry
             if option_obj:is_global() or not option_obj:is_global() and mct:context() ~= "campaign" then
+                logf("\t\t\tSaving this option as global!")
                 this.options[option_key].setting = option_obj:get_finalized_setting()
+
+                logf("\t\t\tFinalized setting is %s", tostring(option_obj:get_finalized_setting()))
 
                 if option_obj:is_locked() then
                     this.options[option_key].is_locked = true
@@ -493,8 +501,8 @@ end
 
 --- TODO if we're in a campaign battle, read the SVR String to get the campaign's index and pull the settings therein.
 function Registry:load_campaign_battle()
-    local this_campaign_index = core:get_svr():LoadString("mct_registry_campaign_index")
-    this_campaign_index = tonumber(this_campaign_index)
+    local this_campaign_str = core:get_svr():LoadString("mct_registry_campaign_index")
+    local this_campaign_index = tonumber(this_campaign_str)
     if not this_campaign_index then
         -- errmsg?
         return false
@@ -510,7 +518,9 @@ function Registry:load_campaign_battle()
             if mod_obj then
                 for option_key, option_data in pairs(mod_data.options) do
                     local option_obj = mod_obj:get_option_by_key(option_key)
-                    if option_obj and not is_nil(option_data.setting) then
+                    if option_obj then
+                        if is_nil(option_data.setting) then option_data.setting = option_obj:get_default_value() end
+
                         option_obj._finalized_setting = option_data.setting
                         option_obj._is_locked = option_data.is_locked
                         option_obj._lock_reason = option_data.lock_reason
@@ -577,9 +587,13 @@ function Registry:load_game(context)
         if mod_obj then
             for option_key, option_data in pairs(mod_data.options) do
                 local option_obj = mod_obj:get_option_by_key(option_key)
-                if option_obj and not is_nil(option_data.setting) then
+                if option_obj then
+                    if is_nil(option_data.setting) then
+                        option_data.setting = option_obj:get_default_value()
+                    end
+
                     logf("Loading saved setting for %s.%s as %s", mod_key, option_key, tostring(option_data.setting))
-                    option_obj._finalized_setting = option_data.setting
+                    option_obj:set_finalized_setting(option_data.setting, true)
 
                     if option_data.is_locked then
                         option_obj._is_locked = true

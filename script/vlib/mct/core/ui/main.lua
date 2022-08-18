@@ -1058,9 +1058,7 @@ function ui_obj:create_panel()
     local panel = core:get_or_create_component("mct_options", "ui/templates/panel_frame", nil)
     panel:SetVisible(true)
 
-    panel:PropagatePriority(200)
-
-    --new_frame:RegisterTopMost()
+    panel:PropagatePriority(2500)
 
     panel:LockPriority()
 
@@ -1081,6 +1079,8 @@ function ui_obj:create_panel()
     self:create_left_panel()
     self:create_right_panel()
     -- self:create_profiles_dropdown()
+
+    core:get_ui_root():Layout()
 end
 
 function ui_obj:create_left_panel()
@@ -1103,14 +1103,14 @@ function ui_obj:create_left_panel()
     -- make the stationary title (on left_panel_bg, doesn't scroll)
     local left_panel_title = core:get_or_create_component("left_panel_title", "ui/templates/parchment_divider_title", left_panel_bg)
     _SetStateText(left_panel_title, common.get_localised_string("mct_ui_mods_header"))
-    left_panel_title:Resize(left_panel_bg:Width(), left_panel_title:Height())
+    left_panel_title:Resize(w, left_panel_title:Height())
     left_panel_title:SetDockingPoint(2)
     left_panel_title:SetDockOffset(0,0)
 
     -- create listview
     local left_panel_listview = core:get_or_create_component("left_panel_listview", "ui/templates/listview", left_panel_bg)
     left_panel_listview:SetCanResizeWidth(true) left_panel_listview:SetCanResizeHeight(true)
-    left_panel_listview:Resize(w, h-left_panel_title:Height()-10) 
+    left_panel_listview:Resize(w, h-left_panel_title:Height()-5) 
     left_panel_listview:SetDockingPoint(2)
     left_panel_listview:SetDockOffset(0, left_panel_title:Height()+5)
 

@@ -796,6 +796,10 @@ end
 ---- Getter for the "finalized_setting" for this `mct_option`.
 --- @treturn any finalized_setting Finalized setting for this `mct_option` - either the default value set via @{mct_option:set_default_value}, or the latest saved value if in a campaign, or the latest mct_settings.lua - value if in a new campaign or in frontend.
 function mct_option:get_finalized_setting()
+    if is_nil(self._finalized_setting) then
+        self._finalized_setting = self:get_default_value()
+    end
+    
     return self._finalized_setting
 end
 
