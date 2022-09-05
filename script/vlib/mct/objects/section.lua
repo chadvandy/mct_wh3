@@ -1,3 +1,6 @@
+--- TODO change the two different section types - collapsible and not collapsible - to two different classes, the collapsible as a child of the other or whichever
+
+
 ---- Section Object
 --- @class MCT.Section
 
@@ -115,9 +118,6 @@ local mct_section_defaults = {
 
     ---@type UIC UI Object for the header row itself.
     _header = nil,
-
-    ---@type UIC[]
-    _dummy_rows = {},
 
     ---@type table<string, MCT.Option> Options linked to this section.
     _options = {},
@@ -275,19 +275,8 @@ end
 --- Clears the UICs saved in this section to prevent wild crashes or whatever.
 -- @local
 function mct_section:clear_uics()
-    self._dummy_rows = {}
     self._header = nil
-end
-
---- Saves the dummy rows (every 3 options in the UI is a dummy_row) in the mct_section.
--- @local
-function mct_section:add_dummy_row(uic)
-    if not is_uicomponent(uic) then
-        err("add_dummy_row() called for section ["..self:get_key().."], but the uic provided isn't a UIComponent!")
-        return false
-    end
-
-    self._dummy_rows[#self._dummy_rows+1] = uic
+    self._holder = nil
 end
 
 --- The UI trigger for the section opening or closing.
@@ -296,14 +285,13 @@ end
 function mct_section:uic_visibility_change(event_free)
     local visibility = self._visible
 
-    local attached_rows = self._dummy_rows
-    for i = 1, #attached_rows do
-        if not is_uicomponent(attached_rows[i]) then
-            -- skip
-            attached_rows[i] = nil
-        else
-            local row = attached_rows[i]
-            row:SetVisible(visibility)
+    local holder = self._holder
+
+    for i = 0, holder:ChildCount() -1 do
+        local child = UIComponent(holder:Find(i))
+
+        if child:Id() ~= self._header:Id() then
+            child:SetVisible(visibility)
         end
     end
 
@@ -320,6 +308,18 @@ function mct_section:uic_visibility_change(event_free)
         core:trigger_custom_event("MctSectionVisibilityChanged", {["mct"] = mct, ["mod"] = self:get_mod(), ["section"] = self, ["visibility"] = visibility})
 
         self:process_callback()
+    end
+end
+
+--- Different from mct_section:set_visibility; 
+---@param b any
+function mct_section:set_hidden(b)
+    if not is_boolean(b) then b = true end
+
+    local visibility = not b
+
+    if is_uicomponent(self._holder) then
+        self._holder:SetVisible(visibility)
     end
 end
 
@@ -345,13 +345,6 @@ function mct_section:process_callback()
     end
 
     f(self)
-end
-
---- Get the dummy rows for the options in this section.
--- Not really needed outside.
--- @local
-function mct_section:get_dummy_rows()
-    return self._dummy_rows or {}
 end
 
 --- Get the key for this section.
@@ -394,6 +387,83 @@ end
 -- @treturn boolean Whether the mct_section is currently visible, or whether the mct_section will be visible when it's next created.
 function mct_section:is_visible()
     return self._visible
+end
+
+--- TODO create this section in the UI.
+---@param this_column UIC The column UIC to pour this section into.
+function mct_section:populate(this_column)
+    local can_collapse = self._is_collapsible
+    local key = self:get_key()
+    local mod = self:get_mod()
+
+    local section_holder = core:get_or_create_component("mct_section_"..key, "ui/mct/layouts/column", this_column)
+    section_holder:Resize(this_column:Width(), this_column:Height())
+    section_holder:SetCanResizeWidth(false)
+    section_holder:SetCanResizeHeight(true)
+
+    self._holder = section_holder
+
+    --- TODO different header depending on is_collapsible!
+    -- first, create the section header
+    local this_layout = "ui/vandy_lib/row_header"
+    if not can_collapse then
+        this_layout = "ui/vandy_lib/text/paragraph_header"
+    end
+    
+    local section_header = core:get_or_create_component("mct_section_"..key.."_header", this_layout, section_holder)
+    self._header = section_header
+
+    --- TODO set this in a Section method, mct_section:set_is_collapsible() or whatever
+    core:add_listener(
+        "MCT_SectionHeaderPressed",
+        "ComponentLClickUp",
+        function(context)
+            return context.string == "mct_section_"..key
+        end,
+        function(context)
+            local visible = self:is_visible()
+            self:set_visibility(not visible)
+        end,
+        true
+    )
+
+    -- set text & width and shit
+    section_header:SetCanResizeWidth(true)
+    -- section_header:SetCanResizeHeight(false)
+    section_header:Resize(this_column:Width() * 0.95, section_header:Height())
+    section_header:SetDockingPoint(2)
+    -- section_header:SetCanResizeWidth(false)
+
+    -- section_header:SetDockOffset(mod_settings_box:Width() * 0.005, 0)
+    
+    -- local child_count = find_uicomponent(section_header, "child_count")
+    -- _SetVisible(child_count, false)
+
+    local text = self:get_localised_text()
+    local tt_text = self:get_tooltip_text()
+
+    local dy_title = find_uicomponent(section_header, "dy_title") or section_header
+    dy_title:SetStateText(text)
+
+    if tt_text ~= "" then
+        _SetTooltipText(section_header, tt_text, true)
+    end
+
+    -- lastly, create all the rows and options within
+    --local num_remaining_options = 0
+    -- local valid = true
+
+    -- this is the table with the positions to the options
+    -- ie. options_table["1,1"] = "option 1 key"
+    -- local options_table, num_remaining_options = section_obj:get_ordered_options()
+    for i,option_key in ipairs(self._true_ordered_options) do
+        local option_obj = mod:get_option_by_key(option_key)
+        get_mct().ui:new_option_row_at_pos(option_obj, section_holder)
+    end
+
+    section_holder:Layout()
+
+    self:uic_visibility_change(true)
 end
 
 --- Set the visibility for the mct_section.
@@ -465,12 +535,12 @@ end
 
 --- Assign an option to this section.
 -- Automatically called through @{mct_option:set_assigned_section}.
----@param option_obj MCT.Option The option object to assign into this section.
+---@param option_obj MCT.Option|string The option object to assign into this section.
 function mct_section:assign_option(option_obj)
-    
     local current_mod = self:get_mod()
     
     if is_string(option_obj) then
+        ---@cast option_obj string
         -- try to get an option obj with this key
         option_obj = current_mod:get_option_by_key(option_obj)
     end

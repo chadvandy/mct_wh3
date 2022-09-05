@@ -73,6 +73,8 @@ function SettingsSuperclass:populate(box)
         local column = core:get_or_create_component("settings_column_"..i, "ui/mct/layouts/column", settings_canvas)
         column:Resize(settings_canvas:Width() / self.num_columns, settings_canvas:Height())
 
+        column:SetCanResizeWidth(false)
+
         --- 2 if num_columns = 1
         --- 1 and 3 if num_columns = 2
         --- 1 | 2 | 3 if num_columns = 3
@@ -88,9 +90,7 @@ function SettingsSuperclass:populate(box)
 
         VLib.Log("Docking point for column %d is %d", i, docking_point)
 
-        column:SetDockingPoint(
-        docking_point
-        )
+        column:SetDockingPoint(docking_point)
     end
 
     core:remove_listener("MCT_SectionHeaderPressed")
@@ -123,68 +123,8 @@ function SettingsSuperclass:populate(box)
         if not section_obj or section_obj._options == nil or next(section_obj._options) == nil then
             -- skip
         else
-            -- make sure the dummy rows table is clear before doing anything
-            section_obj._dummy_rows = {}
-
-            -- first, create the section header
-            local section_header = core:get_or_create_component("mct_section_"..section_key, "ui/vandy_lib/row_header", column)
-            --local open = true
-
-            section_obj._header = section_header
-
-            --- TODO set this in a Section method, mct_section:set_is_collapsible() or whatever
-            core:add_listener(
-                "MCT_SectionHeaderPressed",
-                "ComponentLClickUp",
-                function(context)
-                    return context.string == "mct_section_"..section_key
-                end,
-                function(context)
-                    local visible = section_obj:is_visible()
-                    section_obj:set_visibility(not visible)
-                end,
-                true
-            )
-
-            -- TODO set text & width and shit
-            section_header:SetCanResizeWidth(true)
-            -- section_header:SetCanResizeHeight(false)
-            section_header:Resize(column:Width() * 0.95, section_header:Height())
-            section_header:SetDockingPoint(2)
-            -- section_header:SetCanResizeWidth(false)
-
-            -- section_header:SetDockOffset(mod_settings_box:Width() * 0.005, 0)
-            
-            -- local child_count = find_uicomponent(section_header, "child_count")
-            -- _SetVisible(child_count, false)
-
-            local text = section_obj:get_localised_text()
-            local tt_text = section_obj:get_tooltip_text()
-
-            local dy_title = find_uicomponent(section_header, "dy_title")
-            dy_title:SetStateText(text)
-
-            if tt_text ~= "" then
-                _SetTooltipText(section_header, tt_text, true)
-            end
-
-            -- lastly, create all the rows and options within
-            --local num_remaining_options = 0
-            -- local valid = true
-
-            -- this is the table with the positions to the options
-            -- ie. options_table["1,1"] = "option 1 key"
-            -- local options_table, num_remaining_options = section_obj:get_ordered_options()
-
-            for i,option_key in ipairs(section_obj._true_ordered_options) do
-                local option_obj = mod:get_option_by_key(option_key)
-                get_mct().ui:new_option_row_at_pos(option_obj, column)
-            end
-
-            section_obj:uic_visibility_change(true)
+            section_obj:populate(column)
         end
-
-        -- column:Layout()
     end
 
     --- TODO wish there were a better way to do this
