@@ -93,6 +93,27 @@ function SettingsSuperclass:populate(box)
         column:SetDockingPoint(docking_point)
     end
 
+    local num_dividers = self.num_columns - 1
+    if num_dividers > 0 then
+        for i = 1, num_dividers do
+            local divider = core:get_or_create_component("divider_"..i, "ui/vandy_lib/image", settings_canvas)
+            divider:SetImagePath("ui/skins/default/parchment_divider_height.png")
+            -- divider:SetImageRotation(0, math.rad(90))
+            divider:SetCurrentStateImageTiled(0, true)
+            divider:SetCurrentStateImageMargins(0, 0, 2, 0, 2)
+
+            local pre_column = find_uicomponent(settings_canvas, "settings_column_"..i)
+    
+            local cx, cy = pre_column:Position()
+            local cw, ch = settings_canvas:Dimensions()
+            divider:MoveTo(cx + pre_column:Width(), cy)
+
+            divider:SetCanResizeWidth(true)
+            divider:SetCanResizeHeight(true)
+            divider:Resize(13, ch)
+        end
+    end
+
     core:remove_listener("MCT_SectionHeaderPressed")
 
     --- TODO cleanly split the sections between the columns
