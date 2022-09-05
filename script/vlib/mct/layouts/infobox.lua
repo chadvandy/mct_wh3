@@ -16,12 +16,14 @@ local defaults = {
 }
 
 ---@class MCT.Page.Infobox : MCT.Page
+---@field __new fun():MCT.Page.Infobox
 local Infobox = Super:extend("Infobox", defaults)
 
 mct:add_new_page_type("Infobox", Infobox)
 
 function Infobox:new(key, mod, description, image_path, workshop_link)
     VLib.Log("In infobox:new()")
+
     local o = self:__new()
     ---@cast o MCT.Page.Infobox
     o:init(key, mod, description, image_path, workshop_link)
@@ -40,7 +42,7 @@ function Infobox:init(key, mod, description, image_path, workshop_link)
     self.image_path = image_path
 end
 
---- TODO draw in the UI
+--- draw in the UI
 function Infobox:populate(box)
     local uic = core:get_or_create_component("infobox", "ui/campaign ui/script_dummy", box)
     uic:SetDockingPoint(2)
@@ -60,11 +62,14 @@ function Infobox:populate(box)
     end
 
     if self.description then
+        ---TODO set a border around it or something visually pleasing?
         local t = core:get_or_create_component("description", "ui/vandy_lib/text/dev_ui", uic)
-        t:SetStateText(self.description)
         t:SetDockingPoint(2)
         t:SetDockOffset(0, yo + 15)
-
-        t:Resize(100, 90)
+        t:Resize(400, 500)
+        
+        local tx,ty = t:TextDimensionsForText(self.description)
+        t:Resize(tx, ty)
+        t:SetStateText(self.description)
     end
 end

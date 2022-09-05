@@ -369,7 +369,7 @@ function ui_obj:set_selected_mod(mod_obj, page)
     end end) if not ok then VLib.Error(err) end
 end
 
-function ui_obj:open_frame()
+function ui_obj:open_frame(provided_panel)
     -- check if one exists already
     local ok, msg = pcall(function()
     local test = self.panel
@@ -378,8 +378,8 @@ function ui_obj:open_frame()
     Registry:clear_changed_settings(true)
 
     -- make a new one!
-    if not is_uicomponent(test) then
-        self:create_panel()
+    if provided_panel or not is_uicomponent(test) then
+        self:create_panel(provided_panel)
 
         local ordered_mod_keys = {}
         for n in pairs(mct._registered_mods) do
@@ -1088,27 +1088,33 @@ function ui_obj:close_frame()
     end
 end
 
-function ui_obj:create_panel()
+function ui_obj:create_panel(provided_panel)
     -- create the new window and set it visible
     if self.panel then return end
-    local panel = core:get_or_create_component("mct_options", "ui/templates/panel_frame", nil)
+
+    local sw, sh = core:get_screen_resolution()
+    local panel
+    local pw, ph = sw*0.7, sh*0.65
+    if provided_panel then
+        panel = provided_panel
+        pw, ph = panel:Width(), panel:Height()
+    else
+        panel = core:get_or_create_component("mct_options", "ui/templates/panel_frame")
+        panel:PropagatePriority(2500)
+        panel:LockPriority()
+        panel:SetMoveable(true)
+        panel:SetDockingPoint(5)
+        panel:SetDockOffset(0, 0)
+    end
+
     panel:SetVisible(true)
-
-    panel:PropagatePriority(2500)
-
-    panel:LockPriority()
 
     -- resize the panel
     panel:SetCanResizeWidth(true) panel:SetCanResizeHeight(true)
-    local sw, sh = core:get_screen_resolution()
-    local pw, ph = sw*0.7, sh*0.65
     panel:Resize(pw, ph)
-    panel:SetDockingPoint(5)
-    panel:SetDockOffset(0, 0)
     panel:ResizeCurrentStateImage(0, pw, ph)
     panel:ResizeCurrentStateImage(1, pw, ph)
     panel:SetCanResizeWidth(false) panel:SetCanResizeHeight(false)
-    panel:SetMoveable(true)
 
     self.panel = panel
 
