@@ -8,7 +8,7 @@
 local ui_obj = {
     -- UICs --
 
-    -- the MCT button
+    ---@type UIC the MCT button
     mct_button = nil,
 
     -- script dummy
@@ -37,6 +37,11 @@ local ui_obj = {
     -- if the panel is openeded or closededed
     opened = false,
     notify_num = 0,
+
+    ---@type table<string, boolean> These are tables that the MCT panel cannot open in front of; therefore, we'll hardlock the button when these panels are visible
+    fullscreen_panels = {
+        custom_battle = true,
+    }
 }
 
 local mct = get_mct()
@@ -54,6 +59,36 @@ function ui_obj:is_open()
     return self.opened
 end
 
+function ui_obj:listen_fullscreen_panels()
+    log("Triggering listeners for fullscreen_panels")
+    if core:is_frontend() then
+        core:add_listener(
+            "MCT_StateChange",
+            "FrontendScreenTransition",
+            true,
+            function(context)
+                log("Doin a listen for a change in frontend menu!")
+                local button = self:get_mct_button()
+                -- if this is a hardlocked panel, lock the button
+                if self.fullscreen_panels[context.string] then
+                    log("This frontend menu is fullscreen, locking MCT")
+                    button:SetState("inactive")
+                    button:SetTooltipText("Cannot use MCT while this panel is opened", true)
+                else
+                    button:SetState("active")
+                end
+            end,
+            true
+        )
+    --- TODO these later.
+    elseif core:is_campaign() then
+
+    elseif core:is_battle() then
+
+    end
+end
+
+---@param uic UIC
 function ui_obj:set_mct_button(uic)
     if not is_uicomponent(uic) then
         -- errmsg
@@ -81,6 +116,7 @@ function ui_obj:ui_created()
     log("UI created!")
 
     self.game_ui_created = true
+    self:listen_fullscreen_panels()
 
     for i = 1, #self.ui_created_callbacks do
 
@@ -790,7 +826,7 @@ end
             
 --                     local function set_text(str)
 --                         local w,h = tx:TextDimensionsForText(str)
---                         tx:ResizeTextResizingComponentToInitialSize(w,h)
+--                         tx:ResizeTextResizingComponentTo`ialSize(w,h)
 
 --                         _SetStateText(tx, str)
                 
@@ -1293,6 +1329,8 @@ function ui_obj:create_mct_button(parent)
         end,
         true
     )
+
+    self:set_mct_button(mct_button)
 
     return mct_button
 end
