@@ -15,8 +15,9 @@ get_mct():add_new_page_type("SettingsSuperclass", SettingsSuperclass)
 
 function SettingsSuperclass:new(key, mod, num_columns)
     local o = self:__new()
-
     ---@cast o MCT.Page.SettingsSuperclass
+
+    
     o:init(key, mod, num_columns)
 
     return o

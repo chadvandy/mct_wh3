@@ -96,7 +96,7 @@ function Page:create_row_uic()
 
     self:set_row_uic(page_row)
 
-    --- TODO do this? Or just old it in the Page?
+    --- TODO do this? Or just hold it in the Page?
     mod_obj:set_page_uic(page_row)
 end
 

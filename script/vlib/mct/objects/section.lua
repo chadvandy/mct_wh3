@@ -126,11 +126,17 @@ local mct_section_defaults = {
 
     _true_ordered_options = {},
 
-    ---@type boolean Visibility.
-    _visible = true,
+    ---@type boolean Whether this full section is collapsed (header visible, rows invisible)
+    _is_collapsed = false,
+
+    ---@type boolean Whether this full section is hidden in the UI.
+    _is_hidden = false,
 
     ---@type MCT.Mod
     _mod = nil,
+
+    ---@type MCT.Page TODO link sections to pages
+    _page = nil,
 
     ---@type boolean Whether this section can be collapsed
     _is_collapsible = false,
@@ -281,45 +287,51 @@ end
 
 --- The UI trigger for the section opening or closing.
 -- Internal use only. Use @{mct_section:set_visibility} if you want to manually change the visibility elsewhere.
+---@param b boolean If this should be collapsed.
 ---@param event_free boolean? Whether to trigger the "MctSectionVisibilityChanged" event. True is sent when the section is first created.
-function mct_section:uic_visibility_change(event_free)
-    local visibility = self._visible
+function mct_section:set_collapsed(b, event_free)
+    if is_nil(b) then b = true end
+    if not is_boolean(b) then
+        --- errmsg
+        return false
+    end
+
+    self._is_collapsed = b
+    local is_open = not self._is_collapsed
 
     local holder = self._holder
 
     for i = 0, holder:ChildCount() -1 do
         local child = UIComponent(holder:Find(i))
 
-        if child:Id() ~= self._header:Id() then
-            child:SetVisible(visibility)
+        if child ~= self._header then
+            child:SetVisible(is_open)
         end
     end
 
     -- also change the state of the UI header
-    if visibility then
+    if is_open then
         self._header:SetState("selected")
-        -- set to selected
     else
         self._header:SetState("active")
-        -- set to active
     end
 
     if not event_free then
-        core:trigger_custom_event("MctSectionVisibilityChanged", {["mct"] = mct, ["mod"] = self:get_mod(), ["section"] = self, ["visibility"] = visibility})
+        core:trigger_custom_event("MctSectionVisibilityChanged", {["mct"] = mct, ["mod"] = self:get_mod(), ["section"] = self, ["visibility"] = is_open})
 
         self:process_callback()
     end
 end
 
---- Different from mct_section:set_visibility; 
+--- Hide the Section in the UI, entirely.
 ---@param b any
 function mct_section:set_hidden(b)
     if not is_boolean(b) then b = true end
 
-    local visibility = not b
+    self._hidden = b
 
     if is_uicomponent(self._holder) then
-        self._holder:SetVisible(visibility)
+        self._holder:SetVisible(not self._hidden)
     end
 end
 
@@ -382,13 +394,6 @@ function mct_section:get_localised_text()
     return text
 end
 
---- Grab whether this mct_section is set to be visible or not - whether it's "opened" or "closed"
--- Works to read the UI, as well.
--- @treturn boolean Whether the mct_section is currently visible, or whether the mct_section will be visible when it's next created.
-function mct_section:is_visible()
-    return self._visible
-end
-
 --- TODO create this section in the UI.
 ---@param this_column UIC The column UIC to pour this section into.
 function mct_section:populate(this_column)
@@ -413,25 +418,12 @@ function mct_section:populate(this_column)
     local section_header = core:get_or_create_component("mct_section_"..key.."_header", this_layout, section_holder)
     self._header = section_header
 
-    --- TODO set this in a Section method, mct_section:set_is_collapsible() or whatever
-    core:add_listener(
-        "MCT_SectionHeaderPressed",
-        "ComponentLClickUp",
-        function(context)
-            return context.string == "mct_section_"..key
-        end,
-        function(context)
-            local visible = self:is_visible()
-            self:set_visibility(not visible)
-        end,
-        true
-    )
-
     -- set text & width and shit
     section_header:SetCanResizeWidth(true)
     -- section_header:SetCanResizeHeight(false)
     section_header:Resize(this_column:Width() * 0.95, section_header:Height())
     section_header:SetDockingPoint(2)
+    section_header:SetState("selected")
     -- section_header:SetCanResizeWidth(false)
 
     -- section_header:SetDockOffset(mod_settings_box:Width() * 0.005, 0)
@@ -463,7 +455,11 @@ function mct_section:populate(this_column)
 
     section_holder:Layout()
 
-    self:uic_visibility_change(true)
+    self:set_collapsed(false)
+
+    if self._hidden then
+        section_holder:SetVisible(false)
+    end
 end
 
 --- Set the visibility for the mct_section.
@@ -471,40 +467,20 @@ end
 -- Triggers @{mct_section:uic_visibility_change} automatically.
 ---@param is_visible boolean True for open, false for closed.
 function mct_section:set_visibility(is_visible)
-    if is_nil(is_visible) then enable = true end
-
-    if not is_boolean(is_visible) then
-        err("set_visibility() called for section ["..self:get_key().."], but the is_visible argument passed isn't a boolean or nil! Returning false.")
-        return false
-    end
-
-    self._visible = is_visible
-
-    -- test if the UI object exists - if it does, call the UI wrapper!
-    if is_uicomponent(self._header) then
-        self:uic_visibility_change()
-    end
+    self:set_collapsed(not is_visible)
 end
 
 --- Set the title for this section.
 -- Works the same as always - you can pass hard text, ie. mct_section:set_localised_text("My Section")
 -- or a localised key, ie. mct_section:set_localised_text("my_section_loc_key", true)
 ---@param text string The localised text for this mct_section title. Either hard text, or a loc key.
----@param is_localised boolean If setting a loc key as the localised text, set this to true.
-function mct_section:set_localised_text(text, is_localised)
+function mct_section:set_localised_text(text)
     if not is_string(text) then
         err("set_localised_text() called for section ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the text supplied is not a string! Returning false.")
         return false
     end
 
-    if is_localised then text = "{{loc:" .. text .. "}}" end
-
-    -- if not is_boolean(is_localised) then
-    --     err("set_localised_text() called for section ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the is_localised arg supplied is not a boolean or nil! Returning false.")
-    --     return false
-    -- end
-
-    self._text = text
+    self._text = VLib.HandleLocalisedText(text, "No Section Name Found")
 end
 
 --- Set tooltip text for this section, which'll appear when hovered over.
@@ -575,6 +551,25 @@ function mct_section:set_is_collapsible(b)
     if not is_boolean(b) then return false end
 
     self._is_collapsible = b
+    self._is_collapsed = false
+
+    local l_key = "MCT_SectionHeaderPressed_"..self:get_key()
+
+    core:remove_listener(l_key)
+
+    if b then
+        core:add_listener(
+            l_key,
+            "ComponentLClickUp",
+            function(context)
+                return is_uicomponent(self._header) and context.component == self._header:Address()
+            end,
+            function(context)
+                self:set_collapsed(not self._is_collapsed)
+            end,
+            true
+        )
+    end
 end
 
 --- Return all the options assigned to the mct_section.

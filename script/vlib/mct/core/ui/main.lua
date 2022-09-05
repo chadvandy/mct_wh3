@@ -399,6 +399,7 @@ function ui_obj:open_frame(provided_panel)
         end
 
         local mct_mod = mct:get_mod_by_key("mct_mod")
+        ---@cast mct_mod MCT.Mod
         self:set_selected_mod(mct_mod, mct_mod:get_main_page())
         self.mod_row_list_box:Layout()
 
@@ -436,7 +437,7 @@ function ui_obj:open_frame(provided_panel)
                 local selected_mod, selected_layout = mct:get_selected_mod()
 
                 -- we've selected a subheader of the currently selected mod - check if it's a different subheader than currently selected!
-                if is_string(layout_key) and layout_key ~= "" then
+                if mod_obj == selected_mod then
                     --- TODO test if this layout is different than the currently selected layout
                     uic:SetState("selected")
 
@@ -444,13 +445,13 @@ function ui_obj:open_frame(provided_panel)
                         self:set_selected_mod(mod_obj, mod_obj:get_page_with_key(layout_key))
                     end
                 else
-                    if selected_mod ~= mod_obj then
+                    -- if selected_mod ~= mod_obj then
                         -- trigger stuff on the right
-                        self:set_selected_mod(mod_obj, mod_obj:get_main_page())
-                    else
-                        -- we aren't changing rows, keep this one selected.
-                        uic:SetState("selected")
-                    end
+                        self:set_selected_mod(mod_obj, mod_obj:get_page_with_key(layout_key))
+                    -- else
+                    --     -- we aren't changing rows, keep this one selected.
+                    --     uic:SetState("selected")
+                    -- end
                 end
 
             end,

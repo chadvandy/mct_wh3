@@ -4,6 +4,7 @@ local mct_mod = mct:register_mod("mct_mod")
 
 mct_mod:create_infobox_page("Testing Page", "My Description", "ui/skins/default/advisor_beastmen_2d.png")
 
+
 -- mct_mod:set_tooltip_text("Testing this tooltip text out!")
 
 -- local section = mct_mod:add_new_section("my_section", "This Is My Section")
@@ -183,8 +184,8 @@ drop:add_dropdown_values({
 -- my_dummy:set_text("This is a Dummy object!")
 -- my_dummy:set_tooltip_text("Yallooooo")
 
--- mct_mod:add_new_section("Testing", "Testing Section")
--- mct_mod:add_new_option("plapooey", "checkbox"):set_text("This is a testing checkbox!")
+-- local s = mct_mod:add_new_section("Testing", "Testing Section")
+-- 
 
 -- mct_mod:add_new_section("Final Section", "Testing third!")
 -- mct_mod:add_new_option("flarbo", "checkbox"):set_text("This is a testing checkbox!")
@@ -192,9 +193,17 @@ drop:add_dropdown_values({
 -- mct_mod:add_new_option("Testing Faction Context", "dropdown_game_object")
 
 
--- local second_mod = mct:register_mod("my_test_mod")
--- second_mod:set_author("")
--- second_mod:set_title("bloop")
+local second_mod = mct:register_mod("my_test_mod")
+second_mod:set_author("")
+second_mod:set_title("bloop")
+
+local sec_one = second_mod:add_new_section("First", "First")
+sec_one:set_hidden(true)
+second_mod:add_new_option("plapooey", "checkbox"):set_text("This is a testing checkbox!")
+
+local sec_two = second_mod:add_new_section("Second", "Second")
+sec_two:set_is_collapsible(true)
+second_mod:add_new_option("padoopey", "checkbox"):set_text("This is a testing checkbox!")
 
 -- for i = 1, 1000 do
 --     local option = mct_mod:add_new_option("test_"..i, "checkbox")

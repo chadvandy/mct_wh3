@@ -167,7 +167,6 @@ function mct_mod:new(key)
     local settings = o:create_settings_page("settings", 2)
     logf("Created settings page: " .. tostring(settings))
     o:set_main_page(settings)
-    o:create_infobox_page("Testing Infobox", "This is my test of the emergency infobox system")
 
     end) if not ok then VLib.Error(err) end
 
