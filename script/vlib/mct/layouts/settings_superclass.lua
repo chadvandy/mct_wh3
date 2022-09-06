@@ -47,6 +47,7 @@ end
 function SettingsSuperclass:populate(box)
     local sections = self.assigned_sections
 
+    --- TODO this should pull all sections that don't have a page already; right now this will pull all sections everywhere
     --- TODO properly order them!
     if #sections == 0 then
         local sorted = self.mod_obj:sort_sections()
@@ -72,9 +73,10 @@ function SettingsSuperclass:populate(box)
 
     for i = 1, self.num_columns do
         local column = core:get_or_create_component("settings_column_"..i, "ui/mct/layouts/column", settings_canvas)
-        column:Resize(settings_canvas:Width() / self.num_columns, settings_canvas:Height())
+        column:Resize(settings_canvas:Width() / self.num_columns, panel:Height())
 
         column:SetCanResizeWidth(false)
+        -- column:SetCanResizeHeight(false)
 
         --- 2 if num_columns = 1
         --- 1 and 3 if num_columns = 2
@@ -114,8 +116,6 @@ function SettingsSuperclass:populate(box)
             divider:Resize(13, ch)
         end
     end
-
-    core:remove_listener("MCT_SectionHeaderPressed")
 
     --- TODO cleanly split the sections between the columns
     --- TODO modder ability to set sections to columns (?)
@@ -157,7 +157,7 @@ function SettingsSuperclass:populate(box)
             if column:Height() > max_h then max_h = column:Height() end
         end
         -- local _,max_h = settings_canvas:Bounds()
-        settings_canvas:Resize(panel:Width() * 0.95, max_h)
+        settings_canvas:Resize(panel:Width() * 0.95, max_h, false)
     end, 10)
 
     -- settings_canvas:Resize(panel:Width() * 0.95, panel:Height() * 2)

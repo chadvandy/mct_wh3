@@ -374,6 +374,11 @@ function ui_obj:open_frame(provided_panel)
     local ok, msg = pcall(function()
     local test = self.panel
 
+    if is_uicomponent(test) and test:Visible() == nil then
+        self:close_frame(true)
+        test = nil
+    end
+
     self.opened = true
     Registry:clear_changed_settings(true)
 
@@ -1059,8 +1064,8 @@ end
 --     )
 -- end
 
-function ui_obj:close_frame()
-    delete_component(self.panel)
+function ui_obj:close_frame(already_dead)
+    if not already_dead then delete_component(self.panel) end
 
     --core:remove_listener("left_or_right_pressed")
     core:remove_listener("MctRowClicked")
@@ -1100,7 +1105,7 @@ function ui_obj:create_panel(provided_panel)
         panel = provided_panel
         pw, ph = panel:Width(), panel:Height()
     else
-        panel = core:get_or_create_component("mct_options", "ui/templates/panel_frame")
+        panel = core:get_or_create_component("mct_options", "ui/mct/frame")
         panel:PropagatePriority(2500)
         panel:LockPriority()
         panel:SetMoveable(true)
@@ -1187,19 +1192,21 @@ function ui_obj:create_right_panel()
     mod_settings_panel:SetDockingPoint(6)
     mod_settings_panel:SetDockOffset(-20, 10)
     mod_settings_panel:SetCanResizeWidth(true) mod_settings_panel:SetCanResizeHeight(true)
-
+    
     -- edit the name
     local title = core:get_or_create_component("title", "ui/templates/panel_title", mod_settings_panel)
     title:Resize(title:Width() * 1.35, title:Height())
-
+    
     title:SetDockingPoint(2)
     title:SetDockOffset(0, -title:Height() * 0.8)
-
+    
     local title_text = core:get_or_create_component("title_text", "ui/vandy_lib/text/paragraph_header", title)
     title_text:Resize(title:Width() * 0.8, title:Height() * 0.7)
     title_text:SetDockingPoint(5)
-
+    
     mod_settings_panel:Resize(panel:Width() - (left_panel:Width() + 60), panel:Height() * 0.95 - title:Height(), false)
+    
+    mod_settings_panel:SetCanResizeWidth(false) mod_settings_panel:SetCanResizeHeight(false)
 
     --- Create the close button
     local close_button_uic = core:get_or_create_component("button_mct_close", "ui/templates/round_small_button", mod_settings_panel)
@@ -1401,6 +1408,16 @@ core:add_listener(
     true
 )
 
+core:add_listener(
+    "MCT_EscClosed",
+    "UITrigger",
+    function(context) VLib.Log("UI trigger: " .. context.string) return context.string == "mct_panel_closed" end,
+    function(context)
+        VLib.Log("MCT panel closed UI trigger!!")
+        ui_obj:close_frame(true)
+    end,
+    true
+)
 
 core:add_listener(
     "mct_revert_to_defaults_pressed",

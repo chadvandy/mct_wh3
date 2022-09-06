@@ -297,9 +297,16 @@ function mct_section:set_collapsed(b, event_free)
     end
 
     self._is_collapsed = b
-    local is_open = not self._is_collapsed
 
+    self:ui_set_collapsed(event_free)
+end
+
+---@param event_free boolean? Whether to trigger the "MctSectionVisibilityChanged" event. True is sent when the section is first created.
+function mct_section:ui_set_collapsed(event_free)
+    local is_open = not self._is_collapsed
     local holder = self._holder
+
+    if not is_uicomponent(holder) then return end
 
     for i = 0, holder:ChildCount() -1 do
         local child = UIComponent(holder:Find(i))
@@ -330,8 +337,13 @@ function mct_section:set_hidden(b)
 
     self._hidden = b
 
-    if is_uicomponent(self._holder) then
-        self._holder:SetVisible(not self._hidden)
+    self:ui_set_visibility()
+end
+
+function mct_section:ui_set_visibility()
+    local holder = self._holder
+    if is_uicomponent(holder) then
+        holder:SetVisible(not self._hidden)
     end
 end
 
@@ -402,7 +414,7 @@ function mct_section:populate(this_column)
     local mod = self:get_mod()
 
     local section_holder = core:get_or_create_component("mct_section_"..key, "ui/mct/layouts/column", this_column)
-    section_holder:Resize(this_column:Width(), this_column:Height())
+    section_holder:Resize(this_column:Width(), get_mct().ui.mod_settings_panel:Height())
     section_holder:SetCanResizeWidth(false)
     section_holder:SetCanResizeHeight(true)
 
@@ -420,8 +432,11 @@ function mct_section:populate(this_column)
 
     -- set text & width and shit
     section_header:SetCanResizeWidth(true)
-    -- section_header:SetCanResizeHeight(false)
-    section_header:Resize(this_column:Width() * 0.95, section_header:Height())
+    section_header:SetCanResizeHeight(true)
+    section_header:Resize(this_column:Width() * 0.95, 34)
+    section_header:SetCanResizeWidth(false)
+    section_header:SetCanResizeHeight(false)
+    
     section_header:SetDockingPoint(2)
     section_header:SetState("selected")
     -- section_header:SetCanResizeWidth(false)
@@ -455,11 +470,9 @@ function mct_section:populate(this_column)
 
     section_holder:Layout()
 
-    self:set_collapsed(false)
-
-    if self._hidden then
-        section_holder:SetVisible(false)
-    end
+    --- Toggles the collapsed state to what it should be 
+    self:ui_set_collapsed(true)
+    self:ui_set_visibility()
 end
 
 --- Set the visibility for the mct_section.
@@ -551,7 +564,6 @@ function mct_section:set_is_collapsible(b)
     if not is_boolean(b) then return false end
 
     self._is_collapsible = b
-    self._is_collapsed = false
 
     local l_key = "MCT_SectionHeaderPressed_"..self:get_key()
 

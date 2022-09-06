@@ -205,6 +205,10 @@ local sec_two = second_mod:add_new_section("Second", "Second")
 sec_two:set_is_collapsible(true)
 second_mod:add_new_option("padoopey", "checkbox"):set_text("This is a testing checkbox!")
 
+local sec_thr = second_mod:add_new_section("Third", "Third")
+sec_thr:set_hidden(false)
+second_mod:add_new_option("blammo", "checkbox"):set_text("Bloopadoopa")
+
 -- for i = 1, 1000 do
 --     local option = mct_mod:add_new_option("test_"..i, "checkbox")
 --     option:set_default_value(math.random(1, 2) == 1)
