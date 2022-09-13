@@ -66,17 +66,17 @@ function SettingsSuperclass:populate(box)
     local panel = get_mct().ui.mod_settings_panel
 
     local settings_canvas = core:get_or_create_component("settings_canvas", 'ui/campaign ui/script_dummy', box)
-    settings_canvas:Resize(panel:Width() * 0.95, panel:Height())
+    settings_canvas:Resize(panel:Width() * 0.95, panel:Height(), false)
     settings_canvas:SetDockingPoint(1)
 
     settings_canvas:SetCanResizeWidth(false)
 
     for i = 1, self.num_columns do
         local column = core:get_or_create_component("settings_column_"..i, "ui/mct/layouts/column", settings_canvas)
-        column:Resize(settings_canvas:Width() / self.num_columns, panel:Height())
+        column:SetCanResizeHeight(true)
+        column:Resize(settings_canvas:Width() / self.num_columns, 700, false)
 
         column:SetCanResizeWidth(false)
-        -- column:SetCanResizeHeight(false)
 
         --- 2 if num_columns = 1
         --- 1 and 3 if num_columns = 2
@@ -96,6 +96,7 @@ function SettingsSuperclass:populate(box)
         column:SetDockingPoint(docking_point)
     end
 
+    --- TODO do this at the end
     local num_dividers = self.num_columns - 1
     if num_dividers > 0 then
         for i = 1, num_dividers do
@@ -113,7 +114,7 @@ function SettingsSuperclass:populate(box)
 
             divider:SetCanResizeWidth(true)
             divider:SetCanResizeHeight(true)
-            divider:Resize(13, ch)
+            divider:Resize(13, ch, false)
         end
     end
 
@@ -122,6 +123,10 @@ function SettingsSuperclass:populate(box)
     
     --- number of sections per column
     local per_column = math.ceil(#sections / self.num_columns)
+
+    local column_h = {}
+
+    for i = 1, self.num_columns do column_h[i] = 0 end
 
     for i, section_obj in ipairs(sections) do
         local section_key = section_obj:get_key()
@@ -145,16 +150,24 @@ function SettingsSuperclass:populate(box)
         if not section_obj or section_obj._options == nil or next(section_obj._options) == nil then
             -- skip
         else
-            section_obj:populate(column)
+            local w,h = section_obj:populate(column)
+            column_h[column_num] = column_h[column_num] + h
         end
     end
+
 
     --- TODO wish there were a better way to do this
     core:get_tm():real_callback(function()
         local max_h = settings_canvas:Height()
         for i = 1, self.num_columns do
             local column = find_uicomponent(settings_canvas, "settings_column_" .. i)
+            column:Resize(column:Width(), column_h[i], false)
+
             if column:Height() > max_h then max_h = column:Height() end
+
+            column:SetCanResizeHeight(false)
+
+            -- column:Layout()
         end
         -- local _,max_h = settings_canvas:Bounds()
         settings_canvas:Resize(panel:Width() * 0.95, max_h, false)

@@ -674,6 +674,8 @@ function mct_option:ui_create_option_base(parent, w, h)
 
     dummy_border:SetState("tiled")
 
+    dummy_border:SetDockingPoint(5)
+
     local border_path = self:get_border_image_path()
     local border_visible = self:get_border_visibility()
 

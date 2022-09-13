@@ -44,9 +44,9 @@
         <holder
 			this="4052134E-99A2-4BC0-A3B2721806954094"
 			id="holder"
-			offset="-142.00,80.00"
+			offset="0.00,0.00"
 			docking="Center"
-			dock_offset="0.00,118.00"
+			dock_offset="0.00,0.00"
 			component_anchor_point="0.50,0.50"
 			priority="100"
 			tooltipslocalised="true"
@@ -58,18 +58,14 @@
 					this="DAEA90D9-8B5C-46E9-A8D958F4B1D76249"
 					name="default"
 					width="754"
-					height="500"
+					height="200"
 					texthbehaviour="Never split"
 					uniqueguid="DAEA90D9-8B5C-46E9-A8D958F4B1D76249"/>
 			</states>
 			<LayoutEngine
 				type="List"
-				spacing="8.00,8.00"
-				sizetocontent="false"
+				is_listview_lookup_enabled="false"
 				horizontal_alignment="Center">
-				<columnwidths>
-					<column width="700"/>
-				</columnwidths>
 			</LayoutEngine>
 		</holder>
     </components>

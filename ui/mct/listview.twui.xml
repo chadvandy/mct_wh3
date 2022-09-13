@@ -522,7 +522,7 @@
 				type="List"
 				sizetocontent="false">
 				<columnwidths>
-					<column width="264"/>
+					<column width="1"/>
 				</columnwidths>
 			</LayoutEngine>
 		</list_box>

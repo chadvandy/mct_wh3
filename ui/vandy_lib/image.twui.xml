@@ -45,7 +45,7 @@
 		<image
 			this="345A7C15-9AF4-46A2-A317E69DCAE9E2CE"
 			id="bullet_point"
-			offset="520.00,347.00"
+			offset="0.00,0.00"
 			allowhorizontalresize="false"
 			allowverticalresize="false"
 			priority="42"

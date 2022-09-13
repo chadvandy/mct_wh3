@@ -1267,6 +1267,8 @@ function ui_obj:new_option_row_at_pos(option_obj, this_layout)
     h = h * 0.12
 
     option_obj:ui_create_option_base(this_layout, w, h)
+
+    return w,h
 end
 
 ---@param mod_obj MCT.Mod

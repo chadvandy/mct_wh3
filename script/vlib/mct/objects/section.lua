@@ -406,7 +406,7 @@ function mct_section:get_localised_text()
     return text
 end
 
---- TODO create this section in the UI.
+--- create this section in the UI.
 ---@param this_column UIC The column UIC to pour this section into.
 function mct_section:populate(this_column)
     local can_collapse = self._is_collapsible
@@ -414,13 +414,13 @@ function mct_section:populate(this_column)
     local mod = self:get_mod()
 
     local section_holder = core:get_or_create_component("mct_section_"..key, "ui/mct/layouts/column", this_column)
-    section_holder:Resize(this_column:Width(), get_mct().ui.mod_settings_panel:Height())
-    section_holder:SetCanResizeWidth(false)
     section_holder:SetCanResizeHeight(true)
+    section_holder:Resize(this_column:Width(), 700, false)
+    section_holder:SetCanResizeWidth(false)
 
     self._holder = section_holder
 
-    --- TODO different header depending on is_collapsible!
+    --- different header depending on is_collapsible!
     -- first, create the section header
     local this_layout = "ui/vandy_lib/row_header"
     if not can_collapse then
@@ -430,12 +430,16 @@ function mct_section:populate(this_column)
     local section_header = core:get_or_create_component("mct_section_"..key.."_header", this_layout, section_holder)
     self._header = section_header
 
+    local h = 0
+
     -- set text & width and shit
     section_header:SetCanResizeWidth(true)
     section_header:SetCanResizeHeight(true)
-    section_header:Resize(this_column:Width() * 0.95, 34)
+    section_header:Resize(this_column:Width() * 0.95, 34, false)
     section_header:SetCanResizeWidth(false)
     section_header:SetCanResizeHeight(false)
+
+    h = h + 34
     
     section_header:SetDockingPoint(2)
     section_header:SetState("selected")
@@ -457,7 +461,7 @@ function mct_section:populate(this_column)
     end
 
     -- lastly, create all the rows and options within
-    --local num_remaining_options = 0
+    --local num_remaining_options = 0`
     -- local valid = true
 
     -- this is the table with the positions to the options
@@ -465,14 +469,28 @@ function mct_section:populate(this_column)
     -- local options_table, num_remaining_options = section_obj:get_ordered_options()
     for i,option_key in ipairs(self._true_ordered_options) do
         local option_obj = mod:get_option_by_key(option_key)
-        get_mct().ui:new_option_row_at_pos(option_obj, section_holder)
+        local rw,rh = get_mct().ui:new_option_row_at_pos(option_obj, section_holder)
+
+        h = h + rh
     end
 
-    section_holder:Layout()
+    logf("Resizing section %s to (%d, %d)", self:get_key(), section_holder:Width(), h)
+
+    section_holder:SetCanResizeHeight(true)
+
+    section_holder:Resize(section_holder:Width(), h, false)
+    logf("Section holder size is now (%d, %d)", section_holder:Width(), section_holder:Height())
+
+    -- section_holder:SetCanResizeHeight(false)
+
+    -- section_holder:Layout()
+
 
     --- Toggles the collapsed state to what it should be 
     self:ui_set_collapsed(true)
     self:ui_set_visibility()
+
+    return section_holder:Width(), section_holder:Height()
 end
 
 --- Set the visibility for the mct_section.
