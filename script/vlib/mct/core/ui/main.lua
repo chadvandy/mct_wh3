@@ -408,6 +408,7 @@ function ui_obj:open_frame(provided_panel)
         self:set_selected_mod(mct_mod, mct_mod:get_main_page())
         self.mod_row_list_box:Layout()
 
+        core:remove_listener("MctRowClicked")
         --- The listener for selecting an individual mod
         core:add_listener(
             "MctRowClicked",
@@ -1266,17 +1267,20 @@ function ui_obj:new_option_row_at_pos(option_obj, this_layout)
     w = w * 0.95
     h = h * 0.12
 
+    VLib.Log("[MCT] Option row height is %d", h)
+
     option_obj:ui_create_option_base(this_layout, w, h)
 
     return w,h
 end
+
 
 ---@param mod_obj MCT.Mod
 function ui_obj:new_mod_row(mod_obj)
     local row = core:get_or_create_component(mod_obj:get_key(), "ui/vandy_lib/row_header", self.mod_row_list_box)
     row:SetVisible(true)
     row:SetCanResizeHeight(true) row:SetCanResizeWidth(true)
-    row:Resize(self.mod_row_list_view:Width() * 0.95, row:Height() * 1.8)
+    row:Resize(self.mod_row_list_view:Width() * 0.95, 34 * 1.8)
     row:SetDockingPoint(2)
 
     --- This hides the +/- button from the row headers.

@@ -46,8 +46,8 @@
 			this="345A7C15-9AF4-46A2-A317E69DCAE9E2CE"
 			id="bullet_point"
 			offset="0.00,0.00"
-			allowhorizontalresize="false"
-			allowverticalresize="false"
+			allowhorizontalresize="true"
+			allowverticalresize="true"
 			priority="42"
 			tooltipslocalised="true"
 			uniqueguid="345A7C15-9AF4-46A2-A317E69DCAE9E2CE"
@@ -58,12 +58,6 @@
 					this="BEADD51C-F471-4EA4-B1608E436F260E6C"
 					uniqueguid="BEADD51C-F471-4EA4-B1608E436F260E6C"
 					imagepath="ui/skins/default/bullet_point.png"/>
-
-				<!-- This one is tiled!-->
-				<component_image 
-					this="81ECD2D7-C99F-4309-AE86EBC464593FB8"
-					uniqueguid="81ECD2D7-C99F-4309-AE86EBC464593FB8"
-					imagepath="ui/skins/default/bullet_point_tick.png"/>
 			</componentimages>
 			<states>
 				<regular
@@ -78,68 +72,10 @@
 							uniqueguid="E8254FF2-A69B-4302-8EC8BEF295CA6756"
 							componentimage="BEADD51C-F471-4EA4-B1608E436F260E6C"
 							width="16"
-							height="16"/>
-						
+							height="16"
+						/>
 					</imagemetrics>
 				</regular>
-				<tiled
-					this="82190DAB-1375-4F75-B160B37EEF67313E"
-					name="tiled"
-					width="16"
-					height="16"
-					uniqueguid="82190DAB-1375-4F75-B160B37EEF67313E">
-					<imagemetrics>
-						<image
-							this="E8254FF2-A69B-4302-8EC8BEF295CA6756"
-							uniqueguid="E8254FF2-A69B-4302-8EC8BEF295CA6756"
-							componentimage="BEADD51C-F471-4EA4-B1608E436F260E6C"
-							width="16"
-							height="16"
-							tile="true"
-							dockpoint="Center"
-							margin="50.00,50.00,50.00,50.00"/>
-					</imagemetrics>
-				</tiled>
-				<!-- <completed
-					this="46B88857-A62E-4DD8-888C536EEE49D326"
-					name="completed"
-					width="16"
-					height="16"
-					uniqueguid="46B88857-A62E-4DD8-888C536EEE49D326">
-					<imagemetrics>
-						<image
-							this="A7A8CB47-1D3F-4ECC-87BC20F476D19104"
-							uniqueguid="A7A8CB47-1D3F-4ECC-87BC20F476D19104"
-							componentimage="BEADD51C-F471-4EA4-B1608E436F260E6C"
-							width="16"
-							height="16"/>
-						<image
-							this="A9572C48-ED74-4B48-ADBA09A3215B35B2"
-							uniqueguid="A9572C48-ED74-4B48-ADBA09A3215B35B2"
-							componentimage="81ECD2D7-C99F-4309-AE86EBC464593FB8"
-							offset="-2.00,-3.00"
-							width="21"
-							height="19"
-							dockpoint="Center"
-							dock_offset="0.00,-2.00"/>
-					</imagemetrics>
-				</completed>
-				<locked
-					this="3AD12BAA-BFC7-4A34-AD9D16C153CF00D2"
-					name="locked"
-					width="16"
-					height="16"
-					texthbehaviour="Never split"
-					uniqueguid="3AD12BAA-BFC7-4A34-AD9D16C153CF00D2">
-					<imagemetrics>
-						<image
-							this="D566EAC8-F041-4A50-82222249CC172754"
-							uniqueguid="D566EAC8-F041-4A50-82222249CC172754"
-							componentimage="B9166934-CD6B-4B05-B7D0153B54BDCE7F"
-							width="16"
-							height="16"/>
-					</imagemetrics>
-				</locked> -->
 			</states>
 		</image>
 	</components>

@@ -413,9 +413,12 @@ function mct_section:populate(this_column)
     local key = self:get_key()
     local mod = self:get_mod()
 
+    ---@type UIC
+    local panel = mct.ui.mod_settings_panel
+
     local section_holder = core:get_or_create_component("mct_section_"..key, "ui/mct/layouts/column", this_column)
     section_holder:SetCanResizeHeight(true)
-    section_holder:Resize(this_column:Width(), 700, false)
+    section_holder:Resize(this_column:Width(), panel:Height(), false)
     section_holder:SetCanResizeWidth(false)
 
     self._holder = section_holder
@@ -467,10 +470,13 @@ function mct_section:populate(this_column)
     -- this is the table with the positions to the options
     -- ie. options_table["1,1"] = "option 1 key"
     -- local options_table, num_remaining_options = section_obj:get_ordered_options()
+    logf("In section %s, height is %d", self:get_key(), h)
+
     for i,option_key in ipairs(self._true_ordered_options) do
         local option_obj = mod:get_option_by_key(option_key)
         local rw,rh = get_mct().ui:new_option_row_at_pos(option_obj, section_holder)
 
+        logf("\tHeight = %d + %d = %d", h, rh, h+rh)
         h = h + rh
     end
 

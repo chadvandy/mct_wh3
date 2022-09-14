@@ -301,6 +301,7 @@ end
 
 --- Returns a table of all "sections" within the mct_mod.
 -- These are returned as an array of tables, and each table has two indexes - ["key"] and ["txt"], for internal key and localised name, in that order.
+---@return table<string, MCT.Section>
 function mct_mod:get_sections()
     return self._sections
 end
@@ -469,6 +470,7 @@ function mct_mod:set_positions_for_options()
         -- log("in section ["..section_key.."].")
 
         local ordered_option_keys = section_obj:sort_options()
+        section_obj._true_ordered_options = {}
 
         local total = #ordered_option_keys
 

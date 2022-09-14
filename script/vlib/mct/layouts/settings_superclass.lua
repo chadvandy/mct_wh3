@@ -63,6 +63,7 @@ function SettingsSuperclass:populate(box)
     -- set the positions for all options in the mod
     mod:set_positions_for_options()
 
+    ---@type UIC
     local panel = get_mct().ui.mod_settings_panel
 
     local settings_canvas = core:get_or_create_component("settings_canvas", 'ui/campaign ui/script_dummy', box)
@@ -74,7 +75,7 @@ function SettingsSuperclass:populate(box)
     for i = 1, self.num_columns do
         local column = core:get_or_create_component("settings_column_"..i, "ui/mct/layouts/column", settings_canvas)
         column:SetCanResizeHeight(true)
-        column:Resize(settings_canvas:Width() / self.num_columns, 700, false)
+        column:Resize(settings_canvas:Width() / self.num_columns, panel:Height(), false)
 
         column:SetCanResizeWidth(false)
 
@@ -170,7 +171,7 @@ function SettingsSuperclass:populate(box)
             -- column:Layout()
         end
         -- local _,max_h = settings_canvas:Bounds()
-        settings_canvas:Resize(panel:Width() * 0.95, max_h, false)
+        settings_canvas:Resize(settings_canvas:Width(), max_h, false)
     end, 10)
 
     -- settings_canvas:Resize(panel:Width() * 0.95, panel:Height() * 2)

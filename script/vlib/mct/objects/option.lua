@@ -57,7 +57,7 @@ local mct_option_defaults = {
     _uic_in_ui = true,
 
     -- border deets
-    _border_visible = true,
+    _border_visible = false,
     _border_image_path = "ui/skins/default/panel_back_border.png",
 
     _pos = {
@@ -408,7 +408,7 @@ function mct_option:set_border_image_path(border_path)
     local border_uic = self:get_uic_with_key("border")
     if is_uicomponent(border_uic) then
         ---@diagnostic disable-next-line
-        border_uic:SetImagePath(border_path, 1)
+        border_uic:SetImagePath(border_path)
     end
 end
 
@@ -668,24 +668,22 @@ function mct_option:ui_create_option_base(parent, w, h)
 
     --- Create the border if necessary
     local dummy_border = core:get_or_create_component("border", "ui/vandy_lib/image", dummy_option)
-    dummy_border:SetCanResizeHeight(true) dummy_border:SetCanResizeWidth(true)
     dummy_border:Resize(w, h)
-    dummy_border:SetCanResizeHeight(false) dummy_border:SetCanResizeWidth(false)
-
-    dummy_border:SetState("tiled")
 
     dummy_border:SetDockingPoint(5)
 
     local border_path = self:get_border_image_path()
     local border_visible = self:get_border_visibility()
 
-    if is_string(border_path) and border_path ~= "" then
-        dummy_border:SetImagePath(border_path, 1)
-    else -- some error; default to default
-        dummy_border:SetImagePath("ui/skins/default/panel_back_border.png", 1)
-    end
+    -- if is_string(border_path) and border_path ~= "" then
+    --     dummy_border:SetImagePath(border_path)
+    -- else -- some error; default to default
+    --     dummy_border:SetImagePath("ui/skins/default/panel_back_border.png")
+    -- end
+    dummy_border:SetImagePath("ui/skins/default/panel_back_border.png")
 
-    dummy_border:SetVisible(border_visible)
+    --- TODO enable when it looks good
+    dummy_border:SetVisible(false)
 
     self:set_uic_with_key("border", dummy_border, true)
 

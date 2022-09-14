@@ -198,11 +198,13 @@ second_mod:set_author("")
 second_mod:set_title("bloop")
 
 local sec_one = second_mod:add_new_section("First", "First")
-sec_one:set_hidden(true)
+-- sec_one:set_hidden(true)
+sec_one:set_is_collapsible(true)
 second_mod:add_new_option("plapooey", "checkbox"):set_text("This is a testing checkbox!")
 
 local sec_two = second_mod:add_new_section("Second", "Second")
 sec_two:set_is_collapsible(true)
+sec_two:set_collapsed(true, true)
 second_mod:add_new_option("padoopey", "checkbox"):set_text("This is a testing checkbox!")
 
 local sec_thr = second_mod:add_new_section("Third", "Third")
