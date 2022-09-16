@@ -216,7 +216,7 @@ local second_page = second_mod:create_settings_page("Second Settings", 3)
 -- second_page:
 local sec_four = second_mod:add_new_section("New Page", "New Page Here")
 second_mod:add_new_option("testing", "checkbox"):set_text("Second page setting")
-second_page:assign_section_to_page(sec_four)
+sec_four:assign_to_page(second_page)
 
 -- for i = 1, 1000 do
 --     local option = mct_mod:add_new_option("test_"..i, "checkbox")

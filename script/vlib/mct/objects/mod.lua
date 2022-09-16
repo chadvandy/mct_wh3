@@ -50,7 +50,7 @@ local mct_mod_defaults = {
     ---@type table<string, MCT.Page> All of the Pages defined for this mod.
     _pages = {},
 
-    ---@type MCT.Page the Main page for this mod, the one that will open on pressing the mod header.
+    ---@type MCT.Page.SettingsSuperclass the Main page for this mod, the one that will open on pressing the mod header.
     _main_page = nil,
 
     _page_uics = {},
@@ -82,7 +82,7 @@ function mct_mod:new(key)
     return o
 end
 
-
+---@return MCT.Page.SettingsSuperclass
 function mct_mod:get_main_page()
     if not self._main_page then
         self:set_main_page(self:create_settings_page("settings", 2))
@@ -95,7 +95,7 @@ function mct_mod:get_page_with_key(key)
     return self._pages[key]
 end
 
----@param page MCT.Page
+---@param page MCT.Page.SettingsSuperclass
 function mct_mod:set_main_page(page)
     logf("Setting main page of %s to %s", self:get_key(), page:get_key())
     self._main_page = page
@@ -186,7 +186,7 @@ function mct_mod:add_new_section(section_key, localised_name, is_localised)
     self._sections_by_index_order[#self._sections_by_index_order+1] = section_key
     self._last_section = new_section
 
-    self:get_main_page():assign_section_to_page(new_section)
+    new_section:assign_to_page(self:get_main_page())
 
     return new_section
 end

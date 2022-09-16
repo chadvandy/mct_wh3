@@ -87,6 +87,16 @@ function mct_section:get_ordered_options()
     return ordered_options, num_total
 end
 
+---@param page MCT.Page.SettingsSuperclass
+function mct_section:assign_to_page(page)
+    if self._page then
+        self._page:unassign_section(self)
+    end
+
+    self._page = page
+    page:assign_section_to_page(self)
+end
+
 --- Set an option key at a specific index, for the @{mct_section:get_ordered_options} function.
 -- Don't call this directly - use @{mct_section:set_option_sort_function}
 ---@param option_key string The option key being placed at the index.

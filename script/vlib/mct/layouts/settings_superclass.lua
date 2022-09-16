@@ -37,6 +37,16 @@ function SettingsSuperclass:assign_section_to_page(section)
     self.assigned_sections[#self.assigned_sections+1] = section
 end
 
+function SettingsSuperclass:unassign_section(section)
+    for i = #self.assigned_sections, 1, -1 do
+        local this_section = self.assigned_sections[i]
+        if this_section == section then
+            table.remove(self.assigned_sections, i)
+            break
+        end
+    end
+end
+
 function SettingsSuperclass:get_assigned_sections()
     return self.assigned_sections
 end
