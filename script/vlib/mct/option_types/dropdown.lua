@@ -151,7 +151,7 @@ function Dropdown:ui_create_option(dummy_parent)
     new_uic:Resize(dummy_parent:Width() * 0.4, new_uic:Height())
 
     local popup_menu = find_uicomponent(new_uic, "popup_menu")
-    popup_menu:PropagatePriority(1000) -- higher z-value than other shits
+    popup_menu:PropagatePriority(get_mct().ui.mod_settings_panel:Priority() + 500) -- higher z-value than other shits
     popup_menu:SetVisible(false)
     --popup_menu:SetInteractive(true)
 

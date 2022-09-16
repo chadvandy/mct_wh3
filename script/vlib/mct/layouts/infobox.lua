@@ -13,6 +13,12 @@ local defaults = {
 
     ---@type string Image path to displayed image. TODO decide on the reso.
     image_path = nil,
+
+    ---@type "top_left"|"top_right"|"top_center"
+    image_position = "top_center",
+
+    ---@type {w:number,h:number}
+    image_dimensions = {w=100,h=100},
 }
 
 ---@class MCT.Page.Infobox : MCT.Page
@@ -42,6 +48,27 @@ function Infobox:init(key, mod, description, image_path, workshop_link)
     self.image_path = image_path
 end
 
+local valid_pos = {
+    top_left = true,
+    top_right = true,
+    top_center = true,
+}
+
+---@param pos "top_left"|"top_right"|"top_center"
+function Infobox:set_image_position(pos)
+    if not is_string(pos) or not valid_pos[pos] then
+        -- errmsg
+        return false
+    end
+
+    self.image_position = pos
+end
+
+--- TODO
+function Infobox:set_image_dimensions(w, h)
+
+end
+
 --- draw in the UI
 function Infobox:populate(box)
     local uic = core:get_or_create_component("infobox", "ui/campaign ui/script_dummy", box)
@@ -49,16 +76,36 @@ function Infobox:populate(box)
     uic:Resize(box:Width() * 0.9, box:Height())
 
     local xo,yo = 0,0
+
     if self.image_path then
         local img = core:get_or_create_component("image", "ui/vandy_lib/image", uic)
-        img:SetImagePath(self.image_path, 0)
-        img:SetDockingPoint(2)
-        img:SetDockOffset(0, 50)
-        img:SetVisible(true) -- TODO needed?
-        img:Resize(100, 100)
-        img:ResizeCurrentStateImage(0, 100, 100)
+        img:SetImagePath(self.image_path)
+        
+        local w,h = self.image_dimensions.w, self.image_dimensions.h
+        img:Resize(w, h)
+        img:ResizeCurrentStateImage(0, w, h)
+        local pos = self.image_position
+        if pos == "top_left" then
+            img:SetDockingPoint(1)
+
+            --- TODO take into account the new dimensions
+            img:SetDockOffset(0, 50)
+            
+        end
         
         yo = img:Height()
+
+        if self.workshop_link then
+            common.set_context_value("mct_workshop_link_"..self.mod_obj:get_key(), self.workshop_link)
+
+            local btn = core:get_or_create_component("workshop_button", "ui/mct/workshop_button", img)
+
+            btn:SetDockingPoint(8)
+            btn:SetDockOffset(0, btn:Height() * 1.2)
+            btn:SetTooltipText("Open workshop link", true)
+
+            btn:SetContextObject(cco("CcoStringValue", self.workshop_link))
+        end
     end
 
     if self.description then

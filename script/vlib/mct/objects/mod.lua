@@ -7,98 +7,7 @@ local mct = get_mct()
 
 local log,logf,err,errf = get_vlog("[mct]")
 
-local sort_functions = {
-    --- One of the default sort-section function.
-    -- Sort the sections by their section key - from "!my_section" to "zzz_my_section"
-    key = function(self)
-        local ret = {}
-        local sections = self:get_sections()
-
-        for section_key, _ in pairs(sections) do
-            table.insert(ret, section_key)
-        end
-
-        table.sort(ret)
-
-        return ret
-    end,
-
-    --- One of the default sort-section functions.
-    -- Sort the sections by the order in which they were added in the `mct/settings/?.lua` file.
-    index = function(self)
-        local ret = {}
-
-        -- table that has all mct_mod sections listed in the order they were created via mct_mod:add_new_section
-        -- array of section_keys!
-        local order_by_section_added = self._sections_by_index_order
-    
-        -- copy the table
-        for i = 1, #order_by_section_added do
-            ret[#ret+1] = order_by_section_added[i]
-        end
-    
-        return ret
-    end,
-
-    ---- One of the default sort-option functions.
-    --- Sort the section by their localised text - from "Awesome Options" to "Zoidberg Goes Woop Woop Woop"
-    localised_text = function(self)
-        -- return table, which will be the sorted sections from top to bottom
-        local ret = {}
-
-        -- texts is the sorted list of section texts
-        local texts = {}
-
-        -- table linking localised text to a table of section keys. If multiple section have the same localised text, it will be `["Localised Text"] = {"section_key_a", "section_key_b"}`
-        -- else, it's just `["Localised Text"] = {"section_key"}`
-        local text_to_section_key = {}
-
-        -- all sections
-        local sections = self:get_sections()
-
-        for section_key, section_obj in pairs(sections) do
-            -- grab this section's localised text
-            local localised_text = section_obj:get_localised_text()
-            
-            -- toss it into the texts table, and link it to the section key
-            texts[#texts+1] = localised_text
-
-            -- check if this localised text was already linked to something
-            local test = text_to_section_key[localised_text]
-
-            if is_nil(text_to_section_key[localised_text]) then
-                -- if not, set it equal to the key
-                text_to_section_key[localised_text] = {section_key}
-            else
-                if is_table(test) then
-                    -- this is ugly, I'm sorry.
-                    text_to_section_key[localised_text][#text_to_section_key[localised_text]+1] = section_key
-                end
-            end
-        end
-
-        -- sort the texts alphanumerically.
-        table.sort(texts)
-
-        -- loop through texts, grab the relevant section key, and then add that section key to ret
-        -- if multiple section keys are linked to this text, add them in order added, whatever
-        for i = 1, #texts do
-            -- grab the localised text at this index
-            local text = texts[i]
-
-            -- grab attached sections
-            local attached_sections = text_to_section_key[text]
-
-            -- loop through attached section keys (will only be 1 usually) and then add them to the ret table
-            for j = 1, #attached_sections do
-                local section_key = attached_sections[j]
-                ret[#ret+1] = section_key
-            end
-        end
-
-        return ret
-    end
-}
+local sort_functions = VLib.LoadModule("sections", "script/vlib/mct/sort_functions/")
 
 --- the table.
 ---@class MCT.Mod
@@ -163,21 +72,22 @@ function mct_mod:new(key)
     o._key = key
 
     local ok, err = pcall(function()
-    -- o:create_new_page("main", mct)
-    local settings = o:create_settings_page("settings", 2)
-    logf("Created settings page: " .. tostring(settings))
-    o:set_main_page(settings)
+    -- -- o:create_new_page("main", mct)
+    -- local settings = o:create_settings_page("settings", 2)
+    -- logf("Created settings page: " .. tostring(settings))
+    -- o:set_main_page(settings)
 
     end) if not ok then VLib.Error(err) end
-
-    --- TODO do I want this?
-    -- start with the default section, if none are specified this is what's used
-    o:add_new_section("default", "mct_mct_mod_default_section_text", true)
 
     return o
 end
 
+
 function mct_mod:get_main_page()
+    if not self._main_page then
+        self:set_main_page(self:create_settings_page("settings", 2))
+    end
+
     return self._main_page
 end
 
@@ -191,11 +101,17 @@ function mct_mod:set_main_page(page)
     self._main_page = page
 end
 
+function mct_mod:save_new_page(title, page)
 
+end
+
+---@return MCT.Page.SettingsSuperclass
 function mct_mod:create_settings_page(title, num_columns)
-    ---@type MCT.Page.SettingsSuperclass
     local page_class = mct:get_page_type("SettingsSuperclass")
+    ---@cast page_class MCT.Page.SettingsSuperclass
     local page = page_class:new(title, self, num_columns)
+    
+    ---@cast page MCT.Page.SettingsSuperclass
     self._pages[title] = page
 
     return page
@@ -227,6 +143,11 @@ function mct_mod:get_section_by_key(section_key)
     end
 
     return t
+end
+
+--- TODO wrapper, get the page key and then get its assigned sections
+function mct_mod:get_sections_by_page(page)
+
 end
 
 --- Add a new section to the mod's settings view, to separate them into several categories.
@@ -264,6 +185,8 @@ function mct_mod:add_new_section(section_key, localised_name, is_localised)
     self._sections[section_key] = new_section
     self._sections_by_index_order[#self._sections_by_index_order+1] = section_key
     self._last_section = new_section
+
+    self:get_main_page():assign_section_to_page(new_section)
 
     return new_section
 end
@@ -364,6 +287,11 @@ end
 -- Specifically used when creating new options, to find the last-made section.
 -- @local
 function mct_mod:get_last_section()
+    if not self._last_section then
+        -- start with a default section, if none are created by the Modder.
+        self:add_new_section("default", "mct_mct_mod_default_section_text", true)
+    end
+
     -- return the last created section
     return self._last_section
 end
@@ -376,12 +304,15 @@ end
 
 --- Call the internal ._section_sort_order_function, determined by @{mct_mod:set_section_sort_function}
 -- @local
-function mct_mod:sort_sections()
+---@param page MCT.Page.SettingsSuperclass
+function mct_mod:sort_sections(page)
     -- perform the wrapped sort order function
 
+    --- TODO grab all unassigned sections and plop them into their relative pages
+    --- TODO the below should function on each page at a time
     -- TODO protect it?
     -- protect it with a pcall to catch any issues with a custom sort order func
-    return self:_section_sort_order_function()
+    return self:_section_sort_order_function(page)
 end
 
 --- Set the section-sort-function for this mod's sections.
@@ -911,7 +842,7 @@ function mct_mod:add_new_option(option_key, option_type)
     local new_option
     local ok, err = pcall(function()
 
-        logf("Creating option %s for mod %s", option_key, self:get_key())
+    logf("Creating option %s for mod %s", option_key, self:get_key())
     local option_class = mct:get_option_type(option_type)
     logf("Option class gotten for type %s", option_type)
     new_option = option_class:new(self, option_key)

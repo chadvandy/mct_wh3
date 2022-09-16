@@ -22,6 +22,24 @@ function VLib.FormatText(text)
     return text
 end
 
+
+--- Function to handle an optionally localised string.
+---@param str string The tested string.
+---@param default string? A default to pass if the string is empty and isn't a key.
+---@return string
+function VLib.HandleLocalisedText(str, default)
+    if not is_string(str) then return "" end
+
+    local test = common.get_localised_string(str)
+    if test == "" then
+        return str
+    elseif test == str then
+        return default
+    else
+        return test
+    end
+end
+
 --- Weird name. Takes a string, and add "ui/skins/default/" and ".png" to the front and back of it. That way, you can supply `skin_image("icon_plus") and get "ui/skins/default/icon_plus.png"
 ---@param t string
 ---@return string

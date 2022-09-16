@@ -37,6 +37,10 @@ function SettingsSuperclass:assign_section_to_page(section)
     self.assigned_sections[#self.assigned_sections+1] = section
 end
 
+function SettingsSuperclass:get_assigned_sections()
+    return self.assigned_sections
+end
+
 --[[ TODO instate the ui calls in relevant objects
     Grab the assigned sections (if none are assigned, grab all?)
     Loop through them, call section:populate(column)
@@ -50,7 +54,7 @@ function SettingsSuperclass:populate(box)
     --- TODO this should pull all sections that don't have a page already; right now this will pull all sections everywhere
     --- TODO properly order them!
     if #sections == 0 then
-        local sorted = self.mod_obj:sort_sections()
+        local sorted = self.mod_obj:sort_sections(self)
         for _,key in ipairs(sorted) do
             sections[#sections+1] = self.mod_obj:get_section_by_key(key)
         end

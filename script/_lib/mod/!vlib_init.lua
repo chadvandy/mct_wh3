@@ -251,23 +251,6 @@ function VLib.LoadModules(path, search_override, func_for_each)
     end
 end
 
---- Function to handle an optionally localised string.
----@param str string The tested string.
----@param default string? A default to pass if the string is empty and isn't a key.
----@return string
-function VLib.HandleLocalisedText(str, default)
-    if not is_string(str) then return "" end
-
-    local test = common.get_localised_string(str)
-    if test == "" then
-        return str
-    elseif test == str then
-        return default
-    else
-        return test
-    end
-end
-
 function get_vlog(prefix)
     if not is_string(prefix) then prefix = "[lib]" end
 

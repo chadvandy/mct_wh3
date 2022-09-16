@@ -2,7 +2,7 @@ local mct = get_mct()
 
 local mct_mod = mct:register_mod("mct_mod")
 
-mct_mod:create_infobox_page("Testing Page", "My Description", "ui/skins/default/advisor_beastmen_2d.png")
+mct_mod:create_infobox_page("Testing Page", "My Description", "ui/skins/default/advisor_beastmen_2d.png", "https://steamcommunity.com/sharedfiles/filedetails/?id=2815354316")
 
 
 -- mct_mod:set_tooltip_text("Testing this tooltip text out!")
@@ -201,6 +201,7 @@ local sec_one = second_mod:add_new_section("First", "First")
 -- sec_one:set_hidden(true)
 sec_one:set_is_collapsible(true)
 second_mod:add_new_option("plapooey", "checkbox"):set_text("This is a testing checkbox!")
+sec_one:set_description("Here is some example description text for the first section. No other sections have description text!")
 
 local sec_two = second_mod:add_new_section("Second", "Second")
 sec_two:set_is_collapsible(true)
@@ -210,6 +211,12 @@ second_mod:add_new_option("padoopey", "checkbox"):set_text("This is a testing ch
 local sec_thr = second_mod:add_new_section("Third", "Third")
 sec_thr:set_hidden(false)
 second_mod:add_new_option("blammo", "checkbox"):set_text("Bloopadoopa")
+
+local second_page = second_mod:create_settings_page("Second Settings", 3)
+-- second_page:
+local sec_four = second_mod:add_new_section("New Page", "New Page Here")
+second_mod:add_new_option("testing", "checkbox"):set_text("Second page setting")
+second_page:assign_section_to_page(sec_four)
 
 -- for i = 1, 1000 do
 --     local option = mct_mod:add_new_option("test_"..i, "checkbox")

@@ -79,6 +79,8 @@ local mct_option = VLib.NewClass("MCT.Option", mct_option_defaults)
 --- Overridden by subtypes!
 function mct_option:new(...) end
 
+---@param mod_obj MCT.Mod
+---@param option_key string
 function mct_option:init(mod_obj, option_key)
     logf("MCT.Option init on %s", option_key)
     self._mod = mod_obj
@@ -375,8 +377,11 @@ function mct_option:set_uic_visibility(visibility, keep_in_ui)
     local uic_table = self:get_uics()
 
     for key, uic in pairs(uic_table) do
-        if is_uicomponent(uic) and key ~= "error_popup" then
-            uic:SetVisible(self:get_uic_visibility())
+        if is_uicomponent(uic) then
+            -- the visibility of these two are determined elsewhere.
+            if key ~= "error_popup" and key ~= "border" then
+                uic:SetVisible(self:get_uic_visibility())
+            end
         end
     end
 end
@@ -684,6 +689,8 @@ function mct_option:ui_create_option_base(parent, w, h)
 
     --- TODO enable when it looks good
     dummy_border:SetVisible(false)
+    logf("Setting dummy_border to visible: " .. tostring(false))
+    logf("Dummy border is visible:" .. tostring(dummy_border:Visible()))
 
     self:set_uic_with_key("border", dummy_border, true)
 

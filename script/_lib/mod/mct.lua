@@ -274,6 +274,8 @@ function mct:set_selected_mod(mod_obj, page_obj)
         mod_obj,
         page_obj,
     }
+
+    common.set_context_value("mct_currently_selected_mod", mod_obj:get_key())
 end
 
 function mct:get_selected_mod_name()

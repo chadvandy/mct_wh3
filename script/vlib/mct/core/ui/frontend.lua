@@ -56,29 +56,39 @@ core:add_listener(
 
         core:get_tm():real_callback(function()
             local right_holder = find_uicomponent("campaign_select_new", "right_holder")
+            local tab_settings = find_uicomponent(right_holder, "tab_settings")
             local settings_holder = find_uicomponent("campaign_select_new", "right_holder", "tab_settings", "settings_holder")
-            local tab_mct = UIComponent(right_holder:CreateComponent("tab_mct", "ui/vandy_lib/image"))
-            tab_mct:Resize(settings_holder:Width(), settings_holder:Height())
-            tab_mct:SetImagePath("ui/skins/default/fe_backgraund_gradient.png", 0)
-            tab_mct:SetCurrentStateImageTiled(0, true)
-            tab_mct:SetCurrentStateImageMargins(0, 0, 152, 0, 152)
+            local bg = find_uicomponent(settings_holder, "background_gradient")
+
+            local tab_mct = core:get_or_create_component("tab_mct", "ui/mct/frontend_frame", right_holder)
+            tab_mct:Resize(tab_settings:Width(), tab_settings:Height())
+            local mct_holder = core:get_or_create_component("mct_holder", "ui/campaign ui/script_dummy", tab_mct)
+            mct_holder:Resize(settings_holder:Width(), settings_holder:Height())
+
+            tab_mct:SetVisible(false)
 
             local p = settings_holder:DockingPoint()
             local x,y = settings_holder:GetDockOffset()
-            tab_mct:SetDockingPoint(p)
-            tab_mct:SetDockOffset(x, y)
+            mct_holder:SetDockingPoint(p)
+            mct_holder:SetDockOffset(x, y)
 
 
             local button_list = find_uicomponent("campaign_select_new", "side_panel_holder", "button_list")
             local holder = UIComponent(button_list:CreateComponent("mod_settings_holder", "ui/mct/frontend_button"))
 
             local button = find_uicomponent(holder, "button_mod_settings")
-            local highlight_animation = find_uicomponent(button, "highlight_animation")
-            highlight_animation:SetVisible(true)
+            -- local highlight_animation = find_uicomponent(button, "highlight_animation")
+            -- highlight_animation:SetVisible(true)
 
             local custom_tx = find_uicomponent(button, "custom_text")
-            custom_tx:SetStateText("Mod Configuration Tool")
+            -- custom_tx:SetStateText("Mod Configuration Tool")
             custom_tx:SetVisible(true)
+
+            find_uicomponent(tab_mct, "background_gradient"):Resize(bg:Width(), bg:Height())
+
+            -- local frame = core:get_or_create_component("frame", "ui/vandy_lib/image", button)
+            -- frame:Resize(button:Width(), button:Height())
+            -- frame:SetImagePath("ui/mct/frontend_button_bg.png")
         end, 50)
     end,
     true
@@ -92,7 +102,9 @@ core:add_listener(
     end,
     function(context)
         --- TODO hide close button
-        get_mct().ui:open_frame(find_uicomponent("campaign_select_new", "right_holder", "tab_mct"))
+        get_mct().ui:open_frame(find_uicomponent("campaign_select_new", "right_holder", "tab_mct", "mct_holder"))
+        local close_button = find_uicomponent(get_mct().ui.mod_settings_panel, "button_mct_close")
+        close_button:SetVisible(false)
 
         local button = UIComponent(context.component)
         local highlight_animation = find_uicomponent(button, "highlight_animation")

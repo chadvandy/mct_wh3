@@ -1043,8 +1043,8 @@
 			tooltipslocalised="true"
 			soundcategory="UI_GBL_TMP_Square_Large_Text_Button"
 			uniqueguid="2FEA80C7-C444-A2C3-40E516C9C2222C0B"
-			currentstate="9DE692B5-CD74-5E09-176D124530C5DC15"
-			defaultstate="9DE692B5-CD74-5E09-176D124530C5DC15">
+			currentstate="0C2F1E2D-7DE1-489F-AA76D2650BCCA1D2"
+			defaultstate="0C2F1E2D-7DE1-489F-AA76D2650BCCA1D2">
 			<userproperties>
 				<property
 					name="dynamic_image"
@@ -1052,21 +1052,25 @@
 			</userproperties>
 			<componentimages>
 				<component_image
-					this="48140FEE-3C09-1CF2-DC9BED77070F1BBD"
-					uniqueguid="48140FEE-3C09-1CF2-DC9BED77070F1BBD"
+					this="16FB6155-0DE5-4209-B79EDACFAD6C00A5"
+					uniqueguid="16FB6155-0DE5-4209-B79EDACFAD6C00A5"
 					imagepath="ui/skins/default/fe_flat_button_selected.png"/>
 				<component_image
-					this="7722EE59-7005-FAC8-E3A47E7C1476B5CF"
-					uniqueguid="7722EE59-7005-FAC8-E3A47E7C1476B5CF"
+					this="1473BA02-3340-4A21-BD4395B2BE124A61"
+					uniqueguid="1473BA02-3340-4A21-BD4395B2BE124A61"
 					imagepath="ui/skins/default/fe_flat_button.png"/>
 				<component_image
-					this="4FF3535E-4779-B0CF-AA8725955C27BD9B"
-					uniqueguid="4FF3535E-4779-B0CF-AA8725955C27BD9B"
+					this="450CFD99-5DCE-43CC-808CB178AB3E13B8"
+					uniqueguid="450CFD99-5DCE-43CC-808CB178AB3E13B8"
 					imagepath="ui/skins/default/fe_flat_button_selected_glow.png"/>
+				<component_image
+					this="A63C2CAF-2E7E-4C2B-A78116031CAD1EB1"
+					uniqueguid="A63C2CAF-2E7E-4C2B-A78116031CAD1EB1"
+					imagepath="ui/mct/frontend_button_bg.png"/>
 			</componentimages>
 			<states>
 				<active
-					this="9DE692B5-CD74-5E09-176D124530C5DC15"
+					this="0C2F1E2D-7DE1-489F-AA76D2650BCCA1D2"
 					name="active"
 					width="278"
 					height="128"
@@ -1075,26 +1079,33 @@
 					font_m_leading="3"
 					fontcat_name="ingame_text_warhammer3"
 					shader_name="brighten_t0"
-					uniqueguid="9DE692B5-CD74-5E09-176D124530C5DC15"
+					uniqueguid="0C2F1E2D-7DE1-489F-AA76D2650BCCA1D2"
 					stateeditordisplaypos="40.00,24.00">
 					<imagemetrics>
 						<image
-							this="3A1A7749-2C08-D6B1-E276C21DA637FABD"
-							uniqueguid="3A1A7749-2C08-D6B1-E276C21DA637FABD"
-							componentimage="7722EE59-7005-FAC8-E3A47E7C1476B5CF"
+							this="AC65EABF-2D5C-4919-BD25C2BAD7CD74A2"
+							uniqueguid="AC65EABF-2D5C-4919-BD25C2BAD7CD74A2"
+							componentimage="A63C2CAF-2E7E-4C2B-A78116031CAD1EB1"
+							width="278"
+							height="128"
+							dockpoint="Center"/>
+						<image
+							this="04A1FB4F-1C12-442D-9121518BF759FD4B"
+							uniqueguid="04A1FB4F-1C12-442D-9121518BF759FD4B"
+							componentimage="1473BA02-3340-4A21-BD4395B2BE124A61"
 							width="278"
 							height="128"
 							margin="5.00,5.00,5.00,5.00"/>
 					</imagemetrics>
 					<transitionmap>
 						<transition
-							transition_m_target_state="B315AD73-7279-AD69-EEBCA2228F78650C"
+							transition_m_target_state="5C5E78C0-7C0B-4919-821A9926C0CBB81D"
 							transition_m_transition_time="200"
 							transition_m_interpolation_property_mask="8"/>
 					</transitionmap>
 				</active>
 				<down
-					this="C6D85D12-108E-F7E6-53BBC7920C084D0D"
+					this="8DE50E16-A71A-43C5-849A0DF616D9861E"
 					name="down"
 					width="278"
 					height="128"
@@ -1103,13 +1114,22 @@
 					font_m_leading="3"
 					fontcat_name="ingame_text_warhammer3"
 					textshadervars="0.30,0.00,0.00,0.00"
-					uniqueguid="C6D85D12-108E-F7E6-53BBC7920C084D0D"
+					uniqueguid="8DE50E16-A71A-43C5-849A0DF616D9861E"
 					stateeditordisplaypos="250.00,218.00">
 					<imagemetrics>
 						<image
-							this="8AC0E733-C944-0F0A-E3E405DE4803721A"
-							uniqueguid="8AC0E733-C944-0F0A-E3E405DE4803721A"
-							componentimage="7722EE59-7005-FAC8-E3A47E7C1476B5CF"
+							this="547D94CE-FB8D-4754-8315274FBCB82C2E"
+							uniqueguid="547D94CE-FB8D-4754-8315274FBCB82C2E"
+							componentimage="A63C2CAF-2E7E-4C2B-A78116031CAD1EB1"
+							width="278"
+							height="128"
+							dockpoint="Center"
+							shadertechnique_vars="-0.30,0.00,0.00,0.00"
+							shader_name="brighten_t0"/>
+						<image
+							this="51CF68D1-5C04-4474-BE415A82903D42A4"
+							uniqueguid="51CF68D1-5C04-4474-BE415A82903D42A4"
+							componentimage="1473BA02-3340-4A21-BD4395B2BE124A61"
 							width="278"
 							height="128"
 							margin="5.00,5.00,5.00,5.00"/>
@@ -1117,14 +1137,14 @@
 					<transitionmap>
 						<transition
 							index="3"
-							transition_m_target_state="B315AD73-7279-AD69-EEBCA2228F78650C"/>
+							transition_m_target_state="5C5E78C0-7C0B-4919-821A9926C0CBB81D"/>
 						<transition
 							index="1"
-							transition_m_target_state="FB796CBE-9AAF-59A4-608DDFDC9BB794E1"/>
+							transition_m_target_state="4C0D5351-8472-426B-A75253804D96AA58"/>
 					</transitionmap>
 				</down>
 				<down_off
-					this="FB796CBE-9AAF-59A4-608DDFDC9BB794E1"
+					this="4C0D5351-8472-426B-A75253804D96AA58"
 					name="down_off"
 					width="278"
 					height="128"
@@ -1132,26 +1152,33 @@
 					font_m_colour="#FFFFE0FF"
 					font_m_leading="3"
 					fontcat_name="ingame_text_warhammer3"
-					uniqueguid="FB796CBE-9AAF-59A4-608DDFDC9BB794E1"
+					uniqueguid="4C0D5351-8472-426B-A75253804D96AA58"
 					stateeditordisplaypos="40.00,319.00">
 					<imagemetrics>
 						<image
-							this="B14ECFEE-3D17-911F-3CEAE3333B81CF01"
-							uniqueguid="B14ECFEE-3D17-911F-3CEAE3333B81CF01"
-							componentimage="7722EE59-7005-FAC8-E3A47E7C1476B5CF"
+							this="C74DB3E0-5FF0-4656-8E2BDCD606C90162"
+							uniqueguid="C74DB3E0-5FF0-4656-8E2BDCD606C90162"
+							componentimage="A63C2CAF-2E7E-4C2B-A78116031CAD1EB1"
+							width="278"
+							height="128"
+							dockpoint="Center"/>
+						<image
+							this="3D0148B2-1E28-4B0C-B4593525ED535D9B"
+							uniqueguid="3D0148B2-1E28-4B0C-B4593525ED535D9B"
+							componentimage="1473BA02-3340-4A21-BD4395B2BE124A61"
 							width="278"
 							height="128"
 							margin="5.00,5.00,5.00,5.00"/>
 					</imagemetrics>
 					<transitionmap>
-						<transition transition_m_target_state="C6D85D12-108E-F7E6-53BBC7920C084D0D"/>
+						<transition transition_m_target_state="8DE50E16-A71A-43C5-849A0DF616D9861E"/>
 						<transition
 							index="8"
-							transition_m_target_state="9DE692B5-CD74-5E09-176D124530C5DC15"/>
+							transition_m_target_state="0C2F1E2D-7DE1-489F-AA76D2650BCCA1D2"/>
 					</transitionmap>
 				</down_off>
 				<hover
-					this="B315AD73-7279-AD69-EEBCA2228F78650C"
+					this="5C5E78C0-7C0B-4919-821A9926C0CBB81D"
 					name="hover"
 					width="278"
 					height="128"
@@ -1162,13 +1189,22 @@
 					shader_name="brighten_t0"
 					shadervars="1.00,0.00,0.00,0.00"
 					textshadervars="0.30,0.00,0.00,0.00"
-					uniqueguid="B315AD73-7279-AD69-EEBCA2228F78650C"
+					uniqueguid="5C5E78C0-7C0B-4919-821A9926C0CBB81D"
 					stateeditordisplaypos="138.00,126.00">
 					<imagemetrics>
 						<image
-							this="827C0AB6-EDCA-9F2A-D6AB54E4933613EC"
-							uniqueguid="827C0AB6-EDCA-9F2A-D6AB54E4933613EC"
-							componentimage="7722EE59-7005-FAC8-E3A47E7C1476B5CF"
+							this="71F3DFFD-5CCD-45E6-9905F1BEBFFF7E16"
+							uniqueguid="71F3DFFD-5CCD-45E6-9905F1BEBFFF7E16"
+							componentimage="A63C2CAF-2E7E-4C2B-A78116031CAD1EB1"
+							width="278"
+							height="128"
+							dockpoint="Center"
+							shadertechnique_vars="1.00,0.00,0.00,0.00"
+							shader_name="brighten_t0"/>
+						<image
+							this="F21D6005-3810-469B-96F9C1406D99BAFA"
+							uniqueguid="F21D6005-3810-469B-96F9C1406D99BAFA"
+							componentimage="1473BA02-3340-4A21-BD4395B2BE124A61"
 							width="278"
 							height="128"
 							margin="5.00,5.00,5.00,5.00"/>
@@ -1176,16 +1212,16 @@
 					<transitionmap>
 						<transition
 							index="1"
-							transition_m_target_state="9DE692B5-CD74-5E09-176D124530C5DC15"
+							transition_m_target_state="0C2F1E2D-7DE1-489F-AA76D2650BCCA1D2"
 							transition_m_transition_time="200"
 							transition_m_interpolation_property_mask="8"/>
 						<transition
 							index="2"
-							transition_m_target_state="C6D85D12-108E-F7E6-53BBC7920C084D0D"/>
+							transition_m_target_state="8DE50E16-A71A-43C5-849A0DF616D9861E"/>
 					</transitionmap>
 				</hover>
 				<inactive
-					this="1B247771-FCFF-6A81-54C275CF2DB93603"
+					this="B8BE9AA3-27C5-4BA8-A4A45D41D6BC022A"
 					name="inactive"
 					width="278"
 					height="128"
@@ -1196,39 +1232,54 @@
 					fontcat_name="ingame_text_warhammer3"
 					shader_name="set_greyscale_t0"
 					shadervars="0.70,1.00,0.00,0.00"
-					uniqueguid="1B247771-FCFF-6A81-54C275CF2DB93603">
+					uniqueguid="B8BE9AA3-27C5-4BA8-A4A45D41D6BC022A">
 					<imagemetrics>
 						<image
-							this="224026A9-F92F-10A5-F5D2A2814966CB20"
-							uniqueguid="224026A9-F92F-10A5-F5D2A2814966CB20"
-							componentimage="7722EE59-7005-FAC8-E3A47E7C1476B5CF"
+							this="6DC214A8-B686-4C82-B1DBD5A216C4DC39"
+							uniqueguid="6DC214A8-B686-4C82-B1DBD5A216C4DC39"
+							componentimage="A63C2CAF-2E7E-4C2B-A78116031CAD1EB1"
+							width="278"
+							height="128"
+							colour="#FFFFFF32"
+							dockpoint="Center"/>
+						<image
+							this="9529BDD8-5F57-4911-90251C282D00C2BA"
+							uniqueguid="9529BDD8-5F57-4911-90251C282D00C2BA"
+							componentimage="1473BA02-3340-4A21-BD4395B2BE124A61"
 							width="278"
 							height="128"
 							margin="5.00,5.00,5.00,5.00"/>
 					</imagemetrics>
 				</inactive>
 				<selected
-					this="FB323E89-8F11-F946-EE91F0F1CD327B24"
+					this="50D75572-3F20-4837-8591AD8356EA3A8C"
 					name="selected"
 					width="278"
 					height="128"
 					texthbehaviour="Never split"
 					interactive="true"
-					uniqueguid="FB323E89-8F11-F946-EE91F0F1CD327B24">
+					uniqueguid="50D75572-3F20-4837-8591AD8356EA3A8C">
 					<imagemetrics>
 						<image
-							this="D2B806BE-D69F-9759-2E84ACF99413E90F"
-							uniqueguid="D2B806BE-D69F-9759-2E84ACF99413E90F"
-							componentimage="4FF3535E-4779-B0CF-AA8725955C27BD9B"
+							this="D59C5935-21CD-4A0B-9D4963CA67465C35"
+							uniqueguid="D59C5935-21CD-4A0B-9D4963CA67465C35"
+							componentimage="A63C2CAF-2E7E-4C2B-A78116031CAD1EB1"
+							width="278"
+							height="128"
+							dockpoint="Center"/>
+						<image
+							this="B3313F6F-3AC6-4F6D-B253ED036B802828"
+							uniqueguid="B3313F6F-3AC6-4F6D-B253ED036B802828"
+							componentimage="450CFD99-5DCE-43CC-808CB178AB3E13B8"
 							offset="-14.00,-14.00"
 							width="306"
 							height="156"
 							dockpoint="Center"
 							margin="24.00,24.00,24.00,24.00"/>
 						<image
-							this="E3BE4D28-0330-51C6-2E7620802D9449D2"
-							uniqueguid="E3BE4D28-0330-51C6-2E7620802D9449D2"
-							componentimage="48140FEE-3C09-1CF2-DC9BED77070F1BBD"
+							this="4B9CC5F1-ED59-4CFD-816A414C803751AE"
+							uniqueguid="4B9CC5F1-ED59-4CFD-816A414C803751AE"
+							componentimage="16FB6155-0DE5-4209-B79EDACFAD6C00A5"
 							width="278"
 							height="128"
 							tile="true"
@@ -1927,7 +1978,7 @@
 					name="active"
 					width="277"
 					height="40"
-					text="Custom"
+					text="Mod Configuration Tool"
 					textvalign="Center"
 					textxoffset="5.00,0.00"
 					texthbehaviour="Never split"
@@ -1946,7 +1997,7 @@
 					name="down"
 					width="277"
 					height="40"
-					text="Custom"
+					text="Mod Configuration Tool"
 					textvalign="Center"
 					textxoffset="5.00,0.00"
 					texthbehaviour="Never split"
@@ -1965,7 +2016,7 @@
 					name="hover"
 					width="277"
 					height="40"
-					text="Custom"
+					text="Mod Configuration Tool"
 					textvalign="Center"
 					textxoffset="5.00,0.00"
 					texthbehaviour="Never split"
