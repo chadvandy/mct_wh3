@@ -38,6 +38,8 @@ function UI_Profiles:open()
     self:create_main_view()
     self:create_settings_view()
 
+    self:populate_main_view()
+
     core:add_listener(
         "MCT_ProfilePopupClose",
         "ComponentLClickUp",
@@ -64,23 +66,7 @@ function UI_Profiles:close()
     Registry:save_profiles_file()
 end
 
----@param profile_button UIC New profile button pressed
-function UI_Profiles:change_selected_profile(profile_button)
-    if is_uicomponent(self.selected_holder) then
-        -- do nothing if it's the same button
-        if self.selected_holder == UIComponent(profile_button:Parent()) then return end
-        
-        -- deselect previous button
-        local button = find_uicomponent(self.selected_holder, "profile_button")
-        local frame = find_uicomponent(button, "frame")
-
-        local button_expand_profile = find_uicomponent(self.selected_holder, "button_expand_profile")
-
-        button:SetState("active")
-        frame:SetState("active")
-        button_expand_profile:SetVisible(false)
-    end
-
+function UI_Profiles:set_selected_profile(profile_button)
     -- get our new selected buttons
     local frame = find_uicomponent(profile_button, "frame")
     local profile_holder = UIComponent(profile_button:Parent())
@@ -102,6 +88,26 @@ function UI_Profiles:change_selected_profile(profile_button)
     
     self.selected_profile = this_profile:get_name()
     self.selected_holder = profile_holder
+end
+
+---@param profile_button UIC New profile button pressed
+function UI_Profiles:change_selected_profile(profile_button)
+    if is_uicomponent(self.selected_holder) then
+        -- do nothing if it's the same button
+        if self.selected_holder == UIComponent(profile_button:Parent()) then return end
+        
+        -- deselect previous button
+        local button = find_uicomponent(self.selected_holder, "profile_button")
+        local frame = find_uicomponent(button, "frame")
+
+        local button_expand_profile = find_uicomponent(self.selected_holder, "button_expand_profile")
+
+        button:SetState("active")
+        frame:SetState("active")
+        button_expand_profile:SetVisible(false)
+    end
+
+    self:set_selected_profile(profile_button)
 end
 
 function UI_Profiles:create_profile_popup()
@@ -175,7 +181,27 @@ function UI_Profiles:create_settings_view()
 
     self.uics.settings_view = settings_view
 
-    --- TODO create the currently selected profile element on the top left
+    --- create the currently selected profile element on the top left
+    local topleft_holder = core:get_or_create_component("topleft_holder", "ui/vandy_lib/layouts/hlist_four", settings_view)
+    topleft_holder:SetDockingPoint(1)
+    topleft_holder:SetDockOffset(15, 30)
+    topleft_holder:Resize(settings_view:Width() * 0.35, title:Height())
+
+    --- TODO back button
+    local back_button = core:get_or_create_component("button_return", "ui/templates/round_medium_button", topleft_holder)
+    back_button:SetImagePath("ui/skins/default/icon_home.png")
+    back_button:SetTooltipText("Return", true)
+    back_button:SetDockOffset(0, -10)
+
+    --- current profile name (just the button from the previous screen?)
+    local current_profile = core:get_or_create_component("current_profile", "ui/mct/pretty_button", topleft_holder)
+    
+    current_profile:SetState("selected")
+    find_uicomponent(current_profile, "frame"):SetState("selected")
+    current_profile:SetInteractive(false)
+    
+
+
 
     --- TODO rename button
     --- TODO delete button
@@ -227,21 +253,11 @@ function UI_Profiles:create_main_view()
 
     self:populate_profiles_holder()
 
-    local hdiv = core:get_or_create_component("divider", "ui/vandy_lib/image", main_view)
-    hdiv:SetDockingPoint(2)
-    local _,py = profiles_holder:GetDockOffset()
-    hdiv:SetDockOffset(0, py + profiles_holder:Height() + 15)
-    hdiv:Resize(main_view:Width() * 0.98, 13)
-    hdiv:SetImagePath("ui/skins/default/parchment_divider_length.png")
-    -- divider:SetImageRotation(0, math.rad(90))
-    hdiv:SetCurrentStateImageTiled(0, true)
-    hdiv:SetCurrentStateImageMargins(0, 2, 0, 2, 0)
-
     --- create the bottom half of the page, use the cutesy background block thing with a frame and add buttons and all loads of shit mayn
     local bottom = core:get_or_create_component("details_holder", "ui/vandy_lib/image", main_view)
     bottom:SetDockingPoint(8)
     bottom:SetDockOffset(0, -15)
-    bottom:Resize(main_view:Width() * 0.90, main_view:Height() - profiles_holder:Height() - hdiv:Height() - title:Height() - 65)
+    bottom:Resize(main_view:Width() * 0.90, main_view:Height() - profiles_holder:Height() - title:Height() - 200)
     bottom:SetImagePath("ui/skins/default/parchment_divider.png")
     bottom:SetCurrentStateImageTiled(0, true)
     bottom:SetCurrentStateImageMargins(0, 30, 30, 15, 30)
@@ -250,6 +266,14 @@ function UI_Profiles:create_main_view()
     profile_name:SetDockingPoint(2)
     profile_name:SetDockOffset(0, 15)
     profile_name:SetStateText("Selected Profile")
+
+    local hdiv = core:get_or_create_component("divider", "ui/vandy_lib/image", bottom)
+    hdiv:SetDockingPoint(2+9)
+    hdiv:SetDockOffset(0, 10)
+    hdiv:Resize(main_view:Width() * 0.98, 13)
+    hdiv:SetImagePath("ui/skins/default/parchment_divider_length.png")
+    hdiv:SetCurrentStateImageTiled(0, true)
+    hdiv:SetCurrentStateImageMargins(0, 2, 0, 2, 0)
     
     local profile_desc = core:get_or_create_component("profile_desc", "ui/vandy_lib/text/dev_ui", bottom)
     profile_desc:SetDockingPoint(2)
@@ -261,11 +285,19 @@ function UI_Profiles:create_main_view()
     self.uics.main_view = main_view
     self.uics.profile_name = profile_name
     self.uics.profile_desc = profile_desc
+end
 
-    core:remove_listener("MCT_ProfilePopup")
+function UI_Profiles:populate_main_view()
+    self.uics.main_view:SetVisible(true)
+    self.uics.settings_view:SetVisible(false)
+
+    self:populate_profiles_holder()
+
+    core:remove_listener("MCT_ProfilePopupMainView")
+    core:remove_listener("MCT_ProfilePopupSettingsView")
 
     core:add_listener(
-        "MCT_ProfilePopup",
+        "MCT_ProfilePopupMainView",
         "ComponentLClickUp",
         function(context)
             return context.string == "profile_button" and is_string(UIComponent(context.component):GetProperty("mct_profile"))
@@ -278,7 +310,7 @@ function UI_Profiles:create_main_view()
     )
 
     core:add_listener(
-        "MCT_ProfilePopup",
+        "MCT_ProfilePopupMainView",
         "ComponentLClickUp",
         function(context)
             return context.string ~= "button_close" and uicomponent_descended_from(UIComponent(context.component), "main_view")
@@ -303,10 +335,26 @@ function UI_Profiles:populate_settings_view(profile)
     self.uics.main_view:SetVisible(false)
     self.uics.settings_view:SetVisible(true)
     
+    local profiles_button = find_uicomponent(self.uics.settings_view, "topleft_holder", "current_profile")
+    local label = find_uicomponent(profiles_button, "label")
+    label:SetStateText(profile:get_name())
+
+
+    core:remove_listener("MCT_ProfilePopupMainView")
+    core:remove_listener("MCT_ProfilePopupSettingsView")
+    core:add_listener(
+        "MCT_ProfilePopupReturn",
+        "ComponentLClickUp",
+        function(context)
+            return context.string == "button_return" and uicomponent_descended_from(UIComponent(context.component), "settings_view")
+        end,
+        function(context)
+            self:populate_main_view()
+        end,
+        false
+    )
 end
 
---- TODO a function that just populates the profile holder section
---- TODO can be done more than once (ie. when a new profile is imported/created, or when one is deleted, etc)
 function UI_Profiles:populate_profiles_holder()
     ModLog("Populating!")
     local profiles_holder = self.uics.profiles_holder
@@ -334,16 +382,19 @@ function UI_Profiles:populate_profiles_holder()
     
         button_expand_profile:SetVisible(false)
         profile_button:SetState("active")
-        ModLog("Done first profile!")
+
+        if self.selected_profile and self.selected_profile == profile_key then
+            self:set_selected_profile(profile_button)
+        end
     end
 
     ModLog("Creating no profiles text")
     
-    -- local no_profiles = core:get_or_create_component("no_profiles_txt", "ui/vandy_lib/text/dev_ui", profiles_holder)
-    -- no_profiles:SetVisible(none)
-    -- no_profiles:Resize(300, 35)
-    -- no_profiles:SetStateText("No profiles available!")
-    -- no_profiles:SetTextHAlign("centre")
+    local no_profiles = core:get_or_create_component("no_profiles_txt", "ui/vandy_lib/text/dev_ui", profiles_holder)
+    no_profiles:SetVisible(none)
+    no_profiles:Resize(300, 35)
+    no_profiles:SetStateText("No profiles available!")
+    no_profiles:SetTextHAlign("centre")
 end
 
 return UI_Profiles
