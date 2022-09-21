@@ -108,7 +108,7 @@ function VLib.init()
     local function start_flush()
         core:get_tm():repeat_real_callback(function()
             VLib.FlushLogs()
-        end, 100, "vlib_logging")
+        end, 10, "vlib_logging")
     end 
 
     if core:is_campaign() then

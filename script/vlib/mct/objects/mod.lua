@@ -119,8 +119,9 @@ end
 
 function mct_mod:create_infobox_page(title, description, image_path, workshop_link)
     logf("Creating new Infobox page for %s", self:get_key())
-    ---@type MCT.Page.Infobox
     local page_class = mct:get_page_type("Infobox")
+    ---@cast page_class MCT.Page.Infobox
+
     local page = page_class:new(title, self, description, image_path, workshop_link)
     self._pages[title] = page
     
@@ -129,7 +130,7 @@ end
 
 --- Getter for any @{mct_section}s linked to this mct_mod.
 ---@param section_key string The identifier for the section searched for.
----@return MCT.Section
+---@return MCT.Section?
 function mct_mod:get_section_by_key(section_key)
     if not is_string(section_key) then
         err("get_section_by_key() called on mct_mod ["..self:get_key().."], but the section_key supplied is not a string! Returning nil.")
@@ -156,11 +157,11 @@ end
 --- @param section_key string The unique identifier for this section.
 --- @param localised_name string? The localised text for this section. You can provide a direct string - "My Section Name" - or a loc key - "`loc_key_example_my_sect ion_name`". If a loc key is provided, it will check first at runtime to see if that localised text exists. If no localised_name is provided, it will default to "No Text Assigned". Can leave this and the other blank, and use @{mct_section:set_localised_text} instead.
 --- @param is_localised boolean? If a loc key is provided in localised_name, set this to true, please.
---- @return MCT.Section # Returns the mct_section object created from this call.
+--- @return MCT.Section? # Returns the mct_section object created from this call.
 function mct_mod:add_new_section(section_key, localised_name, is_localised)
     if not is_string(section_key) then
         err("add_new_section() tried on mct_mod with key ["..self:get_key().."], but the section_key supplied was not a string! Returning false.")
-        return false
+        return nil
     end
 
     if not is_string(localised_name) then
@@ -169,17 +170,17 @@ function mct_mod:add_new_section(section_key, localised_name, is_localised)
         --return false
     end
 
-    if is_nil(is_localised) then is_localised = false end
+    -- if is_nil(is_localised) then is_localised = false end
 
-    if not is_boolean(is_localised) then
-        err("add_new_section() tried on mct_mod with key ["..self:get_key().."], but the is_localised supplied was not nil or a boolean! Returning false.")
-        return false
-    end
+    -- if not is_boolean(is_localised) then
+    --     err("add_new_section() tried on mct_mod with key ["..self:get_key().."], but the is_localised supplied was not nil or a boolean! Returning false.")
+    --     return false
+    -- end
 
     local new_section = mct._MCT_SECTION.new(section_key, self)
 
     if localised_name ~= "" then
-        new_section:set_localised_text(localised_name, is_localised)
+        new_section:set_localised_text(localised_name)
     end
 
     self._sections[section_key] = new_section
@@ -613,7 +614,6 @@ function mct_mod:get_settings()
     return mct.registry:get_settings_for_mod(self)
 end
 
-
 function mct_mod:get_settings_by_section(section_key)
     local retval = {}
 
@@ -782,16 +782,16 @@ end
 
 --- Returns a @{mct_option} with the specific key on the mct_mod.
 ---@param option_key string The unique identifier for the desired mct_option.
----@return MCT.Option
+---@return MCT.Option?
 function mct_mod:get_option_by_key(option_key)
     if not is_string(option_key) then
         err("Trying `get_option_by_key` for mod ["..self:get_key().."] but key provided ["..tostring(option_key).."] is not a string! Returning false.")
-        return false
+        return nil
     end
 
     if not self._options[option_key] then
         VLib.Warn("Trying `%s:get_option_by_key(%s)`, but no option exists with that key!", self:get_key(), option_key)
-        return false
+        return nil
     end
 
     return self._options[option_key]
@@ -807,7 +807,7 @@ end
 ---@overload fun(self:MCT.Mod, option_key:string, option_type:"dummy"):MCT.Option.Dummy
 ---@param option_key string The unique identifier for the new mct_option.
 ---@param option_type MCT.OptionType The type for the new mct_option.
----@return MCT.Option
+---@return MCT.Option?
 function mct_mod:add_new_option(option_key, option_type)
     logf("Creating a new option %s to mod %s", option_key, self:get_key())
     -- check first to see if an option with this key already exists; if it does, return that one!
@@ -820,7 +820,7 @@ function mct_mod:add_new_option(option_key, option_type)
     log("Adding option with key ["..option_key.."] to mod ["..self:get_key().."].")
     if not is_string(option_key) then
         err("Trying `add_new_option()` for mod ["..self:get_key().."] but option key provided ["..tostring(option_key).."] is not a string! Returning false.")
-        return false
+        return
     end
 
     if option_key:starts_with("__") then
@@ -829,21 +829,20 @@ function mct_mod:add_new_option(option_key, option_type)
 
     if not is_string(option_type) then
         err("Trying `add_new_option()` for mod ["..self:get_key().."] but option type provided ["..tostring(option_type).."] is not a string! Returning false.")
-        return false
+        return
     end
 
     if not mct:is_valid_option_type(option_type) then
         err("Trying `add_new_option()` for mod ["..self:get_key().."] but option type provided ["..tostring(option_type).."] is not a valid type! Returning false.")
-        return false
+        return
     end
-
-    logf("Here we goooo")
 
     local new_option
     local ok, err = pcall(function()
 
     logf("Creating option %s for mod %s", option_key, self:get_key())
     local option_class = mct:get_option_type(option_type)
+    ---@cast option_class MCT.Option
     logf("Option class gotten for type %s", option_type)
     new_option = option_class:new(self, option_key)
 

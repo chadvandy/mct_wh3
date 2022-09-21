@@ -82,9 +82,9 @@
 							this="C3C04B97-3D61-2004-D9DE81830F861594"
 							uniqueguid="C3C04B97-3D61-2004-D9DE81830F861594"
 							componentimage="D7C06798-512F-7E9C-E80249BBA2E9C1D2"
-							offset="9.00,3.00"
-							width="400"
-							height="523"
+							offset="0.00,0.00"
+							width="418"
+							height="530"
 							tile="true"
 							dockpoint="Center"
 							margin="5.00,5.00,5.00,5.00"/>
@@ -99,22 +99,6 @@
 					</imagemetrics>
 				</newstate>
 			</states>
-			<animations>
-				<escape id="escape">
-					<frames>
-						<frame
-							interpolationtime="0"
-							targetmetrics_m_height="695"
-							targetmetrics_m_width="900">
-							<triggers>
-								<trigger
-									trigger_component="51DC8998-5D24-7D4B-D97990F676B2C79A"
-									trigger_property="destroy"/>
-							</triggers>
-						</frame>
-					</frames>
-				</escape>
-			</animations>
 		</panel_frame>
 	</components>
 </layout>

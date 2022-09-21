@@ -3,7 +3,7 @@
 local mct = get_mct()
 local Super = mct._MCT_PAGE
 
----@class MCT.Page.Infobox : MCT.Page
+---@class MCT.Page.Infobox
 local defaults = {
     ---@type string The displayed description - required!
     description = "",
@@ -21,7 +21,7 @@ local defaults = {
     image_dimensions = {w=100,h=100},
 }
 
----@class MCT.Page.Infobox : MCT.Page
+---@class MCT.Page.Infobox : MCT.Page, Class
 ---@field __new fun():MCT.Page.Infobox
 local Infobox = Super:extend("Infobox", defaults)
 
@@ -31,7 +31,6 @@ function Infobox:new(key, mod, description, image_path, workshop_link)
     VLib.Log("In infobox:new()")
 
     local o = self:__new()
-    ---@cast o MCT.Page.Infobox
     o:init(key, mod, description, image_path, workshop_link)
 
     return o

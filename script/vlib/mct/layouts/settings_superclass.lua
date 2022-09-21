@@ -1,7 +1,7 @@
 --- TODO unused superclass for all settings-type layouts
 local Super = get_mct()._MCT_PAGE
 
----@class MCT.Page.SettingsSuperclass : MCT.Page
+---@class MCT.Page.SettingsSuperclass
 local defaults = {
     ---@type MCT.Section[]
     assigned_sections = {},
@@ -9,15 +9,13 @@ local defaults = {
     num_columns = 3,
 }
 
----@class MCT.Page.SettingsSuperclass : MCT.Page
+---@class MCT.Page.SettingsSuperclass : MCT.Page, Class
+---@field __new fun():MCT.Page.SettingsSuperclass
 local SettingsSuperclass = Super:extend("SettingsSuperclass", defaults)
 get_mct():add_new_page_type("SettingsSuperclass", SettingsSuperclass)
 
 function SettingsSuperclass:new(key, mod, num_columns)
-    local o = self:__new()
-    ---@cast o MCT.Page.SettingsSuperclass
-
-    
+    local o = self:__new()    
     o:init(key, mod, num_columns)
 
     return o
@@ -139,6 +137,7 @@ function SettingsSuperclass:populate(box)
     --- number of sections per column
     local per_column = math.ceil(#sections / self.num_columns)
 
+    ---@type table<number, number>
     local column_h = {}
 
     for i = 1, self.num_columns do column_h[i] = 0 end
@@ -149,9 +148,9 @@ function SettingsSuperclass:populate(box)
         local column_num = 1
 
         if self.num_columns == 3 then
-            column_num = i <= per_column and 1 or
-            i > per_column and i <= per_column *2 and 2 or
-            i >= per_column *2 and 3
+            column_num = ((i <= per_column) and 1) or
+            ((i > per_column and i <= per_column *2) and 2) or
+            3
         elseif self.num_columns == 2 then
             column_num = i > per_column and 2 or 1
         elseif self.num_columns == 1 then

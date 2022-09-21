@@ -77,6 +77,7 @@ local mct_option_defaults = {
 local mct_option = VLib.NewClass("MCT.Option", mct_option_defaults)
 
 --- Overridden by subtypes!
+---@return MCT.Option
 function mct_option:new(...) end
 
 ---@param mod_obj MCT.Mod
@@ -648,7 +649,7 @@ end
 ---@param dummy_parent UIC The parent component for the new option.
 ---@return UIC #
 function mct_option:ui_create_option(dummy_parent)
-
+    return dummy_parent
 end
 
 --- TODO add in the extra goodies ie. "revert to defaults" button or "info" button
@@ -689,8 +690,6 @@ function mct_option:ui_create_option_base(parent, w, h)
 
     --- TODO enable when it looks good
     dummy_border:SetVisible(false)
-    logf("Setting dummy_border to visible: " .. tostring(false))
-    logf("Dummy border is visible:" .. tostring(dummy_border:Visible()))
 
     self:set_uic_with_key("border", dummy_border, true)
 

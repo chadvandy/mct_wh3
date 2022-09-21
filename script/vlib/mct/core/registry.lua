@@ -13,7 +13,11 @@ local log,logf,err,errf = get_vlog("[mct_registry]")
 
 ---@class MCT.Registry : Class
 local defaults = {
+    ---@type string The path to the appdata/scripts/ folder
+    appdata_path = string.gsub(common.get_appdata_screenshots_path(), "screenshots\\$", "scripts\\"),
+
     --- TODO
+    ---@type table<string, MCT.Profile>
     __saved_profiles = {},
 
     ---@alias changed_settings {old_value:any,new_value:any}
@@ -25,44 +29,133 @@ local defaults = {
     ---@type table<string, table<string, changed_settings>> Changed-in-UI settings
     __changed_settings = {},
 
-    --- TODO rename this shit.
-    ---@type boolean If any settings were changed during this "session", ie. one panel open/close
-    __settings_changed = false,
-
     __last_used_campaign_index = 0,
 
     __this_campaign = 0,
 
     __campaigns = {},
+
+    __main_file = "mct_registry.lua",
+    __profiles_file = "mct_profiles.lua",
 }
+
+local Profile = mct._MCT_PROFILE
 
 ---@class MCT.Registry : Class
 local Registry = VLib.NewClass("MCT.Registry", defaults)
 
-function Registry:init()
-    self.appdata_path = string.gsub(common.get_appdata_screenshots_path(), "screenshots\\$", "scripts\\")
-
-    --- TODO read the old file and register everything in active memory
-    self:read_file()
+function Registry:get_file_path(append)
+    return self.appdata_path .. append
 end
 
-function Registry:get_file_path()
-    local appdata = string.gsub(common.get_appdata_screenshots_path(), "screenshots\\$", "scripts\\")
-    return appdata .. "mct_registry.lua"
+function Registry:new_profile(name)
+    local p = Profile:new(name)
+
+    self.__saved_profiles[name] = p
+    return p
+end
+
+function Registry:get_profile(name)
+    return self.__saved_profiles[name]
+end
+
+function Registry:get_profiles()
+    return self.__saved_profiles
+end
+
+function Registry:port_forward()
+    logf("Attempting to port forward.")
+    --- read the old Profiles
+    local old_file = io.open("mct_save.lua", "r")
+    if not old_file then
+        logf("Can't find the old file to port forward!")
+        --- No old profiles to port - all good!
+        return
+    end
+
+    old_file:close()
+
+    local content = loadfile("mct_save.lua")
+
+    if not content then
+        err("port_forward() called, but there is no valid profiles found in the mct_save file!")
+        return false
+    end
+
+    content = content()
+
+    if content.__has_been_ported then
+        -- We've already done this, stop!!!!
+        return 
+    end
+    
+    local old_profiles = content.__profiles
+
+    --- create NuProfiles with their old name/description
+    for profile_key, profile_data in pairs(old_profiles) do
+        logf("Porting forward profile %s", profile_key)
+        local new_profile = self:new_profile(profile_key)
+        new_profile:set_description(profile_data.__description)
+
+        logf("Setting description to %q", profile_data.__description)
+
+        local this_mods = profile_data.__mods
+
+        --- go through all their saved settings, compare them against the default value - if different, save it to this profile
+        for mod_key, mod_data in pairs(this_mods) do
+            local mod_obj = mct:get_mod_by_key(mod_key)
+            if mod_obj then
+                for option_key, value in pairs(mod_data) do
+                    local option_obj = mod_obj:get_option_by_key(option_key)
+                    if option_obj then
+                        if option_obj:get_default_value() ~= value then
+                            new_profile:set_saved_value(mod_key, option_key, value)
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    --- apply the settings from the last used profile to the current global registry
+    local last_used = content.__used_profile
+    local this_profile = self:get_profile(last_used)
+    self:apply_profile(this_profile)
+
+    content.__has_been_ported = true
+
+    local close_file = io.open("mct_save.lua", "w+")
+    if close_file then
+        close_file:write("return " .. table_printer:print(content))
+        close_file:close()
+    end
+
+    self:save()
+end
+
+---@param profile MCT.Profile
+function Registry:apply_profile(profile)
+    local settings = profile:get_overridden_settings()
+
+    for mod_key, mod_data in pairs(settings) do
+        local mod_obj = mct:get_mod_by_key(mod_key)
+        if mod_obj then
+            for option_key, value in pairs(mod_data) do
+                local option_obj = mod_obj:get_option_by_key(option_key)
+                if option_obj then
+                    option_obj:set_finalized_setting(value, true)
+                end
+            end
+        end
+    end
 end
 
 --- TODO discard the "changed settings" system, or at least tweak it so it's just used to inform the script about changed settings or something along those lines.
---- TODO serialize-to-file function
---- TODO hold campaign registry within a file instead of save game? To be read outside of campaign, maybe later? Both?
+
 --- TODO handle held-saved-settings (cached settings) somehow someway
---- TODO print stuff into appdata/scripts/
 
-function Registry:clear_changed_settings(clear_bool)
+function Registry:clear_changed_settings()
     self.__changed_settings = {}
-
-    if clear_bool then
-        self.__settings_changed = false
-    end
 end
 
 -- this saves the changed-setting, called whenever @{mct_option:set_selected_setting} is called (except for creation).
@@ -161,14 +254,6 @@ function Registry:clear_changed_settings_for_mod(mod_key)
     self.__changed_settings[mod_key] = nil
 end
 
-function Registry:finalize_first_time()
-    for _, mod in pairs(mct:get_mods()) do
-        mod:load_finalized_settings()
-    end
-
-    self:save_file()
-end
-
 ---@param mod_obj MCT.Mod
 function Registry:finalize_mod(mod_obj)
     local mod_key = mod_obj:get_key()
@@ -184,7 +269,7 @@ function Registry:finalize_mod(mod_obj)
     for option_key, option_data in pairs(changed_options) do
         local option_obj = mod_obj:get_option_by_key(option_key)
 
-        if not mct:is_mct_option(option_obj) then
+        if not option_obj or not mct:is_mct_option(option_obj) then
             logf("Trying to finalize settings for mct_mod [%s], but there's no option with the key [%s].", mod_key, option_key)
             --return false
         else
@@ -200,7 +285,7 @@ function Registry:finalize_mod(mod_obj)
     self:clear_changed_settings_for_mod(mod_obj:get_key())
 end
 
-function Registry:finalize()
+function Registry:save()
     local mods = mct:get_mods()
 
     for key, mod in pairs(mods) do
@@ -208,10 +293,10 @@ function Registry:finalize()
         logf("Finalized mod [%s]", key)
     end
 
-    self:save_file()
-
-    --- TODO rename this and put it into the UI object
-    self.__settings_changed = true
+    local ok, errmsg = pcall(function()
+    self:save_registry_file()
+    self:save_profiles_file()
+    end) if not ok then err(errmsg) end
 
     -- Automatically save the game whenever the settings are edited.
     if cm then
@@ -220,7 +305,7 @@ function Registry:finalize()
 end
 
 --- TODO combine with :finalize()!
-function Registry:local_only_finalize()
+function Registry:local_only_finalize(...)
 
 end
 
@@ -237,31 +322,81 @@ function Registry:get_default_setting(option)
     return option:get_default_value()
 end
 
---- Save every option from every mod into this profile with a default (or cached) setting
-function Registry:save_all_mods()
-    -- if not self.__data then self.__data = {} end
+-- --- Save every option from every mod into this profile with a default (or cached) setting
+-- function Registry:save_all_mods()
+--     -- if not self.__data then self.__data = {} end
     
-    --- TODO don't do this here or at all tbh
-    --- TODO make sure EVERY option from EVERY mod is accounted for
-    for mod_key,mod in pairs(mct:get_mods()) do
-        -- if not self.__data[mod_key] then self.__data[mod_key] = {} end
-        for option_key,option in pairs(mod:get_options()) do
-            -- logf("checking option %s", option_key)
-            -- if not self.__data[mod_key][option_key] then
+--     --- TODO don't do this here or at all tbh
+--     --- TODO make sure EVERY option from EVERY mod is accounted for
+--     for mod_key,mod in pairs(mct:get_mods()) do
+--         -- if not self.__data[mod_key] then self.__data[mod_key] = {} end
+--         for option_key,option in pairs(mod:get_options()) do
+--             -- logf("checking option %s", option_key)
+--             -- if not self.__data[mod_key][option_key] then
                 
-                local value = Registry:get_default_setting(option)
-                -- logf("saving [%s].__mods[%s][%s] = %s", self.__data, mod_key, option_key, tostring(value))
-                -- self.__data[mod_key][option_key] = value
-            -- end
-        end
+--                 local value = Registry:get_default_setting(option)
+--                 -- logf("saving [%s].__mods[%s][%s] = %s", self.__data, mod_key, option_key, tostring(value))
+--                 -- self.__data[mod_key][option_key] = value
+--             -- end
+--         end
+--     end
+-- end
+
+function Registry:read_profiles_file()
+    local file = io.open(self:get_file_path(self.__profiles_file), "r+")
+
+    if not file then
+        return
+    end
+
+    local str = file:read("*a")
+    file:close()
+    
+    local t = loadstring(str)()
+
+    self.__saved_profiles = {}
+
+    if not is_table(t) then return end
+    
+    --- instantiate all the profiles!
+    for profile_key, profile_data in pairs(t) do
+        local new_profile = Profile:instantiate(profile_data)
+        self.__saved_profiles[profile_key] = new_profile
     end
 end
 
+function Registry:save_profiles_file()
+    local file = io.open(self:get_file_path(self.__profiles_file), "w+")
+    if not file then return end
 
-function Registry:read_file()
-    local file = io.open(self:get_file_path(), "r+")
+    ModLog("Saved profiles table is " .. tostring(self.__saved_profiles))
 
-    if not file then self:save_file_with_defaults() return self:read_file() end
+    for k,v in pairs(self.__saved_profiles) do
+        ModLog("Saved profile " .. k)
+        ModLog("Has details: " .. tostring(v))
+
+        if is_table(v) then
+            for ik,iv in pairs(v) do
+                ModLog("\t["..tostring(ik).."] = "..tostring(iv))
+            end
+        end
+    end
+
+    local t
+    local ok, errmsg = pcall(function()
+        t = table_printer:print(self.__saved_profiles, {["class"] = true})
+    end) if not ok then err(errmsg) end
+    ModLog("Saved profiles string is " .. tostring(t))
+
+    file:write("return " .. t)
+    file:close()
+end
+
+--- TODO split this up into a few sub functions so it's easier to call externally
+function Registry:read_registry_file()
+    local file = io.open(self:get_file_path(self.__main_file), "r+")
+
+    if not file then self:save_file_with_defaults() return self:read_registry_file() end
 
     local str = file:read("*a")
 
@@ -270,7 +405,7 @@ function Registry:read_file()
     if not t or not t.global then
         --- Don't read - set values to default and save immediately.
         self:save_file_with_defaults()
-        return self:read_file()
+        return self:read_registry_file()
     end
 
     logf("Loading MCT.Registry file!")
@@ -318,9 +453,17 @@ function Registry:read_file()
     file:close()
 end
 
+--- TODO load new Profiles file
 function Registry:load(loading_game_context)
-    self:save_all_mods()
-    self:read_file()
+    logf("MCT Load is being called.")
+
+    local ok, errmsg = pcall(function()
+    -- self:save_all_mods()
+    self:read_registry_file()
+    self:read_profiles_file()
+    self:port_forward()
+
+    end) if not ok then err(errmsg) end
 
     if cm and loading_game_context then
         --- read the saved settings for current options!
@@ -333,7 +476,7 @@ function Registry:load(loading_game_context)
 end
 
 function Registry:save_file_with_defaults()
-    local file = io.open(self:get_file_path(), "w+")
+    local file = io.open(self:get_file_path(self.__main_file), "w+")
     ---@cast file file*
 
     local t = {
@@ -372,14 +515,16 @@ function Registry:save_file_with_defaults()
         --- TODO save mod_userdata in the global registry!
     end
 
+
     local t_str = table_printer:print(t)
 
     file:write("return " .. t_str)
     file:close()
+
 end
 
-function Registry:save_file()
-    local old = io.open(self:get_file_path(), "r+")
+function Registry:save_registry_file()
+    local old = io.open(self:get_file_path(self.__main_file), "r+")
     ---@cast old file*
     local str = old:read("*a")
     local t = loadstring(str)()
@@ -483,7 +628,7 @@ function Registry:save_file()
 
     local t_str = table_printer:print(t)
 
-    local file = io.open(self:get_file_path(), "w+")
+    local file = io.open(self:get_file_path(self.__main_file), "w+")
     ---@cast file file*
     file:write("return " .. t_str)
     file:close()
@@ -499,7 +644,7 @@ function Registry:read_campaign_info(save_index)
 
 end
 
---- TODO if we're in a campaign battle, read the SVR String to get the campaign's index and pull the settings therein.
+--- if we're in a campaign battle, read the SVR String to get the campaign's index and pull the settings therein.
 function Registry:load_campaign_battle()
     local this_campaign_str = core:get_svr():LoadString("mct_registry_campaign_index")
     local this_campaign_index = tonumber(this_campaign_str)
@@ -508,7 +653,7 @@ function Registry:load_campaign_battle()
         return false
     end
 
-    local file = io.open(self:get_file_path(), "r+")
+    local file = io.open(self:get_file_path(self.__main_file), "r+")
     if file then
         local t = loadstring(file:read("*a"))()
         local this_campaign = t.campaigns[this_campaign_index]
@@ -608,11 +753,5 @@ function Registry:load_game(context)
 
     core:get_svr():SaveString("mct_registry_campaign_index", tostring(self.__this_campaign))
 end
-
---- TODO forward compatibility
-function Registry:adapt_old_file()
-
-end
-
 
 return Registry

@@ -81,10 +81,12 @@ function mct:load_modules()
     -- ---@type MCT.Settings
     -- self.settings = load_module("settings", core_path)
 
+    ---@type MCT.Profile
+    self._MCT_PROFILE = load_module("profile", obj_path)
+
     ---@type MCT.Registry
     self.registry = load_module("registry", core_path)
 
-    ---@type MCT.UI
     self.ui = load_module("main", ui_path)
 
     if __game_mode == __lib_type_battle then
@@ -309,7 +311,7 @@ function mct:finalize()
             -- check if it's the host
             if cm:get_local_faction_name(true) == cm:get_saved_value("mct_host") then
                 vlog("Finalizing settings mid-campaign for MP.")
-                self.registry:finalize()
+                self.registry:save()
 
                 self._finalized = true
                 self.ui.locally_edited = false
@@ -346,7 +348,7 @@ function mct:finalize()
             end
         else
             -- it's SP, do regular stuff
-            self.registry:finalize()
+            self.registry:save()
 
             self._finalized = true
     
@@ -357,7 +359,7 @@ function mct:finalize()
         end
     else
         --- TODO if we haven't locally edited, don't do this?
-        self.registry:finalize()
+        self.registry:save()
 
         self._finalized = true
 

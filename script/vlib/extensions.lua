@@ -28,7 +28,8 @@ end
 ---@param o table The table getting copied over.
 ---@return table t The original table, post-expansion.
 function table.copy_add(t, o)
-	if not is_table(t) or not is_table(o) then return end
+	if not is_table(t) then return {} end
+    if not is_table(o) then return t end
 
 	for k,v in pairs(o) do
 		if not t[k] then
@@ -194,7 +195,7 @@ function string.endswith(str, pattern, plain)
 	return string.find(str, pattern, start, plain) == start
 end
 
---- TODO rewrite as table.print()
+
 table_printer = {
     __tab = 0,
     __linebreak = "\n",
@@ -204,6 +205,7 @@ table_printer = {
     __last = "",
 }
 
+--- TODO only allow fields that start with __, only allow fields that don't, etc etc etc
 --- TODO exempted indices (ie. don't print anything that does or doesn't match a pattern, etc)
 
 function table_printer:newline(tab_i, override)
@@ -220,6 +222,10 @@ function table_printer:newline(tab_i, override)
 end
 
 function table_printer:handle_key(key)
+    if self.__ignored_fields[key] then
+        return false
+    end
+
     if is_number(key) then
         self:concatf("[%d]", key)
     elseif is_string(key) then
@@ -299,12 +305,14 @@ function table_printer:handle_table(t, is_first)
 end
 
 --- takes a table and returns the formatted text of its entirety
-function table_printer:print(t)
+function table_printer:print(t, ignored_fields)
     if not is_table(t) then return false end
 
     self.__str = ""
     self.__last = ""
     self.__tab = 0
+
+    self.__ignored_fields = is_table(ignored_fields) and ignored_fields or {}
 
     self:handle_table(t, true)
 

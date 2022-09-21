@@ -5,7 +5,7 @@
 --- TODO move into /core/ 
 
 ---@class MCT.UI
-local ui_obj = {
+local UI_Main = {
     -- UICs --
 
     ---@type UIC the MCT button
@@ -15,6 +15,7 @@ local ui_obj = {
     dummy = nil,
 
     -- full panel
+    ---@type UIC
     panel = nil,
 
     -- left side UICs
@@ -45,21 +46,26 @@ local ui_obj = {
 }
 
 local mct = get_mct()
+mct.ui = UI_Main
 
+local ui_path = "script/vlib/mct/core/ui/"
+
+---@type MCT.UI.Profiles
+local UI_Profiles = VLib.LoadModule("profiles", ui_path)
 
 local Registry = mct.registry
 
 local log,logf,logerr,logerrf = get_vlog("[mct_ui]")
 
-function ui_obj:get_mct_button()
+function UI_Main:get_mct_button()
     return self.mct_button
 end
 
-function ui_obj:is_open()
+function UI_Main:is_open()
     return self.opened
 end
 
-function ui_obj:listen_fullscreen_panels()
+function UI_Main:listen_fullscreen_panels()
     log("Triggering listeners for fullscreen_panels")
     if core:is_frontend() then
         core:add_listener(
@@ -89,7 +95,7 @@ function ui_obj:listen_fullscreen_panels()
 end
 
 ---@param uic UIC
-function ui_obj:set_mct_button(uic)
+function UI_Main:set_mct_button(uic)
     if not is_uicomponent(uic) then
         -- errmsg
         return false
@@ -112,7 +118,7 @@ function ui_obj:set_mct_button(uic)
     -- label:SetVisible(false)
 end
 
-function ui_obj:ui_created()
+function UI_Main:ui_created()
     log("UI created!")
 
     self.game_ui_created = true
@@ -125,7 +131,7 @@ function ui_obj:ui_created()
     end
 end
 
-function ui_obj:add_ui_created_callback(callback)
+function UI_Main:add_ui_created_callback(callback)
 
     if not is_function(callback) then
         logerr("add_ui_created_callback() called, but the callback argument passed is not a function!")
@@ -141,7 +147,7 @@ function ui_obj:add_ui_created_callback(callback)
 end
 
 --- TODO create floating notifications that can be X'd out of. WH3, probably?
-function ui_obj:notify(str)
+function UI_Main:notify(str)
     local mct_button = self:get_mct_button()
     if not is_uicomponent(mct_button) then
         logerr("ui:notify() triggered but the mct button doesn't exist yet?")
@@ -168,7 +174,7 @@ function ui_obj:notify(str)
 end
 
 -- clear notifs
-function ui_obj:clear_notifs()
+function UI_Main:clear_notifs()
     local mct_button = self:get_mct_button()
     if not is_uicomponent(mct_button) then
         -- errmsg
@@ -185,7 +191,7 @@ function ui_obj:clear_notifs()
 end
 
 -- stash a popup for when MCT is opened
-function ui_obj:stash_popup(key, text, two_buttons, button_one_callback, button_two_callback)
+function UI_Main:stash_popup(key, text, two_buttons, button_one_callback, button_two_callback)
     -- verify shit is alright
     --[[if not is_string(key) then
         err("stash_popup() called, but the key passed is not a string!")
@@ -218,11 +224,11 @@ function ui_obj:stash_popup(key, text, two_buttons, button_one_callback, button_
     }
 end
 
-function ui_obj:clear_stashed_popups()
+function UI_Main:clear_stashed_popups()
 
 end
 
-function ui_obj:trigger_stashed_popups()
+function UI_Main:trigger_stashed_popups()
     local stashed_popups = self.stashed_popups
 
     local num_total = #stashed_popups
@@ -289,7 +295,7 @@ end
 
 -- if it's the frontend, trigger popup immediately;
 -- else, add the notify button + highlight
-function ui_obj:create_popup(key, text, two_buttons, button_one_callback, button_two_callback)
+function UI_Main:create_popup(key, text, two_buttons, button_one_callback, button_two_callback)
     -- define the popup callback function - triggered immediately in frontend, and triggered when you open the panel for other modes (or immediately if panel is opened)
 
     -- check if the UI has been created; if not, stash it as a ui created callback
@@ -320,7 +326,7 @@ end
 --- TODO if no layout object is supplied, assume "Main" page
 ---@param mod_obj MCT.Mod
 ---@param page MCT.Page
-function ui_obj:set_selected_mod(mod_obj, page)
+function UI_Main:set_selected_mod(mod_obj, page)
     local ok, err = pcall(function()
     -- deselect the former one
     local former = mct:get_selected_mod()
@@ -369,7 +375,17 @@ function ui_obj:set_selected_mod(mod_obj, page)
     end end) if not ok then VLib.Error(err) end
 end
 
-function ui_obj:open_frame(provided_panel)
+function UI_Main:create_profiles_button()
+    local panel = self.panel
+    local profiles_button = core:get_or_create_component("button_mct_profiles", "ui/templates/square_medium_text_button", panel)
+    profiles_button:SetDockingPoint(3)
+    profiles_button:Resize(profiles_button:Width() * 0.7, profiles_button:Height())
+    profiles_button:SetDockOffset(-10, profiles_button:Height() * 0.6)
+
+    find_uicomponent(profiles_button, "button_txt"):SetStateText("Profiles")
+end
+
+function UI_Main:open_frame(provided_panel, is_pre_campaign)
     -- check if one exists already
     local ok, msg = pcall(function()
     local test = self.panel
@@ -380,7 +396,7 @@ function ui_obj:open_frame(provided_panel)
     end
 
     self.opened = true
-    Registry:clear_changed_settings(true)
+    Registry:clear_changed_settings()
 
     -- make a new one!
     if provided_panel or not is_uicomponent(test) then
@@ -398,9 +414,13 @@ function ui_obj:open_frame(provided_panel)
         -- create the MCT mod first
         table.insert(ordered_mod_keys, 1, "mct_mod")
 
-        for i,n in ipairs(ordered_mod_keys) do
-            local mod_obj = mct:get_mod_by_key(n)
-            self:new_mod_row(mod_obj)
+        for i,mod_key in ipairs(ordered_mod_keys) do
+            local mod_obj = mct:get_mod_by_key(mod_key)
+            if mod_obj then
+                self:new_mod_row(mod_obj)
+            else
+                logf("Trying to create a new mod row for MCT.Mod with key %s, but none exists with that key!", mod_key)
+            end
         end
 
         local mct_mod = mct:get_mod_by_key("mct_mod")
@@ -465,7 +485,7 @@ function ui_obj:open_frame(provided_panel)
         )
 
     else
-        test:SetVisible(true)
+        self.panel:SetVisible(true)
     end
 
     -- clear notifications + trigger any stashed popups
@@ -477,7 +497,7 @@ function ui_obj:open_frame(provided_panel)
 end) if not ok then logerr(msg) end
 end
 
-function ui_obj:set_actions_states()
+function UI_Main:set_actions_states()
     -- self:populate_profiles_dropdown_box()
     -- local profiles_dropdown = self.profiles_dropdown
 
@@ -517,7 +537,7 @@ function ui_obj:set_actions_states()
 end
 
 --- TODO?
-function ui_obj:set_selected_profile()
+function UI_Main:set_selected_profile()
 
 end
 
@@ -1065,7 +1085,7 @@ end
 --     )
 -- end
 
-function ui_obj:close_frame(already_dead)
+function UI_Main:close_frame(already_dead)
     if not already_dead then delete_component(self.panel) end
 
     --core:remove_listener("left_or_right_pressed")
@@ -1085,7 +1105,7 @@ function ui_obj:close_frame(already_dead)
 
     self.opened = false
 
-    Registry:clear_changed_settings(true)
+    Registry:clear_changed_settings()
 
     -- clear uic's attached to mct_options
     local mods = mct:get_mods()
@@ -1095,7 +1115,7 @@ function ui_obj:close_frame(already_dead)
     end
 end
 
-function ui_obj:create_panel(provided_panel)
+function UI_Main:create_panel(provided_panel)
     -- create the new window and set it visible
     if self.panel then return end
 
@@ -1127,12 +1147,12 @@ function ui_obj:create_panel(provided_panel)
 
     self:create_left_panel()
     self:create_right_panel()
-    -- self:create_profiles_dropdown()
+    self:create_profiles_button()
 
     core:get_ui_root():Layout()
 end
 
-function ui_obj:create_left_panel()
+function UI_Main:create_left_panel()
     local panel = self.panel
 
     local img_path = VLib.SkinImage("parchment_texture.png")
@@ -1144,7 +1164,7 @@ function ui_obj:create_left_panel()
     left_panel_bg:SetDockingPoint(1)
     left_panel_bg:SetDockOffset(20, 10)
     left_panel_bg:SetCanResizeWidth(true) left_panel_bg:SetCanResizeHeight(true)
-    left_panel_bg:Resize(panel:Width() * 0.15, panel:Height() * 0.8)
+    left_panel_bg:Resize(panel:Width() * 0.15, panel:Height() * 0.95)
     -- left_panel_bg:SetVisible(true)
 
     local w,h = left_panel_bg:Dimensions()
@@ -1181,7 +1201,7 @@ function ui_obj:create_left_panel()
     self.left_panel = left_panel_bg
 end
 
-function ui_obj:create_right_panel()
+function UI_Main:create_right_panel()
     local panel = self.panel
     local img_path = VLib.SkinImage("parchment_texture.png")
     local left_panel = self.left_panel
@@ -1195,11 +1215,11 @@ function ui_obj:create_right_panel()
     mod_settings_panel:SetCanResizeWidth(true) mod_settings_panel:SetCanResizeHeight(true)
     
     -- edit the name
-    local title = core:get_or_create_component("title", "ui/templates/panel_title", mod_settings_panel)
+    local title = core:get_or_create_component("title", "ui/templates/panel_title", panel)
     title:Resize(title:Width() * 1.35, title:Height())
     
-    title:SetDockingPoint(2)
-    title:SetDockOffset(0, -title:Height() * 0.8)
+    title:SetDockingPoint(11)
+    title:SetDockOffset(0, title:Height() / 2)
     
     local title_text = core:get_or_create_component("title_text", "ui/vandy_lib/text/paragraph_header", title)
     title_text:Resize(title:Width() * 0.8, title:Height() * 0.7)
@@ -1210,11 +1230,11 @@ function ui_obj:create_right_panel()
     mod_settings_panel:SetCanResizeWidth(false) mod_settings_panel:SetCanResizeHeight(false)
 
     --- Create the close button
-    local close_button_uic = core:get_or_create_component("button_mct_close", "ui/templates/round_small_button", mod_settings_panel)
+    local close_button_uic = core:get_or_create_component("button_mct_close", "ui/templates/round_small_button", panel)
     close_button_uic:SetImagePath(VLib.SkinImage("icon_cross.png"))
     close_button_uic:SetTooltipText("Close panel", true)
-    close_button_uic:SetDockingPoint(3)
-    close_button_uic:SetDockOffset(-5, -close_button_uic:Height() * 1.2)
+    close_button_uic:SetDockingPoint(3+9)
+    close_button_uic:SetDockOffset(-close_button_uic:Width() / 2, close_button_uic:Height() / 2)
 
     local w,h = mod_settings_panel:Dimensions()
 
@@ -1248,7 +1268,7 @@ function ui_obj:create_right_panel()
     self.mod_settings_panel = mod_settings_panel
 end
 
-function ui_obj:set_title(mod_obj)
+function UI_Main:set_title(mod_obj)
     local mod_title = self.mod_title
     local title = mod_obj:get_title()
 
@@ -1259,13 +1279,13 @@ end
 --- Add a new option row
 ---@param option_obj MCT.Option
 ---@param this_layout UIC
-function ui_obj:new_option_row_at_pos(option_obj, this_layout)
-    local panel = self.mod_settings_panel
+function UI_Main:new_option_row_at_pos(option_obj, this_layout, w, h)
+    -- local panel = self.mod_settings_panel
 
-    local w,h = this_layout:Width(), panel:Height()
-    --- TODO better dynamic height! Handle Arrays and the like!
-    w = w * 0.95
-    h = h * 0.12
+    -- local w,h = this_layout:Width(), panel:Height()
+    -- --- TODO better dynamic height! Handle Arrays and the like!
+    -- w = w * 0.95
+    -- h = h * 0.12
 
     VLib.Log("[MCT] Option row height is %d", h)
 
@@ -1276,7 +1296,7 @@ end
 
 
 ---@param mod_obj MCT.Mod
-function ui_obj:new_mod_row(mod_obj)
+function UI_Main:new_mod_row(mod_obj)
     local row = core:get_or_create_component(mod_obj:get_key(), "ui/vandy_lib/row_header", self.mod_row_list_box)
     row:SetVisible(true)
     row:SetCanResizeHeight(true) row:SetCanResizeWidth(true)
@@ -1329,7 +1349,7 @@ function ui_obj:new_mod_row(mod_obj)
 end
 
 --- TODO add MCT button to the Esc menu(?)
-function ui_obj:create_mct_button(parent)
+function UI_Main:create_mct_button(parent)
     local mct_button = core:get_or_create_component("button_mct", "ui/templates/round_small_button", parent)
 
     mct_button:SetImagePath(VLib.SkinImage("icon_options"))
@@ -1369,7 +1389,7 @@ core:add_listener(
             -- end
         end
         
-        ui_obj:close_frame()
+        UI_Main:close_frame()
     end,
     true
 )
@@ -1381,7 +1401,7 @@ core:add_listener(
         return context.string == "button_mct_options"
     end,
     function(context)
-        ui_obj:open_frame()
+        UI_Main:open_frame()
     end,
     true
 )
@@ -1420,7 +1440,19 @@ core:add_listener(
     function(context) VLib.Log("UI trigger: " .. context.string) return context.string == "mct_panel_closed" end,
     function(context)
         VLib.Log("MCT panel closed UI trigger!!")
-        ui_obj:close_frame(true)
+        UI_Main:close_frame(true)
+    end,
+    true
+)
+
+core:add_listener(
+    "mct_profiles_button_pressed",
+    "ComponentLClickUp",
+    function(context)
+        return context.string == "button_mct_profiles"
+    end,
+    function(context)
+        UI_Profiles:open()
     end,
     true
 )
@@ -1450,4 +1482,4 @@ core:add_listener(
     true
 )
 
-return ui_obj
+return UI_Main

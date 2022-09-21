@@ -228,14 +228,12 @@ function mct_section:ui_set_collapsed(event_free)
     local holder = self._holder
 
     if not is_uicomponent(holder) then return end
+    
+    local options = find_uicomponent(holder, "options_holder")
+    if options then options:SetVisible(is_open) end
 
-    for i = 0, holder:ChildCount() -1 do
-        local child = UIComponent(holder:Find(i))
-
-        if child ~= self._header then
-            child:SetVisible(is_open)
-        end
-    end
+    local desc = find_uicomponent(holder, "description")
+    if desc then desc:SetVisible(is_open) end
 
     -- also change the state of the UI header
     if is_open then
@@ -337,9 +335,9 @@ function mct_section:populate(this_column)
     ---@type UIC
     local panel = mct.ui.mod_settings_panel
 
-    local section_holder = core:get_or_create_component("mct_section_"..key, "ui/mct/layouts/column", this_column)
+    local section_holder = core:get_or_create_component("mct_section_"..key, "ui/mct/layouts/resize_column", this_column)
     section_holder:SetCanResizeHeight(true)
-    section_holder:Resize(this_column:Width(), panel:Height(), false)
+    section_holder:Resize(this_column:Width(), 34, false)
     section_holder:SetCanResizeWidth(false)
 
     self._holder = section_holder
@@ -351,7 +349,7 @@ function mct_section:populate(this_column)
         this_layout = "ui/vandy_lib/text/paragraph_header"
     end
     
-    local section_header = core:get_or_create_component("mct_section_"..key.."_header", this_layout, section_holder)
+    local section_header = core:get_or_create_component("section_header", this_layout, section_holder)
     self._header = section_header
 
     local h = 0
@@ -387,14 +385,14 @@ function mct_section:populate(this_column)
 
     local desc = self:get_description()
     if desc ~= "" then
-        local dy_desc = core:get_or_create_component("mct_section_"..key.."_description", "ui/vandy_lib/text/dev_ui", section_holder)
+        local dy_desc = core:get_or_create_component("description", "ui/vandy_lib/text/dev_ui", section_holder)
         dy_desc:SetCanResizeWidth(true)
         dy_desc:SetCanResizeHeight(true)
 
         dy_desc:SetTextHAlign("centre")
         dy_desc:SetTextVAlign("top")
 
-        dy_desc:Resize(section_holder:Width() * 0.85, dy_desc:Height())
+        dy_desc:Resize(this_column:Width() * 0.85, dy_desc:Height())
         dy_desc:SetCanResizeWidth(false)
         
         local tw,th = dy_desc:TextDimensionsForText(desc)
@@ -413,22 +411,19 @@ function mct_section:populate(this_column)
     -- this is the table with the positions to the options
     -- ie. options_table["1,1"] = "option 1 key"
     -- local options_table, num_remaining_options = section_obj:get_ordered_options()
-    logf("In section %s, height is %d", self:get_key(), h)
+
+    local options_holder = core:get_or_create_component("options_holder", "ui/mct/layouts/resize_column", section_holder)
+    options_holder:Resize(this_column:Width() * 0.95, options_holder:Height())
+    options_holder:SetDockingPoint(8)
 
     for i,option_key in ipairs(self._true_ordered_options) do
         local option_obj = mod:get_option_by_key(option_key)
-        local rw,rh = get_mct().ui:new_option_row_at_pos(option_obj, section_holder)
-
-        logf("\tHeight = %d + %d = %d", h, rh, h+rh)
-        h = h + rh
+        get_mct().ui:new_option_row_at_pos(option_obj, options_holder, this_column:Width() * 0.95, this_column:Height() * 0.12)
     end
 
-    logf("Resizing section %s to (%d, %d)", self:get_key(), section_holder:Width(), h)
+    -- section_holder:SetCanResizeHeight(true)
 
-    section_holder:SetCanResizeHeight(true)
-
-    section_holder:Resize(section_holder:Width(), h, false)
-    logf("Section holder size is now (%d, %d)", section_holder:Width(), section_holder:Height())
+    -- section_holder:Resize(section_holder:Width(), h, false)
 
     -- section_holder:SetCanResizeHeight(false)
 

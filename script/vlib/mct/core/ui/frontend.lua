@@ -86,9 +86,6 @@ core:add_listener(
 
             find_uicomponent(tab_mct, "background_gradient"):Resize(bg:Width(), bg:Height())
 
-            -- local frame = core:get_or_create_component("frame", "ui/vandy_lib/image", button)
-            -- frame:Resize(button:Width(), button:Height())
-            -- frame:SetImagePath("ui/mct/frontend_button_bg.png")
         end, 50)
     end,
     true
@@ -101,8 +98,7 @@ core:add_listener(
         return context.string == "button_mod_settings"
     end,
     function(context)
-        --- TODO hide close button
-        get_mct().ui:open_frame(find_uicomponent("campaign_select_new", "right_holder", "tab_mct", "mct_holder"))
+        get_mct().ui:open_frame(find_uicomponent("campaign_select_new", "right_holder", "tab_mct", "mct_holder"), true)
         local close_button = find_uicomponent(get_mct().ui.mod_settings_panel, "button_mct_close")
         close_button:SetVisible(false)
 

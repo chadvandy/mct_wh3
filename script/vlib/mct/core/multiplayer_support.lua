@@ -2,7 +2,7 @@
 
 local defaults = {}
 
----@class MCT.Multiplayer
+---@class MCT.Multiplayer : Class
 local Multiplayer = VLib.NewClass("MCT.Multiplayer", defaults)
 
 function Multiplayer:init()
