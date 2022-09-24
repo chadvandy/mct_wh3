@@ -1,90 +1,87 @@
---- TODO clean this up a bit!
-
 --- 100% credit to Vanishoxyact. He built this system for easier support of long strings being passed between PC's, because there's a limit to the size of the strings that can be sent. Thanks Vanish!
 
 if not core:is_campaign() then
     return
 end
 
----@class VanishMP
-ClMultiplayerEvents = {};
-local SEPARATOR = "|";
-local MAX_EVENT_STR_LENGTH = 100;
+---@class MP_Communicator
+MultiplayerCommunicator = {
+    __separator = "|",
+    __max_str_len = 100,
 
-local currentEventParts = {};
+    current_event_parts = {},
+}
 
--- Receiving
-local function processSinglePartEvent(payload, callback)
-    local tableFunc = loadstring(payload);
-    local table = tableFunc();
-    callback(table);
-end
-
-local function processMultiPartEvent(partNumber, totalParts, payload, callback)
-    out("MultiplayerEvents: processing multipart event " .. partNumber .. " of " .. totalParts .. " payload " .. payload);
-    local partNumberValue = tonumber(partNumber, 10);
-    local totalPartsNumber = tonumber(totalParts, 10);
-    currentEventParts[partNumberValue] = payload;
-    if partNumberValue == totalPartsNumber then
-        out("MultiplayerEvents: last part of multipart event received, recombining.");
-        local completeEvent = "";
-        for i=1, totalPartsNumber do
-            completeEvent = completeEvent .. currentEventParts[i];
-        end
-        out("MultiplayerEvents: recombine successful, processing event with full payload - " .. completeEvent);
-        processSinglePartEvent(completeEvent, callback);
-        currentEventParts = {};
+---@param payload string
+---@param callback function
+function MultiplayerCommunicator:process_single_part_event(payload, callback)
+    local table_func = loadstring(payload);
+    if table_func then
+        local table = table_func();
+        callback(table);
     end
 end
 
-local function processReceivedEvent(expectedEventName, eventContext, callback)
-    out("MultiplayerEvents: received event - " .. eventContext);
-    local eventName, partNumber, totalParts, payload = string.match(eventContext, "(.-)" .. SEPARATOR .. "(%d-)/(%d-)" .. SEPARATOR .. "(.*)");
-    if eventName and partNumber and totalParts and payload then
-        if eventName ~= expectedEventName then
-            out("MultiplayerEvents: error processing event. Expected event name was " .. expectedEventName .. " but got " .. eventName);
+---@param part_number number
+---@param total number
+---@param payload string
+---@param callback function
+function MultiplayerCommunicator:process_multiple_part_event(part_number, total, payload, callback)
+    out("MultiplayerEvents: processing multipart event " .. part_number .. " of " .. total .. " payload " .. payload);
+
+    self.current_event_parts[part_number] = payload;
+    if part_number == total then
+        out("MultiplayerEvents: last part of multipart event received, recombining.");
+        local completeEvent = "";
+        for i=1, total do
+            completeEvent = completeEvent .. self.current_event_parts[i];
+        end
+        out("MultiplayerEvents: recombine successful, processing event with full payload - " .. completeEvent);
+        self:process_single_part_event(completeEvent, callback);
+        self.current_event_parts = {};
+    end
+end
+
+function MultiplayerCommunicator:process_event(expected_event_name, event_context, callback)
+    out("MultiplayerEvents: received event - " .. event_context);
+    local event_name, part_number, total_parts, payload = string.match(event_context, "(.-)" .. self.__separator .. "(%d-)/(%d-)" .. self.__separator .. "(.*)");
+    if event_name and part_number and total_parts and payload then
+        if event_name ~= expected_event_name then
+            out("MultiplayerEvents: error processing event. Expected event name was " .. expected_event_name .. " but got " .. event_name);
             return;
         end
-        processMultiPartEvent(partNumber, totalParts, payload, callback);
+        self:process_multiple_part_event(tonumber(part_number), tonumber(total_parts), payload, callback);
     else
-        local eventName, payload = string.match(eventContext, "(.-)" .. SEPARATOR .. "(.*)");
-        if eventName ~= expectedEventName then
-            out("MultiplayerEvents: error processing event. Expected event name was " .. expectedEventName .. " but got " .. eventName);
+        local eventName, payload = string.match(event_context, "(.-)" .. self.__separator .. "(.*)");
+        if eventName ~= expected_event_name then
+            out("MultiplayerEvents: error processing event. Expected event name was " .. expected_event_name .. " but got " .. eventName);
             return;
         end
-        processSinglePartEvent(payload, callback);
+        self:process_single_part_event(payload, callback);
     end
 end
 
 --v function(eventName: string, listenerName:string, callback: function(map<string, string>))
-function ClMultiplayerEvents.registerForEvent(eventName, listenerName, callback)
+function MultiplayerCommunicator:RegisterForEvent(event_name, listener_name, callback)
     core:add_listener(
-          listenerName,
+          listener_name,
           "UITrigger",
           function(context)
-              return context:trigger():starts_with(eventName .. SEPARATOR);
+              return context:trigger():starts_with(event_name .. self.__separator);
           end,
           function(context)
-              processReceivedEvent(eventName, context:trigger(), callback);
+              self:process_event(event_name, context:trigger(), callback);
           end,
           true
     );
 end
 
-
--- Sending
---v function(tab: any) --> string
-local function GetTableSaveState(tab)
-    local ret = "return {"..cm:process_table_save(tab).."}";
-    return ret;
-end
-
-local function sendEvent(factionCqi, eventString)
+local function send_event(factionCqi, eventString)
     out("MultiplayerEvents: sending event to other player - " .. eventString);
     CampaignUI.TriggerCampaignScriptEvent(factionCqi, eventString);
 end
 
-local function createSplitEvent(eventNumber, totalEventCount, eventPayloadCapacity, tableString)
+local function create_split_event_string(eventNumber, totalEventCount, eventPayloadCapacity, tableString)
     local countLeftString = tostring(eventNumber);
     for i=string.len(countLeftString), 2 do
         countLeftString = "0" .. countLeftString;
@@ -94,35 +91,38 @@ local function createSplitEvent(eventNumber, totalEventCount, eventPayloadCapaci
         countRightString = "0" .. countRightString;
     end
     local eventPayloadPart = string.sub(tableString, eventPayloadCapacity * (eventNumber - 1) + 1, eventPayloadCapacity * eventNumber);
-    local fullEventString = countLeftString .. "/" .. countRightString .. SEPARATOR .. eventPayloadPart;
+    local fullEventString = countLeftString .. "/" .. countRightString .. MultiplayerCommunicator.__separator .. eventPayloadPart;
     return fullEventString;
 end
 
-local function splitEventAndNotify(eventName, factionCqi, tableString)
+local function split_event_and_notify(eventName, factionCqi, tableString)
     local tableStringLength = string.len(tableString);
-    local eventPrefix = eventName .. SEPARATOR;
-    local fullEventPrefixLength = string.len(eventPrefix .. "xxx/xxx|");
-    local eventPayloadCapacity = MAX_EVENT_STR_LENGTH - fullEventPrefixLength;
+    local eventPrefix = eventName .. MultiplayerCommunicator.__separator;
+    local fullEventPrefixLength = string.len(eventPrefix .. "xxx/xxx" .. MultiplayerCommunicator.__separator);
+    local eventPayloadCapacity = MultiplayerCommunicator.__max_str_len - fullEventPrefixLength;
     local totalEventCount = math.ceil(tableStringLength / eventPayloadCapacity);
     out("MultiplayerEvents: splitting " .. eventName .. " event into " .. tostring(totalEventCount) .. " events - full payload is " .. tableString);
 
     for i=1, totalEventCount do
-        local splitEvent = eventPrefix .. createSplitEvent(i, totalEventCount, eventPayloadCapacity, tableString);
-        sendEvent(factionCqi, splitEvent);
+        local splitEvent = eventPrefix .. create_split_event_string(i, totalEventCount, eventPayloadCapacity, tableString);
+        send_event(factionCqi, splitEvent);
     end
 end
 
---v function(eventName: string, factionCqi: CA_CQI, table: map<string, string>)
-function ClMultiplayerEvents.notifyEvent(eventName, factionCqi, table)
-    local tableString = GetTableSaveState(table)
-    local eventString = eventName .. SEPARATOR .. tableString
-    if string.len(eventString) > MAX_EVENT_STR_LENGTH then
-        splitEventAndNotify(eventName, factionCqi, tableString);
+--- Triggers an instance of an event on all clients, passing the context of the table to each. 
+---@param event_name any
+---@param faction_cqi any
+---@param table any
+function MultiplayerCommunicator:TriggerEvent(event_name, faction_cqi, table)
+    local table_str = cm:process_table_save(table)
+    local eventString = event_name .. self.__separator .. table_str
+    if string.len(eventString) > self.__max_str_len then
+        split_event_and_notify(event_name, faction_cqi, table_str);
     else
-        sendEvent(factionCqi, eventString);
+        send_event(faction_cqi, eventString);
     end
 end
 
-function ClMultiplayerEvents.notifyEventForCurrentFaction(eventName, table)
-    ClMultiplayerEvents.notifyEvent(eventName, cm:get_local_faction(true):command_queue_index(), table);
+function MultiplayerCommunicator:TriggerEventForCurrentFaction(event_name, table)
+    MultiplayerCommunicator:TriggerEvent(event_name, cm:get_local_faction(true):command_queue_index(), table);
 end

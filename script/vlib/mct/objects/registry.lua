@@ -466,9 +466,17 @@ function Registry:load(loading_game_context)
     end) if not ok then err(errmsg) end
 
     if cm and loading_game_context then
+        VLib.Log("MCT.Load, is multiplayer: " .. tostring(cm.game_interface:model():is_multiplayer()))
+        if cm.game_interface:model():is_multiplayer() then
+            local ok, err = pcall(function()
+            mct.sync:init_campaign()
+            end) if not ok then VLib.Error(err) end
+        end
+
         --- read the saved settings for current options!
         self:load_game(loading_game_context)
         cm:add_saving_game_callback(function(context) self:save_game(context) end)
+
     elseif mct:context() == "campaign" and not cm then
         --- We're in a campaign battle - pull the info from the campaign registry!
         self:load_campaign_battle()

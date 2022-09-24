@@ -85,9 +85,12 @@ function mct:load_modules()
     self._MCT_PROFILE = load_module("profile", obj_path)
 
     ---@type MCT.Registry
-    self.registry = load_module("registry", core_path)
+    self.registry = load_module("registry", obj_path)
 
     self.ui = load_module("main", ui_path)
+
+    ---@type MCT.Sync
+    self.sync = load_module("sync", obj_path)
 
     if __game_mode == __lib_type_battle then
         load_module("battle", ui_path)
@@ -157,11 +160,6 @@ function mct:get_option_type(key)
     return self._MCT_TYPES[key]
 end
 
---- TODO kill?
-function mct:mp_prep()
-
-end
-
 --- TODO clean this the fuck up
 function mct:load_and_start(loading_game_context, is_mp)
     self._initialized = true
@@ -190,48 +188,12 @@ function mct:load_and_start(loading_game_context, is_mp)
 
     if __game_mode == __lib_type_campaign then
         if is_mp then
-            out("Is MP! Pre-pre-first-tick")
-            cm:add_pre_first_tick_callback(function()
-                out("Pre first tick callback in mct_mp")
-                if not cm:get_saved_value("mct_mp_init") then
-                    out("MP INIT not done")
-                    local my_faction = cm:get_local_faction_name(true)
-                    --[[local their_faction = ""
-                    local faction_keys = cm:get_human_factions()
-                    if faction_keys[1] == my_faction then
-                        their_faction = faction_keys[2]
-                    else
-                        their_faction = faction_keys[1]
-                    end]]
-                    
-                    local is_host = core:svr_load_bool("local_is_host")
-                    if is_host then
-                        CampaignUI.TriggerCampaignScriptEvent(0, "mct_host|"..my_faction)
-                    end
-                    
-                    -- if not cm:get_saved_value("mct_mp_init") then
-                    cm:set_saved_value("mct_mp_init", true)
-                    -- end
-                    --self.settings:mp_load()
-                    
-                    --trigger()
-                else
-                    out("MP INIT done")
-                    -- self.settings:mp_load()
-                    --     -- trigger during pre-first-tick-callback to prevent time fuckery
-                --     trigger(true)
-                end
-            end)
-            out("Pre load game callback")
-            self.registry:load_game(loading_game_context)
-            out("Post load game callback")
-            --trigger(true)
+            VLib.Log("Pre load game callback")
+            self.registry:load(loading_game_context)
+            VLib.Log("Post load game callback")
+            -- self.registry:load_game(loading_game_context)
 
-            self:mp_prep()
-            out("Post mp_prep()")
-
-
-            cm:add_saving_game_callback(function(context) out("save game callback pre") self.registry:save_game(context) end)
+            trigger(true)
         else           
             self.registry:load(loading_game_context)
 
@@ -337,7 +299,7 @@ function mct:finalize()
                         end
                     end
                 end
-                ClMultiplayerEvents.notifyEvent("MctMpFinalized", 0, mct_data)
+                MultiplayerCommunicator:TriggerEvent("MctMpFinalized", 0, mct_data)
 
                 self.registry:local_only_finalize(true)
             else

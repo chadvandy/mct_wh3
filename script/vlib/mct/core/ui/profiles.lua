@@ -338,6 +338,7 @@ function UI_Profiles:populate_settings_view(profile)
     local profiles_button = find_uicomponent(self.uics.settings_view, "topleft_holder", "current_profile")
     local label = find_uicomponent(profiles_button, "label")
     label:SetStateText(profile:get_name())
+    
 
 
     core:remove_listener("MCT_ProfilePopupMainView")

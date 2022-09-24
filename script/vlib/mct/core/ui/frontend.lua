@@ -19,6 +19,8 @@ local function init()
 
     existing:SetVisible(false)
     bar:SetVisible(true)
+
+    get_mct().sync:new_frontend()
 end
 
 core:add_ui_created_callback(init)

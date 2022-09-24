@@ -205,6 +205,7 @@ table_printer = {
     __last = "",
 }
 
+--- TODO prevent cyclical references (add a table that's indexed by table pointers, if they're already in there don't do it again?)
 --- TODO only allow fields that start with __, only allow fields that don't, etc etc etc
 --- TODO exempted indices (ie. don't print anything that does or doesn't match a pattern, etc)
 
