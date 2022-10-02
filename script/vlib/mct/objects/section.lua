@@ -46,7 +46,7 @@ local mct_section_defaults = {
     ---@type MCT.Mod
     _mod = nil,
 
-    ---@type MCT.Page TODO link sections to pages
+    ---@type MCT.Page.Settings TODO link sections to pages
     _page = nil,
 
     ---@type boolean Whether this section can be collapsed
@@ -74,8 +74,8 @@ function mct_section.new(key, mod)
 end
 
 --- Get the ordered keys of all options in this section, based on the sort-order-function determined by @{mct_section:set_option_sort_function}.
--- @treturn {string,...} ordered_options An array of the ordered option keys, [1] is the first key, [2] is the second, so on.
--- @treturn number num_total The total number of options in this section, for UI creation.
+-- @return {string,...} ordered_options An array of the ordered option keys, [1] is the first key, [2] is the second, so on.
+-- @return number num_total The total number of options in this section, for UI creation.
 function mct_section:get_ordered_options()
     local ordered_options = self._ordered_options
     local num_total = 0
@@ -87,7 +87,7 @@ function mct_section:get_ordered_options()
     return ordered_options, num_total
 end
 
----@param page MCT.Page.SettingsSuperclass
+---@param page MCT.Page.Settings
 function mct_section:assign_to_page(page)
     if self._page then
         self._page:unassign_section(self)
@@ -140,7 +140,7 @@ function mct_section:sort_options()
         local option_key = ordered_options[i]
         local option_obj = mct_mod:get_option_by_key(option_key)
 
-        if not mct:is_mct_option(option_obj) then
+        if not option_obj or not mct:is_mct_option(option_obj) then
             --- TODO warn
             log("sort_options() called but the option found ["..option_key.."] is not a valid MCT option! Skipping.")
         else
@@ -291,13 +291,13 @@ function mct_section:process_callback()
 end
 
 --- Get the key for this section.
--- @treturn string The key for this section.
+-- @return string The key for this section.
 function mct_section:get_key()
     return self._key
 end
 
 --- Get the @{mct_mod} that owns this section.
--- @treturn mct_mod The owning mct_mod for this section.
+-- @return mct_mod The owning mct_mod for this section.
 function mct_section:get_mod()
     return self._mod
 end
@@ -305,7 +305,7 @@ end
 --- Get the header text for this section.
 -- Either mct_[mct_mod_key]_[section_key]_section_text, in a .loc file,
 -- or the text provided using @{mct_section:set_localised_text}
--- @treturn string The localised text for this section, used as the title.
+-- @return string The localised text for this section, used as the title.
 function mct_section:get_localised_text()
     -- default to checking the loc files
     local text = common.get_localised_string("mct_"..self:get_mod():get_key().."_"..self:get_key().."_section_text")
@@ -507,7 +507,7 @@ function mct_section:assign_option(option_obj)
         option_obj = current_mod:get_option_by_key(option_obj)
     end
 
-    if not mct:is_mct_option(option_obj) then
+    if not option_obj or not mct:is_mct_option(option_obj) then
         err("assign_option() called for section ["..self:get_key().."], but the option_obj provided ["..tostring(option_obj).."] is not an mct_option!  Cancelling")
         return false
     end

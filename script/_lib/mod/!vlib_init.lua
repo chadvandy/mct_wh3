@@ -2,6 +2,14 @@
 ---@type fun(className:string,attr:table) : Class
 local new_class = require "script.vlib.includes.30-log"
 
+do
+    local Old = ModLog
+    function ModLog(text)
+        text = tostring(text)
+        Old(text)
+    end
+end
+
 ---@class VLib : Class
 local defaults = {
     ---@type table<string, VLib.Log>
@@ -120,6 +128,10 @@ function VLib.init()
     VLib.LoadModule("extensions", "script/vlib/")
     VLib.LoadModule("helpers", "script/vlib/")
     VLib.LoadModule("uic", "script/vlib/")
+    
+    ---@type CommandManager
+    VLib.CommandManager = VLib.LoadModule("command_manager", "script/vlib/")
+    VLib.CommandManager:init()
 end
 
 --- Create a new Class object, which can be used to simulate OOP systems.
@@ -211,7 +223,7 @@ end
 --- Load every file, and return the Lua module, from within the folder specified, using the pattern specified.
 ---@param path string The path you're checking. Local to data, so if you're checking for any file within the script folder, use "script/" as the path.
 ---@param search_override string The file you're checking for. I believe it requires a wildcard somewhere, "*", but I haven't messed with it enough. Use "*" for any file, or "*.lua" for any lua file, or "*/main.lua" for any file within a subsequent folder with the name main.lua.
----@param func_for_each fun(filename:string, module:function)? Code to run for each module loaded.
+---@param func_for_each fun(filename:string, module:table)? Code to run for each module loaded.
 function VLib.LoadModules(path, search_override, func_for_each)
     if not search_override then search_override = "*.lua" end
     -- vlogf("Checking %s for all main.lua files!", path)
@@ -246,7 +258,7 @@ function VLib.LoadModules(path, search_override, func_for_each)
 
         local module = VLib.LoadModule(filename, string.gsub(filename_for_out, filename..".lua", ""))
         if func_for_each and is_function(func_for_each) then
-            func_for_each(filename_for_out, module)
+            func_for_each(filename, module)
         end
     end
 end

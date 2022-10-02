@@ -97,7 +97,7 @@ end
 
 
 ---- Read whether this mct_option is edited exclusively for the client, instead of passed between both PC's.
---- @treturn boolean local_only Whether this option is only edited on the local PC, instead of both.
+--- @return boolean local_only Whether this option is only edited on the local PC, instead of both.
 function mct_option:get_local_only()
     return self._local_only
 end
@@ -132,7 +132,7 @@ end
 function mct_option:is_global() return self._is_global end
 
 ---- Read whether this mct_option is available in multiplayer.
---- @treturn boolean mp_disabled Whether this mct_option is available in multiplayer or completely disabled.
+--- @return boolean mp_disabled Whether this mct_option is available in multiplayer or completely disabled.
 function mct_option:get_mp_disabled()
     return self._mp_disabled
 end
@@ -193,7 +193,7 @@ function mct_option:set_mp_disabled(enabled)
 end
 
 --- Read whether this mct_option can be edited or not at the moment.
--- @treturn boolean read_only Whether this option is uneditable or not.
+-- @return boolean read_only Whether this option is uneditable or not.
 function mct_option:get_read_only()
     return self:is_locked()
 end
@@ -211,7 +211,7 @@ end
 function mct_option:set_assigned_section(section_key)
     local mod = self:get_mod()
     local section = mod:get_section_by_key(section_key)
-    if not mct:is_mct_section(section) then
+    if not section or mct:is_mct_section(section) then
         log("set_assigned_section() called for option ["..self:get_key().."] in mod ["..mod:get_key().."] but no section with the key ["..section_key.."] was found!")
         return false
     end
@@ -220,7 +220,7 @@ function mct_option:set_assigned_section(section_key)
 end
 
 ---- Reads the assigned_section for this option.
---- @treturn string section_key The key of the section this option is assigned to.
+---@return string section_key The key of the section this option is assigned to.
 function mct_option:get_assigned_section()
     return self._assigned_section
 end
@@ -235,6 +235,11 @@ end
 ---@return string
 function mct_option:get_mod_key()
     return self._mod:get_key()
+end
+
+--- 
+function mct_option:set_origin()
+
 end
 
 ---- Internal use only. Clears all the UIC objects attached to this boy.
@@ -388,13 +393,13 @@ function mct_option:set_uic_visibility(visibility, keep_in_ui)
 end
 
 ---- Get the current visibility for this mct_option.
---- @treturn boolean visibility True for visible, false for invisible.
+--- @return boolean visibility True for visible, false for invisible.
 function mct_option:get_uic_visibility()
     return self._uic_visible
 end
 
 ---- Getter for the image path for this mct_option's border.
---- @treturn string border_path The image path for the .png for the border.
+--- @return string border_path The image path for the .png for the border.
 function mct_option:get_border_image_path()
     return self._border_image_path
 end
@@ -440,7 +445,7 @@ function mct_option:set_border_visibility(is_visible)
 end
 
 ---- Get the current visibility for this mct_option's border. Always true unless changed with @{mct_option:set_border_visibility}.
---- @treturn boolean visibility True for visible, false for the opposite of that.
+--- @return boolean visibility True for visible, false for the opposite of that.
 function mct_option:get_border_visibility()
     return self._border_visible
 end
@@ -566,8 +571,8 @@ end
 
 --- Get the x/y coordinates of the mct_option
 --- Returns two vals, comma delimited (ie. local x,y = option:get_position())
---- @treturn number x x-coord
---- @treturn number y y-coord
+--- @return number x x-coord
+--- @return number y y-coord
 function mct_option:get_position()
     return self._pos.x, self._pos.y
 end
@@ -769,7 +774,7 @@ function mct_option:ui_create_option_base(parent, w, h)
         revert_to_defaults:SetDockingPoint(6)
         revert_to_defaults:SetDockOffset(-new_option:Width() - 5, 0)
         
-        revert_to_defaults:SetTooltipText("Revert this option to its default value.", true)
+        revert_to_defaults:SetTooltipText("Revert this option to its default value.||Default value: " .. tostring(self:get_default_value(true)), true)
 
         self:set_uic_with_key("revert_to_defaults", revert_to_defaults, true)
     end
@@ -800,7 +805,7 @@ function mct_option:ui_refresh()
 end
 
 ---- Getter for the "finalized_setting" for this `mct_option`.
---- @treturn any finalized_setting Finalized setting for this `mct_option` - either the default value set via @{mct_option:set_default_value}, or the latest saved value if in a campaign, or the latest mct_settings.lua - value if in a new campaign or in frontend.
+--- @return any finalized_setting Finalized setting for this `mct_option` - either the default value set via @{mct_option:set_default_value}, or the latest saved value if in a campaign, or the latest mct_settings.lua - value if in a new campaign or in frontend.
 function mct_option:get_finalized_setting()
     if is_nil(self._finalized_setting) then
         self._finalized_setting = self:get_default_value()
@@ -859,7 +864,7 @@ end
 
 ---- Getter for the current selected setting. This is the value set in @{mct_option:set_default_value} if nothing has been selected yet in the UI.
 --- Used when finalizing settings.
---- @treturn any val The value set as the selected_setting for this mct_option.
+--- @return any val The value set as the selected_setting for this mct_option.
 function mct_option:get_selected_setting()
     return Registry:get_selected_setting_for_option(self)
 end
@@ -880,7 +885,7 @@ function mct_option:get_uic_template()
 end
 
 ---- Getter for this option's key.
---- @treturn string key mct_option's unique identifier
+--- @return string key mct_option's unique identifier
 function mct_option:get_key()
     return self._key
 end

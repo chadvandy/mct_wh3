@@ -94,16 +94,16 @@
 							width="38"
 							height="38"
 							dockpoint="Center"
-							shader_name="brighten_t0"/>
-						<image
+							shader_name="normal_t0"/>
+						<!-- <image
 							this="3FBB38BE-14FD-4B65-8481415BCED5FE50"
 							uniqueguid="3FBB38BE-14FD-4B65-8481415BCED5FE50"
 							componentimage="4D0F6E68-DCE4-43C6-A8B365903AFBCF0C"
 							width="38"
 							height="38"
 							dockpoint="Center"
-							shader_name="brighten_t0"/>
-						<image
+							shader_name="brighten_t0"/> -->
+						<!-- <image
 							this="EEF03696-4A08-4339-BBD2CE9A1E62F59A"
 							uniqueguid="EEF03696-4A08-4339-BBD2CE9A1E62F59A"
 							componentimage="4D0F6E68-DCE4-43C6-A8B365903AFBCF0C"
@@ -112,7 +112,7 @@
 							colour="#FFFFFF00"
 							dockpoint="Center"
 							shadertechnique_vars="0.50,0.00,0.00,0.00"
-							shader_name="brighten_t0"/>
+							shader_name="brighten_t0"/> -->
 					</imagemetrics>
 					<transitionmap>
 						<transition
@@ -197,7 +197,7 @@
 					uniqueguid="3F3C8EA2-D5A2-4513-A213FACB2E8AAAB4"
 					stateeditordisplaypos="137.00,126.00">
 					<imagemetrics>
-						<image
+						<!-- <image
 							this="E867F66B-BBAB-451F-94723E7C923E2934"
 							uniqueguid="E867F66B-BBAB-451F-94723E7C923E2934"
 							componentimage="4D0F6E68-DCE4-43C6-A8B365903AFBCF0C"
@@ -213,7 +213,7 @@
 							height="38"
 							colour="#FFFFFF00"
 							dockpoint="Center"
-							shader_name="brighten_t0"/>
+							shader_name="brighten_t0"/> -->
 						<image
 							this="5C395076-A858-4F14-8FF445AD8E5F0B00"
 							uniqueguid="5C395076-A858-4F14-8FF445AD8E5F0B00"
@@ -221,7 +221,7 @@
 							width="38"
 							height="38"
 							dockpoint="Center"
-							shadertechnique_vars="0.50,0.00,0.00,0.00"
+							shadertechnique_vars="5.00,0.00,0.00,0.00"
 							shader_name="brighten_t0"/>
 					</imagemetrics>
 					<transitionmap>

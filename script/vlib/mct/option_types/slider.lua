@@ -238,7 +238,7 @@ end
 ---@param value number The number to change the precision for.
 ---@param as_string boolean Set to true if you want a string returned instead of a number.
 ---@param override_precision number|nil A number to change the precision. If not set, it will use the value set in @{mct_slider:slider_set_precision}.
---- @treturn number|string precise_value The new number with the precision in mind.
+--- @return number|string precise_value The new number with the precision in mind.
 function Slider:slider_get_precise_value(value, as_string, override_precision)
     if not is_number(value) then
         err("slider_get_precise_value() called on mct_option ["..self:get_key().."], but the value provided is not a number!")

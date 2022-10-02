@@ -2,45 +2,60 @@
 local mct = get_mct()
 
 local mct_mod = mct:register_mod("mct_demo")
+-- local page = mct_mod:create_rowbased_settings_page("Row-based Page")
 
----@type MCT.Option.Dropdown
-local glob = mct_mod:add_new_option("global_test", 'dropdown')
-glob:set_text("User-specific Settings")
-glob:set_is_global(true)
-glob:add_dropdown_values({
-    {
-        key = "default",
-        text = "Default",
-        is_default = true,
-    },
-    {
-        key = "host",
-        text = "Host Option",
-    },
-    {
-        key = "client",
-        text = "Client option",
-    }
-})
+local b = mct_mod:add_new_section("section_b", "Section B (index first)")
+mct_mod:add_new_option("test_b", 'checkbox'):set_text("Testing Checkbox")
 
----@type MCT.Option.Dropdown
-local camp = mct_mod:add_new_option("campaign_test", "dropdown")
-camp:set_text("Campaign-wide Settings")
-camp:add_dropdown_values({
-    {
-        key = "default",
-        text = "Default",
-        is_default = true,
-    },
-    {
-        key = "host",
-        text = "Host Option",
-    },
-    {
-        key = "client",
-        text = "Client option",
-    }
-})
+local a = mct_mod:add_new_section("section_a", "Section A (key first)")
+mct_mod:add_new_option("test", 'checkbox'):set_text("Testing Checkbox")
+
+local c = mct_mod:add_new_section("section_c", "AAA Section C (text first)")
+mct_mod:add_new_option("test_c", 'checkbox'):set_text("Testing Checkbox")
+
+-- page:set_section_sort_function("text_sort")
+-- page:assign_section_to_page(a)
+-- page:assign_section_to_page(b)
+-- page:assign_section_to_page(c)
+
+-- ---@type MCT.Option.Dropdown
+-- local glob = mct_mod:add_new_option("global_test", 'dropdown')
+-- glob:set_text("User-specific Settings")
+-- glob:set_is_global(true)
+-- glob:add_dropdown_values({
+--     {
+--         key = "default",
+--         text = "Default",
+--         is_default = true,
+--     },
+--     {
+--         key = "host",
+--         text = "Host Option",
+--     },
+--     {
+--         key = "client",
+--         text = "Client option",
+--     }
+-- })
+
+-- ---@type MCT.Option.Dropdown
+-- local camp = mct_mod:add_new_option("campaign_test", "dropdown")
+-- camp:set_text("Campaign-wide Settings")
+-- camp:add_dropdown_values({
+--     {
+--         key = "default",
+--         text = "Default",
+--         is_default = true,
+--     },
+--     {
+--         key = "host",
+--         text = "Host Option",
+--     },
+--     {
+--         key = "client",
+--         text = "Client option",
+--     }
+-- })
 
 -- local glob = mct_mod:add_new_option("global_test", 'text_input')
 -- glob:set_default_value("Blorpa")

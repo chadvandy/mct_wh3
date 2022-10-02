@@ -4,8 +4,6 @@
 local mct_defaults = {
     _mods_path = "/script/mct/settings/",
     _self_path = "/script/vlib/mct/",
-
-    _finalized = false,
     _initialized = false,
     
     _registered_mods = {},
@@ -87,6 +85,7 @@ function mct:load_modules()
     ---@type MCT.Registry
     self.registry = load_module("registry", obj_path)
 
+    ---@type MCT.UI
     self.ui = load_module("main", ui_path)
 
     ---@type MCT.Sync
@@ -106,11 +105,14 @@ function mct:load_modules()
     ---@type table<string, MCT.Page>
     self._MCT_PAGE_TYPES = { }
 
+    --- TODO use the func_for_each thing 
+    --- Load all Page types 
     load_modules(layout_path, "*.lua")
 
     ---@type table<string, MCT.Option>
     self._MCT_TYPES = { }
 
+    --- TODO autoload
     ---@type MCT.Option
     self._MCT_OPTION = load_module("option", obj_path)
     
@@ -163,55 +165,7 @@ end
 --- TODO clean this the fuck up
 function mct:load_and_start(loading_game_context, is_mp)
     self._initialized = true
-
-    core:add_listener(
-        "who_is_the_host_tell_me_now_please",
-        "UITrigger",
-        function(context)
-            return context:trigger():starts_with("mct_host|")
-        end,
-        function(context)
-            out("UITrigger!")
-            local str = context:trigger()
-            local faction_key = string.gsub(str, "mct_host|", "")
-
-            cm:set_saved_value("mct_host", faction_key)
-
-            -- self.settings:mp_load()
-        end,
-        false
-    )
-    
-    local function trigger(is_multi)
-        core:trigger_custom_event("MctInitialized", {["mct"] = self, ["is_multiplayer"] = is_multi})
-    end
-
-    if __game_mode == __lib_type_campaign then
-        if is_mp then
-            VLib.Log("Pre load game callback")
-            self.registry:load(loading_game_context)
-            VLib.Log("Post load game callback")
-            -- self.registry:load_game(loading_game_context)
-
-            trigger(true)
-        else           
-            self.registry:load(loading_game_context)
-
-            trigger(false)
-        end
-    else
-        --log("frontend?")
-        -- read the settings file
-        local ok, msg = pcall(function()
-            -- self.settings:load()
-
-            self.registry:load()
-
-            trigger(false)
-        end) if not ok then verr(msg) end
-    end
-
-    out("End of load_and_start")
+    self.registry:load(loading_game_context, is_mp)
 end
 
 function mct:load_mods()
@@ -260,77 +214,25 @@ function mct:get_mod_with_name(mod_name)
     return self:get_mod_by_key(mod_name)
 end
 
-function mct:finalize_new()
-    
-end
-
 --- Internal use only. Triggers all the functionality for "Finalize Settings!"
 function mct:finalize()
-    local ok, msg = pcall(function()
-    if __game_mode == __lib_type_campaign then
-        -- check if it's MP!
-        if cm.game_interface:model():is_multiplayer() then
-            -- check if it's the host
-            if cm:get_local_faction_name(true) == cm:get_saved_value("mct_host") then
-                vlog("Finalizing settings mid-campaign for MP.")
-                self.registry:save()
+    if not self.registry:has_pending_changes() then return end
 
-                self._finalized = true
-                self.ui.locally_edited = false
-
-                -- communicate to both clients that this is happening!
-                local mct_data = {}
-                local all_mods = self:get_mods()
-                for mod_key, mod_obj in pairs(all_mods) do
-                    vlog("Looping through mod obj ["..mod_key.."]")
-                    mct_data[mod_key] = {}
-                    local all_options = mod_obj:get_options()
-
-                    for option_key, option_obj in pairs(all_options) do
-                        if not option_obj:get_local_only() then
-                            vlog("Looping through option obj ["..option_key.."]")
-                            mct_data[mod_key][option_key] = {}
-
-                            vlog("Setting: "..tostring(option_obj:get_finalized_setting()))
-
-                            mct_data[mod_key][option_key]._setting = option_obj:get_finalized_setting()
-                        else
-                            --?
-                        end
-                    end
-                end
-                MultiplayerCommunicator:TriggerEvent("MctMpFinalized", 0, mct_data)
-
-                self.registry:local_only_finalize(true)
-            else
-                self._finalized = true
-                self.ui.locally_edited = false
-                
-                self.registry:local_only_finalize(false)
-            end
+    -- check if it's MP!
+    if __game_mode == __lib_type_campaign and cm.game_interface:model():is_multiplayer() then
+        -- check if it's the host
+        if cm:get_local_faction_name(true) == cm:get_saved_value("mct_host") then
+            -- Send finalized settings to all clients (including self to keep models synced!)
+            self.sync:distribute_finalized_settings()
+            self.registry:local_only_finalize(true)
         else
-            -- it's SP, do regular stuff
-            self.registry:save()
-
-            self._finalized = true
-    
-            -- remove the "locally_edited" field
-            self.ui.locally_edited = false
-    
-            core:trigger_custom_event("MctFinalized", {["mct"] = self, ["mp_sent"] = false})
+            self.registry:local_only_finalize(false)
         end
     else
-        --- TODO if we haven't locally edited, don't do this?
         self.registry:save()
-
-        self._finalized = true
-
-        -- remove the "locally_edited" field
-        self.ui.locally_edited = false
 
         core:trigger_custom_event("MctFinalized", {["mct"] = self, ["mp_sent"] = false})
     end
-     end) if not ok then verr(msg) end
 end
 
 --- Getter for the @{mct_mod} with the supplied key.

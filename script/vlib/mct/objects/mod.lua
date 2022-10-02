@@ -7,8 +7,6 @@ local mct = get_mct()
 
 local log,logf,err,errf = get_vlog("[mct]")
 
-local sort_functions = VLib.LoadModule("sections", "script/vlib/mct/sort_functions/")
-
 --- the table.
 ---@class MCT.Mod
 local mct_mod_defaults = {
@@ -33,8 +31,6 @@ local mct_mod_defaults = {
     _finalized_settings = {},
 
     _sections = {},
-    _sections_by_index_order = {},
-    _section_sort_order_function = sort_functions.index,
 
     --- Used to store the path to a log file, for the internal MCT logging functionality.
     _log_file_path = nil,
@@ -45,18 +41,23 @@ local mct_mod_defaults = {
 
     ---@type string The tooltip text for this mod, shown on the row header.
     _tooltip_text = "",
-    -- _workshop_url = "",
+
+    ---@type string The URL for this mod.
+    _workshop_link = "",
 
     ---@type table<string, MCT.Page> All of the Pages defined for this mod.
     _pages = {},
 
-    ---@type MCT.Page.SettingsSuperclass the Main page for this mod, the one that will open on pressing the mod header.
+    ---@type MCT.Page.Settings the Main page for this mod, the one that will open on pressing the mod header.
     _main_page = nil,
 
     _page_uics = {},
 
     ---@type UIC The row header for this mod's main page
     _row_uic = nil,
+
+    ---@type table<string, any> Persistent userdata table that gets saved in Registry.
+    _userdata = {},
 }
 
 ---@class MCT.Mod : Class
@@ -82,7 +83,7 @@ function mct_mod:new(key)
     return o
 end
 
----@return MCT.Page.SettingsSuperclass
+---@return MCT.Page.Settings
 function mct_mod:get_main_page()
     if not self._main_page then
         self:set_main_page(self:create_settings_page("settings", 2))
@@ -95,7 +96,7 @@ function mct_mod:get_page_with_key(key)
     return self._pages[key]
 end
 
----@param page MCT.Page.SettingsSuperclass
+---@param page MCT.Page.Settings
 function mct_mod:set_main_page(page)
     logf("Setting main page of %s to %s", self:get_key(), page:get_key())
     self._main_page = page
@@ -105,13 +106,24 @@ function mct_mod:save_new_page(title, page)
 
 end
 
----@return MCT.Page.SettingsSuperclass
+-- function mct_mod:create_rowbased_settings_page(title)
+--     local page_class = mct:get_page_type("Settings")
+--     ---@cast page_class MCT.Page.Settings
+--     local page = page_class:new(title, self, 1, true)
+    
+--     ---@cast page MCT.Page.Settings
+--     self._pages[title] = page
+
+--     return page
+-- end
+
+---@return MCT.Page.Settings
 function mct_mod:create_settings_page(title, num_columns)
-    local page_class = mct:get_page_type("SettingsSuperclass")
-    ---@cast page_class MCT.Page.SettingsSuperclass
+    local page_class = mct:get_page_type("Settings")
+    ---@cast page_class MCT.Page.Settings
     local page = page_class:new(title, self, num_columns)
     
-    ---@cast page MCT.Page.SettingsSuperclass
+    ---@cast page MCT.Page.Settings
     self._pages[title] = page
 
     return page
@@ -184,7 +196,6 @@ function mct_mod:add_new_section(section_key, localised_name, is_localised)
     end
 
     self._sections[section_key] = new_section
-    self._sections_by_index_order[#self._sections_by_index_order+1] = section_key
     self._last_section = new_section
 
     new_section:assign_to_page(self:get_main_page())
@@ -252,7 +263,7 @@ function mct_mod:set_log_file_path(path)
 end
 
 --- Getter for the log file path.
--- @treturn string
+-- @return string
 function mct_mod:get_log_file_path()
     return self._log_file_path
 end
@@ -303,58 +314,49 @@ function mct_mod:get_key()
     return self._key
 end
 
---- Call the internal ._section_sort_order_function, determined by @{mct_mod:set_section_sort_function}
--- @local
----@param page MCT.Page.SettingsSuperclass
-function mct_mod:sort_sections(page)
-    -- perform the wrapped sort order function
 
-    --- TODO grab all unassigned sections and plop them into their relative pages
-    --- TODO the below should function on each page at a time
-    -- TODO protect it?
-    -- protect it with a pcall to catch any issues with a custom sort order func
-    return self:_section_sort_order_function(page)
+--- TEMP for backwards compat
+function mct_mod:set_section_sort_function(sort_func)
+    for k,v in pairs(self._pages) do
+        if v.className == "Settings" then
+            ---@cast v MCT.Page.Settings
+            v:set_section_sort_function(sort_func)
+        end
+    end
 end
 
---- Set the section-sort-function for this mod's sections.
---- You can pass "key_sort" for @{mct_mod:sort_sections_by_key}.
---- You can pass "index_sort" for @{mct_mod:sort_sections_by_index}.
---- You can pass "text_sort" for @{mct_mod:sort_sections_by_localised_text}.
---- You can also pass a full function, see usage below.
---- @usage    mct_mod:set_sections_sort_function(
----      function()
----          local ordered_sections = {}
----          local sections = mct_mod:get_sections()
----          for section_key, section_obj in pairs(sections) do
----              ordered_sections[#ordered_sections+1] = section_key
----          end
---- 
----          -- alphabetically sort the sections
----          table.sort(ordered_sections)
---- 
----          -- reverse the order
----          table.sort(ordered_sections, function(a,b) return a > b end)
----      end
----     )
----@param sort_func function|"key_sort"|"index_sort"|"text_sort" The sort function provided. Either use one of the two strings above, or a custom function like the below example.
-function mct_mod:set_section_sort_function(sort_func)
-    if is_string(sort_func) then
-        if sort_func == "key_sort" then
-            self._section_sort_order_function = sort_functions.key
-        elseif sort_func == "index_sort" then
-            self._section_sort_order_function = sort_functions.index
-        elseif sort_func == "text_sort" then
-            self._section_sort_order_function = sort_functions.localised_text
-        else
-            err("set_section_sort_function() called for mod ["..self:get_key().."], but the sort_func provided ["..sort_func.."] is an invalid string!")
-            return false
-        end
-    elseif is_function(sort_func) then
-        self._section_sort_order_function = sort_func
+--- TODO global table sanitizer
+
+function mct_mod:set_userdata(t)
+    if not is_table(t) then return end
+
+    --- TODO sanitize this table
+    self._userdata = t
+end
+
+---@param as_table boolean? #If we want the Lua table instead of the sanitized printed string.
+---@return string|table
+function mct_mod:get_userdata(as_table)
+    if as_table then return self._userdata end
+
+    return table_printer:print(self._userdata)
+end
+
+function mct_mod:set_userdata_kv(k, v)
+    if not is_table(self._userdata) then self._userdata = {} end
+
+    --- Can only save string or number indices!
+    if not is_string(k) and not is_number(k) then return end
+    if is_table(v) then
+        --- TODO handle tables
     else
-        err("set_section_sort_function() called for mod ["..self:get_key().."], but the sort_func provided isn't a string or a function!")
-        return false
+        --- Can only handle string/number/boolean values
+        if not is_string(v) and not is_number(v) and not is_boolean(v) then
+            return
+        end
     end
+
+    self._userdata[k] = v
 end
 
 --- Set the option-sort-function for every section
@@ -504,7 +506,7 @@ function mct_mod:revert_to_defaults()
     --log("Reverting to defaults for mod ["..self:get_key().."]")
     local all_options = self:get_options()
 
-    for option_key, option_obj in pairs(all_options) do
+    for _, option_obj in pairs(all_options) do
         local current_val = option_obj:get_selected_setting()
         local default_val = option_obj:get_default_value(true)
 
@@ -609,9 +611,16 @@ function mct_mod:load_finalized_settings()
     self._finalized_settings = ret
 end
 
---- Returns the `finalized_settings` field of this `mct_mod`.
+--- Returns a k/v table of all option keys and their currently finalized setting.
 function mct_mod:get_settings()
-    return mct.registry:get_settings_for_mod(self)
+    local options = self:get_options()
+    local retval = {}
+
+    for key, option in pairs(options) do
+        retval[key] = option:get_selected_setting()
+    end
+
+    return retval
 end
 
 function mct_mod:get_settings_by_section(section_key)
@@ -683,14 +692,14 @@ function mct_mod:get_tooltip_text()
     return tooltip or ""
 end
 
---[[function mct_mod:set_workshop_link(link_text)
+function mct_mod:set_workshop_link(link_text)
     if is_string(link_text) then
         self._workshop_link = link_text
     end
-end]]
+end
 
 --- Grabs the title text. First checks for a loc-key `mct_[mct_mod_key]_title`, then checks to see if anything was set using @{mct_mod:set_title}. If not, "No title assigned" is returned.
---- @treturn string title_text The returned string for this mct_mod's title.
+--- @return string title_text The returned string for this mct_mod's title.
 function mct_mod:get_title()
     -- check if a title exists in the localised texts!
     local title = common.get_localised_string("mct_"..self:get_key().."_title")
@@ -710,7 +719,7 @@ function mct_mod:get_title()
 end
 
 --- Grabs the author text. First checks for a loc-key `mct_[mct_mod_key]_author`, then checks to see if anything was set using @{mct_mod:set_author}. If not, "No author assigned" is returned.
---- @treturn string author_text The returned string for this mct_mod's author.
+--- @return string author_text The returned string for this mct_mod's author.
 function mct_mod:get_author()
     local author = common.get_localised_string("mct_"..self:get_key().."_author")
     if author ~= "" then
@@ -725,7 +734,7 @@ function mct_mod:get_author()
 end
 
 --- Grabs the description text. First checks for a loc-key `mct_[mct_mod_key]_description`, then checks to see if anything was set using @{mct_mod:set_description}. If not, "No description assigned" is returned.
---- @treturn string description_text The returned string for this mct_mod's description.
+--- @return string description_text The returned string for this mct_mod's description.
 function mct_mod:get_description()
     local description = common.get_localised_string("mct_"..self:get_key().."_description")
     if description ~= "" then
@@ -743,20 +752,19 @@ function mct_mod:get_description()
     return description or "No description assigned"
 end
 
---[[function mct_mod:get_workshop_link()
+function mct_mod:get_workshop_link()
     return self._workshop_link
-end]]
+end
 
 --- Returns all three localised texts - title, author, description.
---- @treturn string title_text The returned string for this mct_mod's title.
---- @treturn string author_text The returned string for this mct_mod's author.
---- @treturn string description_text The returned string for this mct_mod's description.
+--- @return string title_text The returned string for this mct_mod's title.
+--- @return string author_text The returned string for this mct_mod's author.
+--- @return string description_text The returned string for this mct_mod's description.
 function mct_mod:get_localised_texts()
     return 
         self:get_title(),
         self:get_author(),
         self:get_description()
-        --self:get_workshop_link()
 end
 
 --- Returns every @{mct_option} attached to this mct_mod.

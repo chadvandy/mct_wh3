@@ -441,6 +441,12 @@ function Registry:read_registry_file()
                     end
                 end
             end
+            
+            if t.global.saved_mods[mod_key].data then
+                if t.global.saved_mods[mod_key].data.userdata then
+                    mod_obj:set_userdata(loadstring(t.global.saved_mods[mod_key].data.userdata))
+                end
+            end
         end
     end
 
@@ -454,23 +460,17 @@ function Registry:read_registry_file()
 end
 
 --- TODO load new Profiles file
-function Registry:load(loading_game_context)
+function Registry:load(loading_game_context, is_mp)
     logf("MCT Load is being called.")
 
-    local ok, errmsg = pcall(function()
     -- self:save_all_mods()
     self:read_registry_file()
     self:read_profiles_file()
     self:port_forward()
 
-    end) if not ok then err(errmsg) end
-
     if cm and loading_game_context then
-        VLib.Log("MCT.Load, is multiplayer: " .. tostring(cm.game_interface:model():is_multiplayer()))
-        if cm.game_interface:model():is_multiplayer() then
-            local ok, err = pcall(function()
+        if is_mp then
             mct.sync:init_campaign()
-            end) if not ok then VLib.Error(err) end
         end
 
         --- read the saved settings for current options!
@@ -481,6 +481,8 @@ function Registry:load(loading_game_context)
         --- We're in a campaign battle - pull the info from the campaign registry!
         self:load_campaign_battle()
     end
+
+    core:trigger_custom_event("MctInitialized", {["mct"] = self, ["is_multiplayer"] = is_mp})
 end
 
 function Registry:save_file_with_defaults()
@@ -593,13 +595,14 @@ function Registry:save_registry_file()
 
         for option_key, option_obj in pairs(mod_obj:get_options()) do
             logf("\t\tIn option [%s]", option_key)
-            if not this.options[option_key] then
-                this.options[option_key] = {
-                    name = option_obj:get_text(),
-                    description = option_obj:get_tooltip_text(),
-                    setting = option_obj:get_finalized_setting(),
-                }
-            end
+
+            --- Save all the shared data we need to keep in the global reg
+            this.options[option_key] = {
+                name = option_obj:get_text(),
+                description = option_obj:get_tooltip_text(),
+                default_value = option_obj:get_default_value(),
+            }
+
 
             -- if this option is global, or it's campaign-specific but we're outside a campaign, save its changes in the global registry
             if option_obj:is_global() or not option_obj:is_global() and mct:context() ~= "campaign" then
@@ -630,8 +633,7 @@ function Registry:save_registry_file()
 
         this.data.name = mod_obj:get_title()
         this.data.description = mod_obj:get_description()
-
-        --- TODO save mod_userdata in the global registry!
+        this.data.userdata = mod_obj:get_userdata()
     end
 
     local t_str = table_printer:print(t)

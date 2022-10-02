@@ -53,6 +53,9 @@ local ui_path = "script/vlib/mct/core/ui/"
 ---@type MCT.UI.Profiles
 local UI_Profiles = VLib.LoadModule("profiles", ui_path)
 
+---@type MCT.UI.Notifications
+local UI_Notifications = VLib.LoadModule("notifications", ui_path)
+
 local Registry = mct.registry
 
 local log,logf,logerr,logerrf = get_vlog("[mct_ui]")
@@ -73,11 +76,11 @@ function UI_Main:listen_fullscreen_panels()
             "FrontendScreenTransition",
             true,
             function(context)
-                log("Doin a listen for a change in frontend menu!")
+                -- log("Doin a listen for a change in frontend menu!")
                 local button = self:get_mct_button()
                 -- if this is a hardlocked panel, lock the button
                 if self.fullscreen_panels[context.string] then
-                    log("This frontend menu is fullscreen, locking MCT")
+                    -- log("This frontend menu is fullscreen, locking MCT")
                     button:SetState("inactive")
                     button:SetTooltipText("Cannot use MCT while this panel is opened", true)
                 else
@@ -366,14 +369,22 @@ function UI_Main:set_selected_mod(mod_obj, page)
         page:populate(box)
 
         box:Layout()
-        
-        --- Needed? TODO
-        self:set_actions_states()
 
         core:trigger_custom_event("MctPanelPopulated", {["mct"] = mct, ["ui_obj"] = self, ["mod"] = mod_obj, ["page"] = page})
         
     end end) if not ok then VLib.Error(err) end
 end
+
+function UI_Main:create_notifications_button()
+    local panel = self.panel
+    local profiles_button = core:get_or_create_component("button_mct_notifications", "ui/templates/square_medium_text_button", panel)
+    profiles_button:SetDockingPoint(3)
+    profiles_button:Resize(profiles_button:Width() * 0.7, profiles_button:Height())
+    profiles_button:SetDockOffset(-10, profiles_button:Height() * 0.6)
+
+    find_uicomponent(profiles_button, "button_txt"):SetStateText("Notifications")
+end
+
 
 function UI_Main:create_profiles_button()
     local panel = self.panel
@@ -392,6 +403,7 @@ function UI_Main:open_frame(provided_panel, is_pre_campaign)
 
     if is_uicomponent(test) and test:Visible() == nil then
         self:close_frame(true)
+        ---@diagnostic disable-next-line
         test = nil
     end
 
@@ -497,593 +509,6 @@ function UI_Main:open_frame(provided_panel, is_pre_campaign)
 end) if not ok then logerr(msg) end
 end
 
-function UI_Main:set_actions_states()
-    -- self:populate_profiles_dropdown_box()
-    -- local profiles_dropdown = self.profiles_dropdown
-
-    -- -- --- the smol buttons next to profiles dropdown
-    -- -- local profiles_new = find_uicomponent(profiles_dropdown, "mct_profiles_new")
-    -- -- local profiles_delete = find_uicomponent(profiles_dropdown, "mct_profiles_delete")
-    -- -- local profiles_edit = find_child_uicomponent(profiles_dropdown, "mct_profiles_edit")
-
-    -- -- local current_profile = Settings:get_selected_profile()
-    -- -- local current_profile_name = current_profile.__name
-
-    -- --- TODO profiles_new lock when you have too many profiles.
-    -- -- profiles_new is always allowed!
-    -- _SetState(profiles_new, "active")
-
-    -- -- if not io.open(Settings.__import_profiles_file, "r") then
-    -- --     _SetState(profiles_import, "inactive")
-    -- -- else
-    -- --     _SetState(profiles_import, "active")
-    -- -- end
-
-    -- -- lock the Profiles Delete button if it's the default profile
-    -- if current_profile_name == "Default Profile" then
-    --     _SetState(profiles_delete, "inactive")
-    --     _SetTooltipText(profiles_delete, common.get_localised_string("mct_profiles_delete_tt_inactive"), false)
-
-    --     _SetState(profiles_edit, "inactive")
-    --     _SetTooltipText(profiles_edit, common.get_localised_string("mct_profiles_edit_tt_inactive"), false)
-    -- else
-    --     -- there is a current profile; enable delete
-    --     _SetState(profiles_delete, "active")
-    --     _SetTooltipText(profiles_delete, common.get_localised_string("mct_profiles_delete_txt"), false)
-
-    --     _SetState(profiles_edit, "active")
-    --     _SetTooltipText(profiles_edit, common.get_localised_string("mct_profiles_edit_tt"), false)
-    -- end
-end
-
---- TODO?
-function UI_Main:set_selected_profile()
-
-end
-
--- function ui_obj:populate_profiles_dropdown_box()
---     local profiles_dropdown = self.profiles_dropdown
---     if not is_uicomponent(profiles_dropdown) then
---         logerr("populate_profiles_dropdown_box() called, but the actions_panel UIC is not found!")
---         return false
---     end
-
---     core:remove_listener("mct_profiles_ui")
---     core:remove_listener("mct_profiles_ui_selected")
---     core:remove_listener("mct_profiles_ui_close")
-
---     -- get necessary bits & bobs
---     local popup_menu = find_uicomponent(profiles_dropdown, "popup_menu")
---     local popup_list = find_uicomponent(popup_menu, "popup_list")
---     local selected_tx = find_uicomponent(profiles_dropdown, "dy_selected_txt")
-
---     selected_tx:SetStateText("")
-    
---     popup_list:DestroyChildren()
-
---     --- get all currently extant Profiles and order them
---     local all_profiles = mct.settings:get_all_profile_keys()
---     local ordered_profiles = all_profiles
-
---     for i,k in ipairs(ordered_profiles) do
---         if k == "Default Profile" then
---             table.remove(ordered_profiles, i)
---             break
---         end
---     end
-
---     table.sort(ordered_profiles, function(a, b)
---         return a < b
---     end)
-
---     --- always have Default Profile first!
---     table.insert(ordered_profiles, 1, "Default Profile")
-
-
---     local w,h = 0,0
---     if is_table(ordered_profiles) and next(ordered_profiles) ~= nil then
-
---         _SetState(profiles_dropdown, "active")
-
---         local selected_boi = mct.settings:get_selected_profile_key()
-
---         for i = 1, #ordered_profiles do
---             local profile_key = ordered_profiles[i]
---             local profile = mct.settings:get_profile(profile_key)
-
---             local new_entry = core:get_or_create_component(profile_key, "ui/vandy_lib/dropdown_option", popup_list)
---             new_entry:SetVisible(true)
-            
---             _SetTooltipText(new_entry, profile.__description or "", true)
-
---             new_entry:SetCanResizeHeight(true)
---             new_entry:SetCanResizeWidth(true)
-
---             local off_y = 5 + (new_entry:Height() * (i-1))
---             new_entry:SetDockingPoint(2)
---             new_entry:SetDockOffset(0, off_y)
-
---             -- new_entry:Resize(new_entry:Width(), new_entry:Height() * 1.2)
---             w,h = new_entry:Dimensions()
-
---             local txt = find_uicomponent(new_entry, "row_tx")
-    
---             _SetStateText(txt, profile.__name)
-
---             new_entry:SetCanResizeHeight(false)
---             new_entry:SetCanResizeWidth(false)
-
---             if profile_key == selected_boi then
---                 _SetState(new_entry, "selected")
-
---                 -- add the value's text to the actual dropdown box
---                 _SetStateText(selected_tx, profile.__name)
---                 _SetTooltipText(profiles_dropdown, profile.__description or "", true)
---             else
---                 _SetState(new_entry, "unselected")
---             end
---         end
-
---         local border_top = find_uicomponent(popup_menu, "border_top")
---         local border_bottom = find_uicomponent(popup_menu, "border_bottom")
-        
---         border_top:SetCanResizeHeight(true)
---         border_top:SetCanResizeWidth(true)
---         border_bottom:SetCanResizeHeight(true)
---         border_bottom:SetCanResizeWidth(true)
-    
---         popup_list:SetCanResizeHeight(true)
---         popup_list:SetCanResizeWidth(true)
-
---         w,h = w*1.1, h*#ordered_profiles + 10
-
---         popup_list:Resize(w, h)
---         --popup_list:MoveTo(popup_menu:Position())
---         popup_list:SetDockingPoint(2)
---         --popup_list:SetDocKOffset()
-
-    
---         popup_menu:SetCanResizeHeight(true)
---         popup_menu:SetCanResizeWidth(true)
---         popup_list:SetCanResizeHeight(false)
---         popup_list:SetCanResizeWidth(false)
-        
---         -- w, h = popup_list:Bounds()
---         popup_menu:Resize(w,h)
---     else
---         -- if there are no profiles, lock the dropdown and set text to empty
---         _SetState(profiles_dropdown, "inactive")
-
---         -- clear out the selected text
---         _SetStateText(selected_tx, "")
---     end
-
---     core:add_listener(
---         "mct_profiles_ui",
---         "ComponentLClickUp",
---         function(context)
---             return context.string == "mct_profiles_dropdown"
---         end,
---         function(context)
---             local box = UIComponent(context.component)
---             local menu = find_uicomponent(box, "popup_menu")
---             if is_uicomponent(menu) then
---                 if menu:Visible() then
---                     menu:SetVisible(false)
---                 else
---                     menu:SetVisible(true)
---                     menu:RegisterTopMost()
---                     menu:Resize(w, h)
---                     -- next time you click something, close the menu!
---                     core:add_listener(
---                         "mct_profiles_ui_close",
---                         "ComponentLClickUp",
---                         true,
---                         function(c)
---                             if box:CurrentState() == "selected" then
---                                 _SetState(box, "active")
---                             end
-
---                             menu:SetVisible(false)
---                             menu:RemoveTopMost()
-
---                             -- core:remove_listener("mct_profiles_ui_selected")
---                             core:remove_listener("mct_profiles_ui_close")
---                         end,
---                         false
---                     )
---                 end
---             end
---         end,
---         true
---     )
-
---     -- Set Selected listeners
---     core:add_listener(
---         "mct_profiles_ui_selected",
---         "ComponentLClickUp",
---         function(context)
---             local uic = UIComponent(context.component)
-            
---             return UIComponent(uic:Parent()):Id() == "popup_list" and uicomponent_descended_from(uic, "mct_profiles_dropdown")
---         end,
---         function(context)
---             -- core:remove_listener("mct_profiles_ui_selected")
---             core:remove_listener("mct_profiles_ui_close")
-
---             local old_selected_uic = nil
---             local new_selected_uic = UIComponent(context.component)
-
---             local old_key = mct.settings:get_selected_profile_key()
---             local new_key = new_selected_uic:Id()
-
---             local popup_list = UIComponent(new_selected_uic:Parent())
---             local popup_menu = UIComponent(popup_list:Parent())
---             local dropdown_box = UIComponent(popup_menu:Parent())
-
---             local function change_profiles()
---                 if is_string(old_key) then
---                     old_selected_uic = find_uicomponent(popup_list, old_key)
---                     if is_uicomponent(old_selected_uic) then
---                         _SetState(old_selected_uic, "unselected")
---                     end
---                 end
-    
---                 _SetState(new_selected_uic, "selected")
-        
---                 -- set the menu invisible and unclick the box
---                 if dropdown_box:CurrentState() == "selected" then
---                     _SetState(dropdown_box, "active")
---                 end
-        
---                 popup_menu:RemoveTopMost()
---                 popup_menu:SetVisible(false)
-    
---                 Settings:apply_profile_with_key(new_key)
---                 self:set_actions_states()
---             end
-
---             if Registry:has_pending_changes() then
---                 VLib.TriggerPopup(
---                     "mct_profiles_change",
---                     string.format(common.get_localised_string("mct_profiles_change_popup"), old_key),
---                     true,
---                     function()
---                         -- change profiles
---                         -- self.panel:LockPriority()
---                         change_profiles()
---                     end,
---                     function()
---                         -- self.panel:LockPriority()
---                         -- don't change profiles
---                     end,
---                     self.panel
---                 )
---             else
---                 change_profiles()
---             end
---         end,
---         true
---     )
--- end
-
--- function ui_obj:create_profiles_dropdown()
---     -- local mod_settings_panel = self.mod_settings_panel
---     local left_panel = self.left_panel
-
---     local profiles_dropdown = core:get_or_create_component("mct_profiles_dropdown", "ui/vandy_lib/dropdown_button", left_panel)
---     profiles_dropdown:SetDockingPoint(8)
---     profiles_dropdown:SetDockOffset(0, profiles_dropdown:Height() * 1.2)
-
---     local popup_menu = find_uicomponent(profiles_dropdown, "popup_menu")
---     popup_menu:SetVisible(false)
-
---     self.profiles_dropdown = profiles_dropdown
-
---     local bw = profiles_dropdown:Height() * 0.8
---     local bh = bw
---     local templ_path = "ui/templates/square_small_button"
-
---     local i = 1 local m = 3
-
---     local function new_button(key, image)
---         local btn = core:get_or_create_component(key, templ_path, profiles_dropdown)
---         btn:SetCanResizeHeight(true)
---         btn:SetCanResizeWidth(true)
---         btn:Resize(bw, bh)
-
---         --- TODO alternatively, use a friggin layoutengine`
---         --- TODO utilize m and handle this a bit better
---         btn:SetDockingPoint(8)
---         btn:SetDockOffset((bw + (bw*(i-3)) * 1.1), bh * 1.1)
-
---         btn:SetTooltipText(common.get_localised_string(key.."_tt"), true)
-
---         btn:SetImagePath(VLib.SkinImage(image))
-
---         find_uicomponent(btn, "icon"):SetVisible(false)
-
---         i = i + 1
---     end
-    
---     new_button("mct_profiles_new", "icon_plus_small")
---     new_button("mct_profiles_edit", "icon_rename")
---     new_button("mct_profiles_delete", "icon_delete")
-
---     self:add_profiles_dropdown_listeners()
--- end
-
--- function ui_obj:add_profiles_dropdown_listeners()
---     core:add_listener(
---         "mct_profiles_new",
---         "ComponentLClickUp",
---         function(context)
---             return context.string == "mct_profiles_new"
---         end,
---         function(context)
---             local btn = UIComponent(context.component)
---             if is_uicomponent(btn) then
---                 _SetState(btn, 'active')
---             end
-
---             VLib.TriggerPopup(
---                 "mct_profiles_new",
---                 "",
---                 true,
---                 function()
-
---                 end,
---                 function(p)
-
---                 end,
---                 function(popup)
---                     local tx = find_uicomponent(popup, "DY_text")
---                     -- local both_
-            
---                     tx:SetVisible(true)
---                     tx:SetDockingPoint(5)
---                     local ow,oh = popup:Width() * 0.9, popup:Height() * 0.8
---                     tx:Resize(ow, oh)
---                     tx:SetDockOffset(1, -35)
-                    
---                     -- TODO plop in a pretty title
---                     local default_text = common.get_localised_string("mct_profiles_new")
-
---                     local tx = find_uicomponent(popup, "DY_text")
-            
---                     local function set_text(str)
---                         local w,h = tx:TextDimensionsForText(str)
---                         tx:ResizeTextResizingComponentTo`ialSize(w,h)
-
---                         _SetStateText(tx, str)
-                
---                         tx:Resize(ow,oh)
---                         tx:ResizeTextResizingComponentToInitialSize(ow,oh)
---                     end
-
---                     set_text(default_text)
-
---                     local xx,yy = tx:GetDockOffset()
---                     yy = yy - 40
---                     tx:SetDockOffset(xx,yy)
-
---                     local current_name = "Profile Name"
---                     local current_desc = "Profile Description"
---                     local current_name_str = common.get_localised_string("mct_profiles_current_name") -- "Current name: %s"
-
---                     --- TODO add in a "clear text" button on both inputs
---                     local input = core:get_or_create_component("text_input", "ui/common ui/text_box", popup)
---                     input:SetDockingPoint(8)
---                     input:SetDockOffset(0, input:Height() * -6.5)
---                     input:SetStateText(current_name)
---                     input:SetInteractive(true)
-
---                     input:Resize(input:Width() * 0.75, input:Height())
-
---                     input:PropagatePriority(popup:Priority())
-
---                     local description_input = core:get_or_create_component("description_input", "ui/common ui/text_box", popup)
---                     description_input:SetDockingPoint(8)
---                     description_input:SetDockOffset(0, description_input:Height() * -4.5)
---                     _SetStateText(description_input, current_desc)
---                     description_input:SetInteractive(true)
-
---                     description_input:Resize(description_input:Width() * 0.75, description_input:Height())
-
---                     description_input:PropagatePriority(popup:Priority())
-
-            
---                     find_uicomponent(popup, "both_group"):SetVisible(true)
---                     find_uicomponent(popup, "ok_group"):SetVisible(false)
-
---                     local button_tick = find_uicomponent(popup, "both_group", "button_tick")
---                     _SetState(button_tick, "inactive")
-
---                     core:get_tm():repeat_real_callback(function()
---                         local current_key = input:GetStateText()
---                         current_desc = description_input:GetStateText()
-
---                         local test = mct.settings:test_profile_with_key(current_key)
-
---                         if test == true then
---                             _SetState(button_tick, "active")
-
---                             current_name = current_key
---                             set_text(default_text)
---                         else
---                             _SetState(button_tick, "inactive")
---                             current_name = ""
-
---                             set_text(default_text .. test)
---                         end
---                     end, 100, "profiles_check_name")
-
---                     core:add_listener(
---                         "mct_profiles_popup_close",
---                         "ComponentLClickUp",
---                         function(context)
---                             return context.string == "button_tick" or context.string == "button_cancel"
---                         end,
---                         function(context)
---                             core:get_tm():remove_real_callback("profiles_check_name")
---                             delete_component(popup)
-
---                             local panel = self.panel
---                             if is_uicomponent(panel) then
---                                 panel:LockPriority()
---                             end
-
---                             if context.string == "button_tick" then
---                                 mct.settings:add_profile_with_key(current_name, current_desc)
---                             end
---                         end,
---                         false
---                     )
---                 end,
---                 self.panel
---             )
---         end,
---         true
---     )
-
---     core:add_listener(
---         "mct_profiles_edit",
---         "ComponentLClickUp",
---         function(context)
---             return context.string == "mct_profiles_edit"
---         end,
---         function(context)
---             logf("Clicking profiles_edit")
---             local btn = UIComponent(context.component)
---             btn:SetState("active")
-
---             local default_text = common.get_localised_string("mct_profiles_new")
---             local current_name = ""
---             local current_desc = ""
-
---             VLib.TriggerPopup(
---                 "mct_profiles_edit",
---                 default_text,
---                 true,
---                 function(p)
---                     mct.settings:rename_profile(mct.settings:get_selected_profile_key(), current_name, current_desc)
-
---                     self:set_actions_states()
---                 end,
---                 function(p)
-
---                 end,
---                 function(p)
---                     -- TODO plop in a pretty title
---                     local tx = find_uicomponent(p, "DY_text")
---                     local ow, oh = p:Width() * 0.9, p:Height() * 0.8
-            
---                     local function set_text(str)
---                         local w,h = tx:TextDimensionsForText(str)
---                         tx:ResizeTextResizingComponentToInitialSize(w,h)
-
---                         _SetStateText(tx, str)
-                
---                         tx:Resize(ow,oh)
---                         tx:ResizeTextResizingComponentToInitialSize(ow,oh)
---                     end
-
---                     set_text(default_text)
-
---                     local xx,yy = tx:GetDockOffset()
---                     yy = yy - 40
---                     tx:SetDockOffset(xx,yy)
-
---                     local current_profile = mct.settings:get_selected_profile()
---                     current_name = current_profile.__name
---                     current_desc = current_profile.__description
---                     local current_name_str = common.get_localised_string("mct_profiles_current_name") -- "Current name: %s"
-
---                     --- TODO add in a "restore default" button on both inputs
---                     local input = core:get_or_create_component("text_input", "ui/common ui/text_box", p)
---                     input:SetDockingPoint(8)
---                     input:SetDockOffset(0, input:Height() * -6.5)
---                     _SetStateText(input, current_name)
---                     input:SetInteractive(true)
-
---                     input:Resize(input:Width() * 0.75, input:Height())
-
---                     input:PropagatePriority(p:Priority())
-
---                     local description_input = core:get_or_create_component("description_input", "ui/common ui/text_box", p)
---                     description_input:SetDockingPoint(8)
---                     description_input:SetDockOffset(0, description_input:Height() * -4.5)
---                     _SetStateText(description_input, current_desc)
---                     description_input:SetInteractive(true)
-
---                     description_input:Resize(description_input:Width() * 0.75, description_input:Height())
-
---                     description_input:PropagatePriority(p:Priority())
-
-            
---                     -- find_uicomponent(p, "both_group"):SetVisible(true)
---                     -- find_uicomponent(p, "ok_group"):SetVisible(false)
-
---                     local button_tick = find_uicomponent(p, "both_group", "button_tick")
---                     _SetState(button_tick, "inactive")
-
---                     core:get_tm():repeat_real_callback(function()
---                         local current_key = input:GetStateText()
---                         current_desc = description_input:GetStateText()
-
---                         --- TODO prevent renaming Default Profile!
---                         local test = mct.settings:test_profile_with_key(current_key)
-                        
---                         --- ignore the "same key" error if this profile is that key!
---                         if test == true or (current_key == mct.settings:get_selected_profile_key()) then
---                             _SetState(button_tick, "active")
-
---                             current_name = current_key
---                             set_text(default_text)
---                         else
---                             _SetState(button_tick, "inactive")
---                             current_name = ""
-
---                             set_text(default_text .. test)
---                         end
---                     end, 100, "profiles_check_name")                 
-
---                 end,
---                 self.panel
---             )
---         end,
---         true
---     )
-
-
---     core:add_listener(
---         "mct_profiles_delete",
---         "ComponentLClickUp",
---         function(context)
---             return context.string == "mct_profiles_delete" and mct.settings:get_selected_profile_key() ~= "Default Profile"
---         end,
---         function(context)
---             local btn = UIComponent(context.component)
---             btn:SetState("active")
-
---             -- trigger a popup with "Are you Sure?"
---             -- yes: clear this profile from mct.settings, and selected_profile as well (just deselect profile entirely?) (probably!)
---             -- no: close the popup, do naught
---             ui_obj:create_popup(
---                 "mct_profiles_delete_popup",
---                 string.format(common.get_localised_string("mct_profiles_delete_popup"), mct.settings:get_selected_profile_key()),
---                 true,
---                 function(context) -- "button_tick" triggered for yes
---                     mct.settings:delete_profile_with_key(mct.settings:get_selected_profile_key())
---                 end,
---                 function(context) -- "button_cancel" triggered for no
---                     -- do nothing!
---                 end
---             )
---         end,
---         true
---     )
--- end
 
 function UI_Main:close_frame(already_dead)
     if not already_dead then delete_component(self.panel) end
@@ -1127,7 +552,7 @@ function UI_Main:create_panel(provided_panel)
         pw, ph = panel:Width(), panel:Height()
     else
         panel = core:get_or_create_component("mct_options", "ui/mct/frame")
-        panel:PropagatePriority(2500)
+        panel:PropagatePriority(50)
         panel:LockPriority()
         panel:SetMoveable(true)
         panel:SetDockingPoint(5)
@@ -1147,7 +572,8 @@ function UI_Main:create_panel(provided_panel)
 
     self:create_left_panel()
     self:create_right_panel()
-    self:create_profiles_button()
+    self:create_notifications_button()
+    -- self:create_profiles_button()
 
     core:get_ui_root():Layout()
 end
@@ -1164,7 +590,7 @@ function UI_Main:create_left_panel()
     left_panel_bg:SetDockingPoint(1)
     left_panel_bg:SetDockOffset(20, 10)
     left_panel_bg:SetCanResizeWidth(true) left_panel_bg:SetCanResizeHeight(true)
-    left_panel_bg:Resize(panel:Width() * 0.15, panel:Height() * 0.95)
+    left_panel_bg:Resize(panel:Width() * 0.22, panel:Height() * 0.95)
     -- left_panel_bg:SetVisible(true)
 
     local w,h = left_panel_bg:Dimensions()
@@ -1294,6 +720,43 @@ function UI_Main:new_option_row_at_pos(option_obj, this_layout, w, h)
     return w,h
 end
 
+core:declare_lookup_listener("component_click_up", "ComponentLClickUp", function(context) return context.component end)
+
+---comment
+---@param comp UIComponent
+---@param f function
+---@param persistent boolean
+---@param disable boolean
+function UI_Main:OnComponentClick(comp, f, persistent, disable)
+    if not is_uicomponent(comp) then return end
+    if not is_function(f) then return end
+
+    local id = "component_click_"..comp:Id()
+    local addr = comp:Address()
+
+    if disable then
+        core:remove_lookup_listener_callback("component_click_up", id)
+        return
+    end
+
+    core:add_lookup_listener_callback(
+        "component_click_up",
+        id,
+        addr,
+        function()
+            ModLog("component_click_up")
+            if comp:Visible() == nil then
+                core:remove_lookup_listener_callback("component_click_up", id)
+                return
+            end
+
+            f()
+        end,
+        persistent
+    )
+end
+
+--- TODO move row_header creation to a VLib method or summat
 
 ---@param mod_obj MCT.Mod
 function UI_Main:new_mod_row(mod_obj)
@@ -1315,9 +778,14 @@ function UI_Main:new_mod_row(mod_obj)
 
     local txt = find_uicomponent(row, "dy_title")
 
-    txt:Resize(row:Width() * 0.9, row:Height() * 0.9)
-    txt:SetDockingPoint(2)
-    txt:SetDockOffset(10,0)
+    txt:Resize(row:Width() - 28, row:Height() * 0.9)
+    txt:SetDockingPoint(4)
+    txt:SetDockOffset(0,0)
+    txt:SetTextVAlign("centre")
+    txt:SetTextHAlign("left")
+    txt:SetTextXOffset(5, 0)
+    txt:SetTextYOffset(0, 0)
+
 
     local txt_txt = mod_obj:get_title()
     local author_txt = mod_obj:get_author()
@@ -1335,6 +803,17 @@ function UI_Main:new_mod_row(mod_obj)
     if is_string(tt) and tt ~= "" then
         row:SetTooltipText(tt, true)
     end
+
+    local button_more_options = core:get_or_create_component("button_more_options", "ui/mct/more_options_button", row)
+    button_more_options:SetProperty("mct_mod", mod_obj:get_key())
+
+    -- local commands = VLib.CommandManager.commands.mct_mod_commands
+
+    -- common.set_context_value("mct_mod_commands", commands)
+    button_more_options:SetContextObject(cco("CcoScriptObject", "mct_mod_commands"))
+    button_more_options:SetDockingPoint(6)
+    button_more_options:SetDockOffset(-8, 0)
+    button_more_options:SetTooltipText("More Options", true)
 
     --- create the subpages for this mod row and then hide them to be reopened when this mod is selected.
     for page_key,page_obj in pairs(mod_obj._pages) do
@@ -1445,6 +924,94 @@ core:add_listener(
     true
 )
 
+--- TODO move to VLib
+local function inv(obj, e)
+    ModLog("Investigate object from event " .. e)
+
+    -- for k,v in pairs(obj) do
+    --     ModLog("\tFound "..e.."."..k.."()")
+    -- end
+
+    local mt = getmetatable(obj)
+
+    if mt then
+        for k,v in pairs(mt) do
+            if is_function(v) then
+                ModLog("\tFound " .. e.."."..k.."()")
+            elseif k == "__index" then
+                ModLog("\tIn index!")
+                for ik,iv in pairs(v) do
+                    if is_function(iv) then
+                        ModLog("\t\tFound " .. e.."."..ik.."()")
+                    else
+                        ModLog("\t\tFound " .. e.."."..ik)
+                    end
+                end
+            else
+                ModLog("\tFound " .. e.."."..k)
+            end
+        end
+    end
+end
+
+--- TODO hook this up more situationally
+core:add_listener(
+    "MCT_ContextCommands",
+    "ContextTriggerEvent",
+    function(context)
+        ModLog("ContextTriggerEvent: " .. context.string)
+        return context.string:starts_with("mct_")
+    end,
+    function(context)
+        local command_string = context.string
+        local command_context = string.match(command_string, "([^|]-)|")
+        local command_key = string.match(command_string, "|([^|]-)|")
+
+        --- TODO multiple params, accept a table here
+        local param = string.match(command_string, "|([^|]-)$")
+
+        ModLog("Context: " .. command_context)
+        ModLog("Command: " .. command_key)
+        ModLog("Param: " .. param)
+        
+        local this_context = VLib.CommandManager.commands[command_context]
+
+        if this_context then
+            ModLog("ContextTriggerEvent context is: " .. command_context)
+            ModLog("Command is: " .. command_key)
+
+            local this_command = this_context[command_key]
+            -- local last_component_guid = common.get_context_value("CcoScriptObject", command_context, "LastComponentThatSetOurValue")
+    
+            -- if is_string(last_component_guid) and last_component_guid ~= "" then
+                -- ModLog("Last component guid is: " .. last_component_guid)
+                -- local last_commponent = cco("CcoComponent", last_component_guid)
+                -- ModLog("Cco is: " .. tostring(last_commponent))
+
+                -- common.call_context_command("CcoScriptObject", command_context, "SetStringValue('')")
+    
+                --- TODO instead of this being hardcoded per context, it should probably just be that we use `SetProperty("param_1", mct_mod)` etc., and loop through param_i where i = 1, 10 until we can't find a property, and then just pass all those forward.
+
+                --- Figure out the context we need from the component!
+                if command_context == "mct_mod_commands" then
+                    -- local mod_key = last_commponent:Call("ParentContext.ParentContext.ParentContext.ParentContext.ParentContext.GetProperty('mct_mod')")
+
+                    local mod_key = param
+            
+                    ModLog("Running an mct_mod_command, for mod: " .. mod_key)
+                    --- TODO get the relevant properties from the component
+                    local mod_obj = mct:get_mod_by_key(mod_key)
+                    if mod_obj then
+                        this_command.callback(mod_obj)
+                    end
+                end
+            -- end
+        end
+
+    end,
+    true
+)
+
 core:add_listener(
     "mct_profiles_button_pressed",
     "ComponentLClickUp",
@@ -1453,6 +1020,18 @@ core:add_listener(
     end,
     function(context)
         UI_Profiles:open()
+    end,
+    true
+)
+
+core:add_listener(
+    "mct_notifications_button_pressed",
+    "ComponentLClickUp",
+    function(context)
+        return context.string == "button_mct_notifications"
+    end,
+    function(context)
+        UI_Notifications:open()
     end,
     true
 )

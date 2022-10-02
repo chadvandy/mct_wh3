@@ -10,28 +10,33 @@ local mct = get_mct()
 ---@class MCT.Sync : Class
 local Sync = VLib.NewClass("MCT.Sync", defaults)
 
---- TODO read who the host is in frontend UI (listen for going into the host campaign screen and save a bool there, instead of scrubbing UI)
 function Sync:new_frontend()
     self.local_is_host = false
 
     core:add_listener(
         "MCTSyncHost",
         "FrontendScreenTransition",
-        true,
         function(context)
-            if not self.local_is_host then
-                if context.string == "mp_campaign_host" then
-                    self.local_is_host = true
-                end
-            else
-                if context.string ~= "mp_grand_campaign" then
-                    self.local_is_host = false
-                end
-            end
-
-            if context.string == "mp_grand_campaign" then
+            return context.string == "mp_grand_campaign"
+        end,
+        function(context)
+            core:get_tm():real_callback(function()
+                self.local_is_host = common.get_context_value("CcoFrontendRoot", "", "CampaignLobbyContext.IsLocalPlayerHost")
                 core:svr_save_bool("mct_local_is_host", self.local_is_host)
-            end
+
+                --- TODO trigger popup!
+
+                core:get_tm():real_callback(function()
+                    local text = "Mod Configuration Tool\n\n"
+                    if self.local_is_host then
+                        text = text .. "\nYou are the host, which means your settings will be used for the duration of the campaign. You can set them now, or edit them at any point during the campaign to apply them to other players."
+                    else
+                        text = text .. "\n" .. common.get_context_value("CcoFrontendRoot", "", "HostSlotContext.Name") .. " is the host, which means their settings will be used for the duration of the campaign. Confirm with them what settings you all would like, if any, before starting a new game. You will not be able to see their settings until you load the campaign, and only the host can edit."
+                    end
+
+                    VLib.TriggerPopup("mct_sync_popup", text, false)
+                end, 2500)
+            end, 2000)
         end,
         true
     )
@@ -42,8 +47,7 @@ end
 --- TODO multiple-sync (probably later)
 --- TODO save campaign data in global registry, w/ bool for "is_multiplayer" and faction key for "mct_host" (if needed)
 
---- TODO if first load, get the host and then sync the settings on LoadingGame
---- TODO if reload, get the settings from the save game file on LoadingGame
+--- on first load, get the host and then sync the settings on LoadingGame
 function Sync:init_campaign()
     VLib.Log("Calling Sync.init_campaign!")
     --- Get the current host and distribute that knowledge to each PC
@@ -68,9 +72,10 @@ function Sync:init_campaign()
                 MultiplayerCommunicator:TriggerEvent("MctMpHostDistribution", 0, {host_faction_key = this_faction})
             end
         end)
-    else
-        --- TODO reload, I think we just use Registry:load_game() here and set the necessary MP settings we need to set (ie. one-person-edit for now)
     end
+
+    --- Trigger the listeners for pulling in the new settings from the host.
+    self:assign_settings_from_host()
 end
 
 --- TODO a way to get the current host 
@@ -83,46 +88,86 @@ function Sync:new_campaign(host_faction_key)
         ---@param mct_data table<string, table<string, any>>
         function(mct_data)
             VLib.Log("MctMpInitialLoad triggered!")
-            for mod_key, mod_data in pairs(mct_data) do
-                local mod_obj = mct:get_mod_by_key(mod_key)
-                VLib.Log("\tIn mod %s", mod_key)
 
-                if mod_obj then
-                    for option_key, option_data in pairs(mod_data) do
-                        VLib.Log("\t\tIn option %s", option_key)
-                        local option_obj = mod_obj:get_option_by_key(option_key)
+            self:apply_mct_data_to_local_user(mct_data)
 
-                        if option_obj then
-                            VLib.Log("\t\tSetting option %s to %s", option_key, tostring(option_data))
-                            option_obj:set_finalized_setting(option_data, true)
-                        end
-                    end
-                end
-            end
+            cm:set_saved_value("mct_mp_init", true)
         end
     )
 
     if cm.game_interface:model():faction_is_local(host_faction_key) then
-        local t = {}
-
-        local all_mods = mct:get_mods()
-        for mod_key, mod_obj in pairs(all_mods) do
-            t[mod_key] = {}
-
-            local options = mod_obj:get_options()
-
-            for option_key, option_obj in pairs(options) do
-                
-                -- don't send local-only settings to both
-                if option_obj:is_global() == false then
-                    t[mod_key][option_key] = option_obj:get_finalized_setting()
-                end
-            end
-        end
-
+        local t = self:get_mct_data_from_local_user()
         MultiplayerCommunicator:TriggerEvent("MctMpInitialLoad", 0, t)
     end
 end
 
+---@alias mct_data table<string, table<string, any>>
+
+--- RegisterForEvent for clients
+function Sync:assign_settings_from_host()
+    MultiplayerCommunicator:RegisterForEvent(
+        "MctMpFinalized",
+        "MctMpFinalized",
+        ---@param mct_data mct_data
+        function(mct_data)
+            VLib.Log("MctMpFinalized called, saving settings from host!")
+
+            self:apply_mct_data_to_local_user(mct_data)
+
+            VLib.Log("Proper settings retrieved from host, saving and finalizing!")
+            mct.registry:save()
+            core:trigger_custom_event("MctFinalized", {["mct"] = mct, ["mp_sent"] = false})
+        end
+    )
+end
+
+--- TriggerEvent from host
+function Sync:distribute_finalized_settings()
+    -- communicate to both clients that this is happening!
+    local mct_data = self:get_mct_data_from_local_user()
+    MultiplayerCommunicator:TriggerEvent("MctMpFinalized", 0, mct_data)
+end
+
+---@param mct_data mct_data
+function Sync:apply_mct_data_to_local_user(mct_data)
+    for mod_key, mod_data in pairs(mct_data) do
+        local mod_obj = mct:get_mod_by_key(mod_key)
+        VLib.Log("\tIn mod %s", mod_key)
+
+        if mod_obj then
+            for option_key, option_data in pairs(mod_data) do
+                VLib.Log("\t\tIn option %s", option_key)
+                local option_obj = mod_obj:get_option_by_key(option_key)
+
+                if option_obj then
+                    VLib.Log("\t\tSetting option %s to %s", option_key, tostring(option_data))
+                    option_obj:set_finalized_setting(option_data, true)
+                end
+            end
+        end
+    end
+end
+
+---@return mct_data
+function Sync:get_mct_data_from_local_user()
+    local mct_data = {}
+    local all_mods = mct:get_mods()
+    for mod_key, mod_obj in pairs(all_mods) do
+        vlog("Looping through mod obj ["..mod_key.."]")
+        mct_data[mod_key] = {}
+        local all_options = mod_obj:get_options()
+
+        for option_key, option_obj in pairs(all_options) do
+            if not option_obj:is_global() then
+                vlog("Looping through option obj ["..option_key.."]")
+                mct_data[mod_key][option_key] = mct.registry:get_selected_setting_for_option(option_obj)
+
+                vlog("Setting: "..tostring(mct_data[mod_key][option_key]))
+            end
+        end
+    end
+
+    return mct_data
+end
 
 return Sync

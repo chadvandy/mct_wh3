@@ -1,41 +1,52 @@
---- TODO unused superclass for all settings-type layouts
 local Super = get_mct()._MCT_PAGE
 
----@class MCT.Page.SettingsSuperclass
+---@type {key:fun(), index:fun(), localised_text: fun()}
+local sort_functions = VLib.LoadModule("sections", "script/vlib/mct/sort_functions/")
+
+---@class MCT.Page.Settings
 local defaults = {
     ---@type MCT.Section[]
     assigned_sections = {},
 
     num_columns = 3,
+
+    _section_sort_order_function = sort_functions.index,
 }
 
----@class MCT.Page.SettingsSuperclass : MCT.Page, Class
----@field __new fun():MCT.Page.SettingsSuperclass
-local SettingsSuperclass = Super:extend("SettingsSuperclass", defaults)
-get_mct():add_new_page_type("SettingsSuperclass", SettingsSuperclass)
+--- TODO support for side-to-side!
 
-function SettingsSuperclass:new(key, mod, num_columns)
+---@class MCT.Page.Settings : MCT.Page, Class
+---@field __new fun():MCT.Page.Settings
+local SettingsPage = Super:extend("Settings", defaults)
+get_mct():add_new_page_type("Settings", SettingsPage)
+
+function SettingsPage:new(key, mod, num_columns, row_based)
     local o = self:__new()    
-    o:init(key, mod, num_columns)
+    o:init(key, mod, num_columns, row_based)
 
     return o
 end
 
-function SettingsSuperclass:init(key, mod, num_columns)
+function SettingsPage:init(key, mod, num_columns, row_based)
     Super.init(self, key, mod)
 
     if not is_number(num_columns) then num_columns = 3 end
     num_columns = math.clamp(math.floor(num_columns), 1, 3)
     self.num_columns = num_columns
+
+    if is_boolean(row_based) and row_based == true then
+        self.is_row_based = true
+        self.num_columns = 1
+    end
 end
 
 --- Attach a settings section to this page. They will be displayed in order that they are added.
 ---@param section MCT.Section
-function SettingsSuperclass:assign_section_to_page(section)
+function SettingsPage:assign_section_to_page(section)
     self.assigned_sections[#self.assigned_sections+1] = section
 end
 
-function SettingsSuperclass:unassign_section(section)
+function SettingsPage:unassign_section(section)
     for i = #self.assigned_sections, 1, -1 do
         local this_section = self.assigned_sections[i]
         if this_section == section then
@@ -45,7 +56,7 @@ function SettingsSuperclass:unassign_section(section)
     end
 end
 
-function SettingsSuperclass:get_assigned_sections()
+function SettingsPage:get_assigned_sections()
     return self.assigned_sections
 end
 
@@ -55,14 +66,67 @@ end
     In section:populate, call option:populate(), etc etc etc
 ]]
 
----@param box UIC
-function SettingsSuperclass:populate(box)
-    local sections = self.assigned_sections
+--- Set the section-sort-function for this mod's sections.
+--- You can pass "key_sort" for @{mct_mod:sort_sections_by_key}.
+--- You can pass "index_sort" for @{mct_mod:sort_sections_by_index}.
+--- You can pass "text_sort" for @{mct_mod:sort_sections_by_localised_text}.
+--- You can also pass a full function, see usage below.
+--- @usage    mct_mod:set_sections_sort_function(
+---      function()
+---          local ordered_sections = {}
+---          local sections = mct_mod:get_sections()
+---          for section_key, section_obj in pairs(sections) do
+---              ordered_sections[#ordered_sections+1] = section_key
+---          end
+--- 
+---          -- alphabetically sort the sections
+---          table.sort(ordered_sections)
+--- 
+---          -- reverse the order
+---          table.sort(ordered_sections, function(a,b) return a > b end)
+---      end
+---     )
+---@param sort_func function|"key_sort"|"index_sort"|"text_sort" The sort function provided. Either use one of the two strings above, or a custom function like the below example.
+function SettingsPage:set_section_sort_function(sort_func)
+    if is_string(sort_func) then
+        if sort_func == "key_sort" then
+            self._section_sort_order_function = sort_functions.key
+        elseif sort_func == "index_sort" then
+            self._section_sort_order_function = sort_functions.index
+        elseif sort_func == "text_sort" then
+            self._section_sort_order_function = sort_functions.localised_text
+        else
+            VLib.Error("set_section_sort_function() called for mod ["..self:get_key().."], but the sort_func provided ["..sort_func.."] is an invalid string!")
+            return false
+        end
+    elseif is_function(sort_func) then
+        self._section_sort_order_function = sort_func
+    else
+        VLib.Error("set_section_sort_function() called for mod ["..self:get_key().."], but the sort_func provided isn't a string or a function!")
+        return false
+    end
+end
 
+--- Call the internal ._section_sort_order_function, determined by @{mct_mod:set_section_sort_function}
+-- @local
+function SettingsPage:sort_sections()
+    -- perform the wrapped sort order function
+
+    --- TODO grab all unassigned sections and plop them into their relative pages
+    --- TODO the below should function on each page at a time
+    -- TODO protect it?
+    -- protect it with a pcall to catch any issues with a custom sort order func
+    return self:_section_sort_order_function()
+end
+
+---@param box UIC
+function SettingsPage:populate(box)
+    local sections = self:sort_sections()
+
+    --- TODO do the "pull into page" on the MCT.Mod level - grab any orphaned sections and toss them into main?
     --- TODO this should pull all sections that don't have a page already; right now this will pull all sections everywhere
-    --- TODO properly order them!
     if #sections == 0 then
-        local sorted = self.mod_obj:sort_sections(self)
+        local sorted = self:sort_sections()
         for _,key in ipairs(sorted) do
             sections[#sections+1] = self.mod_obj:get_section_by_key(key)
         end
@@ -84,8 +148,13 @@ function SettingsSuperclass:populate(box)
 
     settings_canvas:SetCanResizeWidth(false)
 
+    local layout = "ui/mct/layouts/column"
+    if self.is_row_based then
+        layout = "ui/mct/layouts/column_three_items"
+    end
+
     for i = 1, self.num_columns do
-        local column = core:get_or_create_component("settings_column_"..i, "ui/mct/layouts/column", settings_canvas)
+        local column = core:get_or_create_component("settings_column_"..i, layout, settings_canvas)
         column:SetCanResizeHeight(true)
         column:Resize(settings_canvas:Width() / self.num_columns, panel:Height(), false)
 

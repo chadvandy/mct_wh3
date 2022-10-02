@@ -8,9 +8,6 @@ local defaults = {
     ---@type string The displayed description - required!
     description = "",
 
-    ---@type string Link to the Steam Workshop page.
-    workshop_link = "",
-
     ---@type string Image path to displayed image. TODO decide on the reso.
     image_path = nil,
 
@@ -27,23 +24,22 @@ local Infobox = Super:extend("Infobox", defaults)
 
 mct:add_new_page_type("Infobox", Infobox)
 
-function Infobox:new(key, mod, description, image_path, workshop_link)
+function Infobox:new(key, mod, description, image_path)
     VLib.Log("In infobox:new()")
 
     local o = self:__new()
-    o:init(key, mod, description, image_path, workshop_link)
+    o:init(key, mod, description, image_path)
 
     return o
 end
 
 --- TODO methods for editing all of that.
 --- TODO pass forward all the necessary params (description, image, workshop link, etc.)
-function Infobox:init(key, mod, description, image_path, workshop_link)
+function Infobox:init(key, mod, description, image_path)
     VLib.Log("In infobox:init()")
     Super.init(self, key, mod)
 
     self.description = description
-    self.workshop_link = workshop_link
     self.image_path = image_path
 end
 
@@ -94,8 +90,8 @@ function Infobox:populate(box)
         
         yo = img:Height()
 
-        if self.workshop_link then
-            common.set_context_value("mct_workshop_link_"..self.mod_obj:get_key(), self.workshop_link)
+        if self.mod_obj:get_workshop_link() ~= "" then
+            common.set_context_value("mct_workshop_link_"..self.mod_obj:get_key(), self.mod_obj:get_workshop_link())
 
             local btn = core:get_or_create_component("workshop_button", "ui/mct/workshop_button", img)
 
@@ -103,7 +99,7 @@ function Infobox:populate(box)
             btn:SetDockOffset(0, btn:Height() * 1.2)
             btn:SetTooltipText("Open workshop link", true)
 
-            btn:SetContextObject(cco("CcoStringValue", self.workshop_link))
+            btn:SetContextObject(cco("CcoStringValue", self.mod_obj:get_workshop_link()))
         end
     end
 

@@ -23,7 +23,13 @@ local function init()
     get_mct().sync:new_frontend()
 end
 
-core:add_ui_created_callback(init)
+core:add_ui_created_callback(function()
+    local ok, err = pcall(function()
+        init()
+    end)
+
+    if not ok then ModLog(err) end
+end)
 
 local is_in_campaign = false
 
@@ -39,6 +45,8 @@ core:add_listener(
         local mct_button = get_mct().ui:get_mct_button()
         local parent = UIComponent(mct_button:Parent())
         parent:SetVisible(true)
+
+        core:remove_listener("MCT_ModSettingsClosed")
     end,
     true
 )
@@ -100,13 +108,30 @@ core:add_listener(
         return context.string == "button_mod_settings"
     end,
     function(context)
-        get_mct().ui:open_frame(find_uicomponent("campaign_select_new", "right_holder", "tab_mct", "mct_holder"), true)
-        local close_button = find_uicomponent(get_mct().ui.mod_settings_panel, "button_mct_close")
+        local frame = find_uicomponent("campaign_select_new", "right_holder", "tab_mct", "mct_holder")
+        get_mct().ui:open_frame(frame, true)
+        local close_button = find_uicomponent(frame, "button_mct_close")
         close_button:SetVisible(false)
 
         local button = UIComponent(context.component)
         local highlight_animation = find_uicomponent(button, "highlight_animation")
         highlight_animation:SetVisible(false)
+
+        core:add_listener(
+            "MCT_ModSettingsClosed",
+            "ComponentLClickUp",
+            function(i_context)
+                VLib.Log("MCT_ModSettingsClosed conditional: " ..  context.string)
+                local id = i_context.string
+                local uic = UIComponent(i_context.component)
+                return id == "button_start_campaign" or id == "main_tab" or uicomponent_descended_from(uic, "button_list")
+            end,
+            function()
+                VLib.Log("MCT_ModSettingsClosed callback: " ..  context.string)
+                mct:finalize()
+            end,
+            false
+        )
     end,
     true
 )

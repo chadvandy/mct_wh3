@@ -66,7 +66,7 @@ end
 ---@param popup_key string
 ---@param text string
 ---@param use_two_buttons boolean
----@param button_one_callback function
+---@param button_one_callback function?
 ---@param button_two_callback function?
 ---@param creation_callback fun(popup:UIC)?
 ---@param opt_parent UIC?
@@ -97,6 +97,8 @@ function VLib.TriggerPopup(popup_key, text, use_two_buttons, button_one_callback
 
     local parent = is_uicomponent(opt_parent) and opt_parent or core:get_ui_root()
 
+    if not is_function(button_one_callback) then button_one_callback = function() end end
+    if not is_function(button_two_callback) then button_two_callback = function() end end
     if not use_two_buttons then button_two_callback = function() end end
 
     local popup = core:get_or_create_component(popup_key, "ui/vandy_lib/dialogue_box", parent)
