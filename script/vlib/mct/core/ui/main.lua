@@ -816,7 +816,8 @@ function UI_Main:new_mod_row(mod_obj)
     button_more_options:SetTooltipText("More Options", true)
 
     --- create the subpages for this mod row and then hide them to be reopened when this mod is selected.
-    for page_key,page_obj in pairs(mod_obj._pages) do
+    for _, title in ipairs(mod_obj._page_order) do
+        local page_obj = mod_obj._pages[title]
         --- if page_obj is the  main_page then don't do anything (because that row header has already been made!)
         if page_obj ~= mod_obj:get_main_page() then
             page_obj:create_row_uic()

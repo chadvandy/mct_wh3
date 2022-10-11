@@ -48,6 +48,9 @@ local mct_mod_defaults = {
     ---@type table<string, MCT.Page> All of the Pages defined for this mod.
     _pages = {},
 
+    ---@type table<string> The table keeping order of the order pages should be presented.
+    _page_order = {},
+
     ---@type MCT.Page.Settings the Main page for this mod, the one that will open on pressing the mod header.
     _main_page = nil,
 
@@ -125,6 +128,7 @@ function mct_mod:create_settings_page(title, num_columns)
     
     ---@cast page MCT.Page.Settings
     self._pages[title] = page
+    table.insert(self._page_order, title)
 
     return page
 end
@@ -136,8 +140,129 @@ function mct_mod:create_infobox_page(title, description, image_path, workshop_li
 
     local page = page_class:new(title, self, description, image_path, workshop_link)
     self._pages[title] = page
+    table.insert(self._page_order, title)
     
     return page
+end
+
+--- Sorts the pages by alphanumerical order.
+--- The function allows for ascending and descending ordering and separate ordering for settings_page and infobox_page
+---@param descending_order boolean
+---@param separate_page_types boolean
+---@param infobox_first boolean
+function mct_mod:sort_pages(descending_order, separate_page_types, infobox_first)
+    if not is_boolean(descending_order) then
+        err("sort_pages() called on mct_mod ["..self:get_key().."], but ascending_order is not a boolean! Returning nil.")
+    elseif not is_boolean(separate_page_types) then
+        err("sort_pages() called on mct_mod ["..self:get_key().."], but seperate_page_types is not a boolean! Returning nil.")
+    elseif not is_boolean(infobox_first) then
+        err("sort_pages() called on mct_mod ["..self:get_key().."], but infobox_first is not a boolean! Returning nil.")
+    end
+
+    --- Initialise temporary variables
+    local info_dummy = {}
+    local settings_dummy = {}
+    --- Separate page types if needed
+    if separate_page_types then
+        for _, title in ipairs(self._page_order) do
+            if self._pages[title].description == nil then
+                table.insert(settings_dummy, title)
+            else
+                table.insert(info_dummy, title)
+            end
+        end
+    else
+        for _, title in ipairs(self._page_order) do
+            table.insert(settings_dummy, title)
+        end
+    end
+
+    --- Sort dummies
+    if descending_order then
+        table.sort(info_dummy, function(a, b) return a > b end)
+        table.sort(settings_dummy, function(a, b) return a > b end)
+    else
+        table.sort(info_dummy)
+        table.sort(settings_dummy)
+    end
+
+    --- Recreate self._page_order
+    if infobox_first then
+        self._page_order = {}
+        local count = 0
+        for _, value in ipairs(info_dummy) do 
+            count = count + 1
+            table.insert(self._page_order, count, value)
+        end
+        for _, value in ipairs(settings_dummy) do 
+            count = count + 1
+            table.insert(self._page_order, count, value)
+        end
+    else
+        self._page_order = {}
+        local count = 0
+        for _, value in ipairs(settings_dummy) do 
+            count = count + 1
+            table.insert(self._page_order, count, value)
+        end
+        for _, value in ipairs(info_dummy) do 
+            count = count + 1
+            table.insert(self._page_order, count, value)
+        end
+    end
+end
+
+--- Sets a page to be loaded in a specific position in the page order
+--- Based on 1 indexation, 1 being at the top of the list
+--- If type aware, it will insert the page only after first discovering another page of the same type in the page order
+--- This means that asking to insert a settings page at position 1 when that spot is taken by an infobox, the function will look down the list for a spot not taken by an infobox and place itself first among the settings pages, but after the infoboxes
+---@param list_position number
+---@param page_title string
+---@param type_aware boolean
+function mct_mod:set_page_position(list_position, page_title, type_aware)
+    if not is_number(list_position) then
+        err("set_page_position() called on mct_mod ["..self:get_key().."], but list_position is not a number! Returning nil.")
+    elseif not is_string(page_title) then
+        err("set_page_position() called on mct_mod ["..self:get_key().."], but page_title is not a string! Returning nil.")
+    elseif not is_boolean(type_aware) then
+        err("set_page_position() called on mct_mod ["..self:get_key().."], but type_aware is not a boolean! Returning nil.")
+    elseif is_nil(self._pages[page_title]) then
+        err("set_page_position() called on mct_mod ["..self:get_key().."], but page_title is not a page! Returning nil.")
+    end
+
+    --- Get current index and remove the page_title
+    local current_index = 0
+    for index, title in ipairs(self._page_order) do
+        if title == page_title then
+            current_index = index
+            break
+        end
+    end
+    table.remove(self._page_order, current_index)
+
+    --- If not type aware, make a simple insert
+    if not type_aware then
+        table.insert(self._page_order, list_position, page_title)
+        return nil
+    end
+
+    --- Else locate where its own page type start in the page order
+    local is_infobox = is_string(self._pages[page_title].description)
+    local offset = 0
+    for _, title in ipairs(self._page_order) do
+        if is_infobox and is_string(self._pages[title].description) then
+            table.insert(self._page_order, list_position + offset, page_title)
+            return nil
+        elseif not is_infobox and not is_string(self._pages[title].description) then
+            table.insert(self._page_order, list_position + offset, page_title)
+            return nil
+        else
+            offset = offset + 1
+        end
+    end
+
+    --- If unable to find any pages of same type, insert at the bottom
+    table.insert(self._page_order, page_title)
 end
 
 --- Getter for any @{mct_section}s linked to this mct_mod.
