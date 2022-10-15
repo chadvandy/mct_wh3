@@ -22,8 +22,14 @@ local mct = VLib.NewClass("ModConfigurationTool", mct_defaults)
 
 --- Initial creation and loading of MCT, and all the individual MCT Mods.
 function mct:init()
+    ModLog("MCT.Init")
+    local ok, err = pcall(function()
     self:load_modules()
     self:load_mods()
+    end) if not ok then ModLog(err) end
+
+
+    ModLog("Done loading mods!")
 
     core:add_static_object("mod_configuration_tool", self)
 
@@ -43,16 +49,7 @@ function mct:init()
     else
         vlog("LISTENING FOR LOAD GAME")
         
-        cm:add_loading_game_callback(function(context)
-            vlog("LOADING GAME CALBACK")
-            if not cm.game_interface:model():is_multiplayer() then
-                mct:load_and_start(context, false)
-            else
-                mct:load_and_start(context, true)
-            end
-
-            vlog("Done the loading game callback!")
-        end)
+        mct:load_and_start()
     end
 end
 
@@ -169,9 +166,9 @@ function mct:get_option_type(key)
 end
 
 --- TODO clean this the fuck up
-function mct:load_and_start(loading_game_context, is_mp)
+function mct:load_and_start()
     self._initialized = true
-    self.registry:load(loading_game_context, is_mp)
+    self.registry:load()
 end
 
 function mct:load_mods()

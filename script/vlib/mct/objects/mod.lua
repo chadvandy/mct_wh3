@@ -177,17 +177,17 @@ end
 
 --- Getter for any @{mct_section}s linked to this mct_mod.
 ---@param section_key string The identifier for the section searched for.
----@return MCT.Section?
+---@return MCT.Section
 function mct_mod:get_section_by_key(section_key)
     if not is_string(section_key) then
-        err("get_section_by_key() called on mct_mod ["..self:get_key().."], but the section_key supplied is not a string! Returning nil.")
-        return nil
+        err("get_section_by_key() called on mct_mod ["..self:get_key().."], but the section_key supplied is not a string! Returning the last section.")
+        return self:get_last_section()
     end
 
     local t = self._sections[section_key]
     if not mct:is_mct_section(t) then
-        err("get_section_by_key() called on mct_mod ["..self:get_key().."], but the section found in self._sections is not an mct_section! Returning nil.")
-        return nil
+        err("get_section_by_key() called on mct_mod ["..self:get_key().."], but the section found in self._sections is not an mct_section! Returning the last available section.")
+        return self:get_last_section()
     end
 
     return t

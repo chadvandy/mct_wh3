@@ -460,7 +460,7 @@ function Registry:read_registry_file()
 end
 
 --- TODO load new Profiles file
-function Registry:load(loading_game_context, is_mp)
+function Registry:load()
     logf("MCT Load is being called.")
 
     -- self:save_all_mods()
@@ -468,21 +468,31 @@ function Registry:load(loading_game_context, is_mp)
     self:read_profiles_file()
     self:port_forward()
 
-    if cm and loading_game_context then
+    if cm then
+        local is_mp = cm.game_interface:model():is_multiplayer()
         if is_mp then
             mct.sync:init_campaign()
         end
 
         --- read the saved settings for current options!
-        self:load_game(loading_game_context)
+        cm:add_loading_game_callback(function(context)
+            local ok, err = pcall(function()
+                self:load_game(context)
+                logf("Trigger MctInitialized")
+                core:trigger_custom_event("MctInitialized", {["mct"] = mct, ["is_multiplayer"] = is_mp})
+            end) if not ok then logf(err) end
+        end)
+
         cm:add_saving_game_callback(function(context) self:save_game(context) end)
 
     elseif mct:context() == "campaign" and not cm then
         --- We're in a campaign battle - pull the info from the campaign registry!
         self:load_campaign_battle()
+        core:trigger_custom_event("MctInitialized", {["mct"] = mct, ["is_multiplayer"] = false})
+    else
+        core:trigger_custom_event("MctInitialized", {["mct"] = mct, ["is_multiplayer"] = false})
     end
 
-    core:trigger_custom_event("MctInitialized", {["mct"] = self, ["is_multiplayer"] = is_mp})
 end
 
 function Registry:save_file_with_defaults()
@@ -727,6 +737,7 @@ function Registry:load_game(context)
     logf("Registry loading game!")
     local registry_data = cm:load_named_value("mct_registry", {}, context)
     ---@cast registry_data table
+    logf("Registry data loaded!")
 
     if is_nil(next(registry_data)) then
         --- assign this_campaign to the next index, and iterate that counter. (ie. if last index is 0, assign this campaign to 1, and save 1 in MCT so we iterate it next time)
@@ -734,6 +745,8 @@ function Registry:load_game(context)
         self.__this_campaign = index
         self.__last_used_campaign_index = index
 
+        core:get_svr():SaveString("mct_registry_campaign_index", tostring(self.__this_campaign))
+        logf("Ending")
         return
     end
 
@@ -761,7 +774,8 @@ function Registry:load_game(context)
 
     self.__this_campaign = registry_data.this_campaign_index
 
-    core:get_svr():SaveString("mct_registry_campaign_index", tostring(self.__this_campaign))
+    -- --- TODO isn't this going to decriment the index if you load an old save?
+    -- core:get_svr():SaveString("mct_registry_campaign_index", tostring(self.__this_campaign))
 end
 
 return Registry
