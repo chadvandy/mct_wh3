@@ -302,29 +302,6 @@ function mct_section:get_mod()
     return self._mod
 end
 
---- Get the header text for this section.
--- Either mct_[mct_mod_key]_[section_key]_section_text, in a .loc file,
--- or the text provided using @{mct_section:set_localised_text}
--- @return string The localised text for this section, used as the title.
-function mct_section:get_localised_text()
-    -- default to checking the loc files
-    local text = common.get_localised_string("mct_"..self:get_mod():get_key().."_"..self:get_key().."_section_text")
-
-    if text ~= "" then
-        return text
-    else
-        -- nothing found, check for anything supplied by `set_localised_text()`, or send the default "No text assigned"
-        text = VLib.FormatText(self._text)
-    end
-
-    if not is_string(text) or text == "" then
-        text = "No text assigned"
-    end
-
-
-    return text
-end
-
 --- create this section in the UI.
 ---@param this_column UIC The column UIC to pour this section into.
 function mct_section:populate(this_column)
@@ -455,7 +432,15 @@ function mct_section:set_localised_text(text)
         return false
     end
 
-    self._text = VLib.HandleLocalisedText(text, "No Section Name Found")
+    self._text = text
+end
+
+--- Get the header text for this section.
+-- Either mct_[mct_mod_key]_[section_key]_section_text, in a .loc file,
+-- or the text provided using @{mct_section:set_localised_text}
+-- @return string The localised text for this section, used as the title.
+function mct_section:get_localised_text()
+    return VLib.HandleLocalisedText(self._text, "Default Section", common.get_localised_string("mct_"..self:get_mod():get_key().."_"..self:get_key().."_section_text"))
 end
 
 --- Set tooltip text for this section, which'll appear when hovered over.
@@ -467,21 +452,7 @@ function mct_section:set_tooltip_text(text)
 end
 
 function mct_section:get_tooltip_text()
-    -- default to checking the loc files
-    local text = common.get_localised_string("mct_"..self:get_mod():get_key().."_"..self:get_key().."_section_tooltip_text")
-
-    if text ~= "" then
-        return text
-    else
-        -- nothing found, check for anything supplied by `set_localised_text()`, or send the default "No text assigned"
-        text = VLib.FormatText(self._tooltip_text)
-    end
-
-    if not is_string(text) then
-        text = ""
-    end
-
-    return text
+    return VLib.HandleLocalisedText(self._tooltip_text, "", common.get_localised_string("mct_"..self:get_mod():get_key().."_"..self:get_key().."_section_tooltip_text"))
 end
 
 function mct_section:set_description(t)
@@ -492,7 +463,7 @@ end
 
 ---@return string 
 function mct_section:get_description()
-    return VLib.HandleLocalisedText(self._description, "")
+    return VLib.HandleLocalisedText(self._description, "", common.get_localised_string("mct_"..self:get_mod():get_key().."_"..self:get_key().."_section_description"))
 end
 
 --- Assign an option to this section.

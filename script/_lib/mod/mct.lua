@@ -10,6 +10,8 @@ local mct_defaults = {
 
     ---@type {[1]: MCT.Mod, [2]: MCT.Page}
     _selected_mod = {nil, nil},
+
+    _version = 0.9,
 }
 
 local load_module = VLib.LoadModule
@@ -52,6 +54,10 @@ function mct:init()
             vlog("Done the loading game callback!")
         end)
     end
+end
+
+function mct:get_version()
+    return self._version
 end
 
 --- Create a new MCT.Page type

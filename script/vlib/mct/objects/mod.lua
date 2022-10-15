@@ -58,6 +58,12 @@ local mct_mod_defaults = {
 
     ---@type table<string, any> Persistent userdata table that gets saved in Registry.
     _userdata = {},
+
+    ---@type number The current version number of this mod. Used for Notifications, Changelogs, etc.
+    _version = 0,
+
+    ---@type {path:string, width:number, height:number} The info of a main image for this mod, to display where relevant. Optional w/h overrides (they may be clamped lower, but aspect ratio defined here will be kept!) 
+    _main_image = {path = "", width = 100, height = 100,},
 }
 
 ---@class MCT.Mod : Class
@@ -106,6 +112,46 @@ function mct_mod:save_new_page(title, page)
 
 end
 
+function mct_mod:set_version(i)
+    if not is_number(i) then return false end
+
+    self._version = i
+end
+
+function mct_mod:get_version()
+    return self._version
+end
+
+function mct_mod:set_main_image(path, w, h)
+    if not is_string(path) then return false end
+
+    self._main_image.path = path
+    if is_number(w) then self._main_image.width = w end
+    if is_number(h) then self._main_image.height = h end
+end
+
+function mct_mod:get_main_image()
+    return self._main_image.path, self._main_image.width, self._main_image.height
+end
+
+function mct_mod:use_infobox(b)
+    if is_nil(b) then b = true end
+    if not is_boolean(b) then return end
+
+    if b == true then
+        local page_class = mct:get_page_type("Infobox")
+        ---@cast page_class MCT.Page.Infobox
+        local page = page_class:new("Details", self)
+        
+        ---@cast page MCT.Page.Infobox
+        self._pages["Details"] = page
+        
+        return page
+    else
+        self._pages["Details"] = nil
+    end
+end
+
 -- function mct_mod:create_rowbased_settings_page(title)
 --     local page_class = mct:get_page_type("Settings")
 --     ---@cast page_class MCT.Page.Settings
@@ -126,17 +172,6 @@ function mct_mod:create_settings_page(title, num_columns)
     ---@cast page MCT.Page.Settings
     self._pages[title] = page
 
-    return page
-end
-
-function mct_mod:create_infobox_page(title, description, image_path, workshop_link)
-    logf("Creating new Infobox page for %s", self:get_key())
-    local page_class = mct:get_page_type("Infobox")
-    ---@cast page_class MCT.Page.Infobox
-
-    local page = page_class:new(title, self, description, image_path, workshop_link)
-    self._pages[title] = page
-    
     return page
 end
 
@@ -641,11 +676,8 @@ end
 
 --- Enable localisation for this mod's title. Accepts either finalized text, or a localisation key.
 ---@param title_text string The text supplied for the title. You can supply the text - ie., "My Mod", or a loc-key, ie. "ui_text_replacements_my_dope_mod". Please note you can also skip this method, and just make a loc key called: `mct_[mct_mod_key]_title`, and MCT will automatically read that.
----@param is_localised boolean True if the title_text supplied is a loc key.
-function mct_mod:set_title(title_text, is_localised)
+function mct_mod:set_title(title_text)
     if is_string(title_text) then
-        if is_localised then title_text = "{{loc:"..title_text.."}}" end
-
         self._title = title_text
     end
 end
@@ -661,22 +693,16 @@ end
 
 --- Enable localisation for this mod's description. Accepts either finalized text, or a localisation key.
 ---@param desc_text string The text supplied for the description. You can supply the text - ie., "My Mod's Description", or a loc-key, ie. "ui_text_replacements_my_dope_mod_description". Please note you can also skip this method, and just make a loc key called: `mct_[mct_mod_key]_description`, and MCT will automatically read that.
----@param is_localised boolean True if the desc_text supplied is a loc key.
-function mct_mod:set_description(desc_text, is_localised)
+function mct_mod:set_description(desc_text)
     if is_string(desc_text) then
-        if is_localised then desc_text = "{{loc:"..desc_text.."}}" end
-
         self._description = desc_text
     end
 end
 
 --- Create a tooltip that will be displayed when hovering over the Mod row header in the left panel. Leave this blank to avoid any toolitp.
 ---@param text string
----@param is_localised boolean?
-function mct_mod:set_tooltip_text(text, is_localised)
+function mct_mod:set_tooltip_text(text)
     if is_string(text) then
-        if is_localised then text = "{{loc:"..text.."}}" end
-
         self._tooltip_text = text
     end
 end
@@ -736,20 +762,7 @@ end
 --- Grabs the description text. First checks for a loc-key `mct_[mct_mod_key]_description`, then checks to see if anything was set using @{mct_mod:set_description}. If not, "No description assigned" is returned.
 --- @return string description_text The returned string for this mct_mod's description.
 function mct_mod:get_description()
-    local description = common.get_localised_string("mct_"..self:get_key().."_description")
-    if description ~= "" then
-        return description
-    end
-
-    description = VLib.FormatText(self._description)
-    -- if description.is_localised then
-    --     local test = effect.get_localised_string(description.text)
-    --     if test ~= "" then
-    --         return test
-    --     end
-    -- end
-
-    return description or "No description assigned"
+    return VLib.HandleLocalisedText(self._description, "", "mct_"..self:get_key().."_description")
 end
 
 function mct_mod:get_workshop_link()

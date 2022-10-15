@@ -1,8 +1,14 @@
 local mct = get_mct()
 
 local mct_mod = mct:register_mod("mct_mod")
+mct_mod:set_workshop_link("https://steamcommunity.com/sharedfiles/filedetails/?id=2815354316")
+mct_mod:set_version(mct:get_version())
+mct_mod:set_main_image("ui/mct/van_mct.png", 300, 300)
+mct_mod:set_description("The Mod Configuration Tool, home of all things mod and configuration!")
 
-mct_mod:create_infobox_page("Testing Page", "My Description", "ui/skins/default/advisor_beastmen_2d.png", "https://steamcommunity.com/sharedfiles/filedetails/?id=2815354316")
+mct_mod:use_infobox(true)
+
+-- mct_mod:create_infobox_page("Details", "My Description", "ui/mct/van_mct.png")
 
 
 -- mct_mod:set_tooltip_text("Testing this tooltip text out!")

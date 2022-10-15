@@ -47,7 +47,7 @@
 			id="text"
 			offset="0.00,0.00"
 			allowhorizontalresize="true"
-			allowverticalresize="false"
+			allowverticalresize="true"
 			priority="42"
 			tooltipslocalised="true"
 			uniqueguid="345A7C15-9AF4-46A2-A317E69DCAE9E2FF"

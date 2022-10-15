@@ -4,19 +4,7 @@ local mct = get_mct()
 local Super = mct._MCT_PAGE
 
 ---@class MCT.Page.Infobox
-local defaults = {
-    ---@type string The displayed description - required!
-    description = "",
-
-    ---@type string Image path to displayed image. TODO decide on the reso.
-    image_path = nil,
-
-    ---@type "top_left"|"top_right"|"top_center"
-    image_position = "top_center",
-
-    ---@type {w:number,h:number}
-    image_dimensions = {w=100,h=100},
-}
+local defaults = {}
 
 ---@class MCT.Page.Infobox : MCT.Page, Class
 ---@field __new fun():MCT.Page.Infobox
@@ -24,94 +12,88 @@ local Infobox = Super:extend("Infobox", defaults)
 
 mct:add_new_page_type("Infobox", Infobox)
 
-function Infobox:new(key, mod, description, image_path)
+function Infobox:new(key, mod)
     VLib.Log("In infobox:new()")
 
     local o = self:__new()
-    o:init(key, mod, description, image_path)
+    o:init(key, mod)
 
     return o
 end
 
 --- TODO methods for editing all of that.
 --- TODO pass forward all the necessary params (description, image, workshop link, etc.)
-function Infobox:init(key, mod, description, image_path)
+function Infobox:init(key, mod)
     VLib.Log("In infobox:init()")
     Super.init(self, key, mod)
-
-    self.description = description
-    self.image_path = image_path
 end
 
-local valid_pos = {
-    top_left = true,
-    top_right = true,
-    top_center = true,
-}
+--- TODO author[s]
+--- TODO workshop link
+--- TODO quick description
+--- TODO version
 
----@param pos "top_left"|"top_right"|"top_center"
-function Infobox:set_image_position(pos)
-    if not is_string(pos) or not valid_pos[pos] then
-        -- errmsg
-        return false
-    end
-
-    self.image_position = pos
-end
-
---- TODO
-function Infobox:set_image_dimensions(w, h)
-
-end
-
+--- TODO do it more like an Infobox, layout engine + vlist + holders per row
+--- TODO versions and changelog button for popup w/ each changelog
 --- draw in the UI
 function Infobox:populate(box)
-    local uic = core:get_or_create_component("infobox", "ui/campaign ui/script_dummy", box)
+    --- infobox_holder is needed because list_box automatically reorders and spaces its children; this way, we can control spacing far better.
+    local infobox_holder = core:get_or_create_component("infobox_holder", "ui/campaign ui/script_dummy", box)
+    infobox_holder:Resize(box:Width(), box:Height())
+
+    --- TODO listview without scrollbar, center of screen
+    local uic = core:get_or_create_component("infobox", "ui/vandy_lib/image", infobox_holder)
     uic:SetDockingPoint(2)
-    uic:Resize(box:Width() * 0.9, box:Height())
+    uic:SetDockOffset(0, 10)
+    uic:Resize(box:Width() * 0.4, box:Height() * 0.94)
+    uic:SetImagePath("ui/skins/default/avatar_frame_custom_battle.png")
+
+    local mod = self.mod_obj
 
     local xo,yo = 0,0
 
-    if self.image_path then
+    local p,w, h = mod:get_main_image()
+    --- TODO border around image
+    if p then
         local img = core:get_or_create_component("image", "ui/vandy_lib/image", uic)
-        img:SetImagePath(self.image_path)
-        
-        local w,h = self.image_dimensions.w, self.image_dimensions.h
+        img:SetImagePath(p)
+
         img:Resize(w, h)
         img:ResizeCurrentStateImage(0, w, h)
-        local pos = self.image_position
-        if pos == "top_left" then
-            img:SetDockingPoint(1)
+        img:SetDockingPoint(2)
 
-            --- TODO take into account the new dimensions
-            img:SetDockOffset(0, 50)
-            
-        end
-        
-        yo = img:Height()
+        --- TODO take into account the new dimensions
+        img:SetDockOffset(0, 10)
+        yo = yo + img:Height() + 10
 
-        if self.mod_obj:get_workshop_link() ~= "" then
-            common.set_context_value("mct_workshop_link_"..self.mod_obj:get_key(), self.mod_obj:get_workshop_link())
+        if mod:get_workshop_link() ~= "" then
+            --- TODO set the img
+            common.set_context_value("mct_workshop_link_"..mod:get_key(), mod:get_workshop_link())
 
             local btn = core:get_or_create_component("workshop_button", "ui/mct/workshop_button", img)
 
             btn:SetDockingPoint(8)
             btn:SetDockOffset(0, btn:Height() * 1.2)
-            btn:SetTooltipText("Open workshop link", true)
+            btn:SetTooltipText("Open Steam Workshop page", true)
 
-            btn:SetContextObject(cco("CcoStringValue", self.mod_obj:get_workshop_link()))
+            --- this don't work
+            btn:SetContextObject(cco("CcoStringValue", mod:get_workshop_link()))
+
+            yo = yo + btn:Height() * 1.4
         end
     end
 
-    if self.description then
+    local d = mod:get_description()
+    if d then
         ---TODO set a border around it or something visually pleasing?
         local t = core:get_or_create_component("description", "ui/vandy_lib/text/dev_ui", uic)
         t:SetDockingPoint(2)
         t:SetDockOffset(0, yo + 15)
-        t:Resize(400, 500)
-        
-        local tx,ty = t:TextDimensionsForText(self.description)
+        t:Resize(uic:Width() * 0.95, 40)
+        t:SetCanResizeWidth(false)
+
+        local tx,ty = t:TextDimensionsForText(d)
         t:Resize(tx, ty)
-        t:SetStateText(self.description)
+        t:SetStateText(d)
     end
 end

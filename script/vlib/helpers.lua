@@ -23,16 +23,27 @@ function VLib.FormatText(text)
 end
 
 
+--- TODO handle the formatted auto-names, ie. `mct_mod_[key]_description
 --- Function to handle an optionally localised string.
 ---@param str string The tested string.
 ---@param default string? A default to pass if the string is empty and isn't a key.
+---@param auto string? The auto-formatted string.
 ---@return string
-function VLib.HandleLocalisedText(str, default)
+function VLib.HandleLocalisedText(str, default, auto)
     if not is_string(str) then return "" end
+
+    auto = common.get_localised_string(auto)
+    if is_string(auto) and auto ~= "" then return auto end
+
+    local catch = str:match("{{loc:(.-)}}")
+    if catch then
+        return common.get_localised_string(catch)
+    end
 
     local test = common.get_localised_string(str)
     if test == "" then
         return str
+    --- Why do I do this?
     elseif test == str then
         return default
     else

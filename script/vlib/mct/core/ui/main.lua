@@ -552,7 +552,7 @@ function UI_Main:create_panel(provided_panel)
         pw, ph = panel:Width(), panel:Height()
     else
         panel = core:get_or_create_component("mct_options", "ui/mct/frame")
-        panel:PropagatePriority(50)
+        panel:PropagatePriority(200)
         panel:LockPriority()
         panel:SetMoveable(true)
         panel:SetDockingPoint(5)
