@@ -5,6 +5,56 @@ local mct_mod = mct:register_mod("mct_demo")
 -- local page = mct_mod:create_rowbased_settings_page("Row-based Page")
 
 local b = mct_mod:add_new_section("section_b", "Section B (index first)")
+
+---@type MCT.Option.Dropdown
+local test = mct_mod:add_new_option("test_dropdown", "dropdown")
+test:add_dropdown_values({
+    {
+        key = "one",
+        text = "one",
+    },
+    {
+        key = "two",
+        text = "two",
+    },
+    {
+        key = "three",
+        text = "three",
+    },
+    {
+        key = "four",
+        text = "four",
+    },
+    {
+        key = "five",
+        text = "five",
+    },
+    {
+        key = "six",
+        text = "six",
+    },
+    {
+        key = "seven",
+        text = "seven",
+    },
+    {
+        key = "eight",
+        text = "eight",
+    },
+    {
+        key = "nine",
+        text = "nine",
+    },
+    {
+        key = "ten",
+        text = "ten",
+    },
+    {
+        key = "eleven",
+        text = "eleven",
+    },
+})
+
 mct_mod:add_new_option("test_b", 'checkbox'):set_text("Testing Checkbox")
 
 local a = mct_mod:add_new_section("section_a", "Section A (key first)")

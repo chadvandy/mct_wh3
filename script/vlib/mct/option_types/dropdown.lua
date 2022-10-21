@@ -1,3 +1,5 @@
+--- TODO use an auto-fill similar to the new command button dropdowns.
+
 --- TODO prettify
 
 local mct = get_mct()
@@ -146,22 +148,40 @@ function Dropdown:ui_create_option(dummy_parent)
     local box = "ui/vandy_lib/dropdown_button"
     --local dropdown_option = templates[2]
 
-    local new_uic = core:get_or_create_component("mct_dropdown_box", box, dummy_parent)
+    local box_template = "ui/mct/options/dropdown"
+
+    --- TODO do this elsewhere?
+    --- TODO build a CcoScriptObject for this dropdown, and truly all options
+    --- 
+    local dd = {
+        values = {}
+    }
+
+    for i, value in ipairs(self._values) do
+        dd.values[value.key] = {
+            text = value.text,
+            tooltip = value.tt,
+            sort_order = i,
+        }
+    end
+
+    local context_key = self:get_mod_key().."_"..self:get_key().."_dropdown"
+    common.set_context_value(context_key, dd)
+
+    local new_uic = core:get_or_create_component("mct_dropdown_box", box_template, dummy_parent)
+    new_uic:SetContextObject(cco("CcoScriptObject", context_key))
     new_uic:SetVisible(true)
     new_uic:Resize(dummy_parent:Width() * 0.4, new_uic:Height())
 
-    local popup_menu = find_uicomponent(new_uic, "popup_menu")
-    popup_menu:PropagatePriority(get_mct().ui.mod_settings_panel:Priority() + 500) -- higher z-value than other shits
-    popup_menu:SetVisible(false)
-    --popup_menu:SetInteractive(true)
-
-    local popup_list = find_uicomponent(popup_menu, "popup_list")
-    popup_list:PropagatePriority(popup_menu:Priority()+1)
-    --popup_list:SetInteractive(true)
+    new_uic:SetProperty("mct_option", self:get_key())
+    new_uic:SetProperty("mct_mod", self:get_mod_key())
 
     self:set_uic_with_key("option", new_uic, true)
 
-    self:refresh_dropdown_box()
+    --- TODO grab selected value and click it UP
+
+
+    -- self:refresh_dropdown_box()
 
     return new_uic
 end
@@ -348,6 +368,7 @@ end
 
 ---- Specific listeners for the UI ----
 
+--- TODO listen for ContextTriggerEvent for `mct_dropdown_click|%MOD_KEY%|%OPTION_KEY%|%VALUE_KEY`
 core:add_listener(
     "mct_dropdown_box",
     "ComponentLClickUp",
@@ -355,65 +376,72 @@ core:add_listener(
         return context.string == "mct_dropdown_box"
     end,
     function(context)
-        local ok, err = pcall(function()
+        -- local ok, err = pcall(function()
         local box = UIComponent(context.component)
         local menu = find_uicomponent(box, "popup_menu")
 
-        local mod_obj = mct:get_selected_mod()
+        local mod_key = box:GetProperty("mct_mod")
         local option_key = box:GetProperty("mct_option")
-        local option_obj = mod_obj:get_option_by_key(option_key)
+        local mod_obj = mct:get_mod_by_key(mod_key)
 
-        logf("Clickingt dropdown box %s in mod %s", option_key, mod_obj:get_key())
-
-        if is_uicomponent(menu) then
-            if menu:Visible() then
-                logf("Menu is visible, hiding!")
-                menu:SetVisible(false)
-            else
-                logf("Menu is invisible, showing!")
-                menu:SetVisible(true)
-                menu:RegisterTopMost()
-                -- next time you click something, close the menu!
-                core:add_listener(
-                    "mct_dropdown_box_close",
-                    "ComponentLClickUp",
-                    true,
-                    function(context)
-                        core:remove_listener("mct_dropdown_box_option_selected")
-                        if box:CurrentState() == "selected" then
-                            box:SetState("active")
-                        end
-
-                        menu:SetVisible(false)
-                        menu:RemoveTopMost()
-                    end,
-                    false
-                )
-
-                -- Set Selected listeners
-                core:add_listener(
-                    "mct_dropdown_box_option_selected",
-                    "ComponentLClickUp",
-                    function(context)
-                        local uic = UIComponent(context.component)
-                        
-                        return UIComponent(uic:Parent()):Id() == "popup_list" and uicomponent_descended_from(uic, "mct_dropdown_box")
-                    end,
-                    function(context)
-                        -- core:remove_listener("mct_dropdown_box_close")
-                        log("mct_dropdown_box_option_selected")
-                        local uic = UIComponent(context.component)
-
-                        -- this operation is set externally (so we can perform the same operation outside of here)
-                        local ok, msg = pcall(function()
-                        option_obj:set_selected_setting(uic:Id())
-                        end) if not ok then err(msg) end
-                    end,
-                    false
-                )
+        if mod_obj then
+            local option_obj = mod_obj:get_option_by_key(option_key)
+            if option_obj then
+                logf("Clickingt dropdown box %s in mod %s", option_key, mod_key)
+                
             end
         end
-    end) if not ok then VLib.Error(err) end
+
+
+    --     if is_uicomponent(menu) then
+    --         if menu:Visible() then
+    --             logf("Menu is visible, hiding!")
+    --             menu:SetVisible(false)
+    --         else
+    --             logf("Menu is invisible, showing!")
+    --             menu:SetVisible(true)
+    --             menu:RegisterTopMost()
+    --             -- next time you click something, close the menu!
+    --             core:add_listener(
+    --                 "mct_dropdown_box_close",
+    --                 "ComponentLClickUp",
+    --                 true,
+    --                 function(context)
+    --                     core:remove_listener("mct_dropdown_box_option_selected")
+    --                     if box:CurrentState() == "selected" then
+    --                         box:SetState("active")
+    --                     end
+
+    --                     menu:SetVisible(false)
+    --                     menu:RemoveTopMost()
+    --                 end,
+    --                 false
+    --             )
+
+    --             -- Set Selected listeners
+    --             core:add_listener(
+    --                 "mct_dropdown_box_option_selected",
+    --                 "ComponentLClickUp",
+    --                 function(context)
+    --                     local uic = UIComponent(context.component)
+                        
+    --                     return UIComponent(uic:Parent()):Id() == "popup_list" and uicomponent_descended_from(uic, "mct_dropdown_box")
+    --                 end,
+    --                 function(context)
+    --                     -- core:remove_listener("mct_dropdown_box_close")
+    --                     log("mct_dropdown_box_option_selected")
+    --                     local uic = UIComponent(context.component)
+
+    --                     -- this operation is set externally (so we can perform the same operation outside of here)
+    --                     local ok, msg = pcall(function()
+    --                     option_obj:set_selected_setting(uic:Id())
+    --                     end) if not ok then err(msg) end
+    --                 end,
+    --                 false
+    --             )
+    --         end
+    --     end
+    -- end) if not ok then VLib.Error(err) end
     end,
     true
 )

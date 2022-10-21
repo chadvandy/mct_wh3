@@ -12,6 +12,8 @@ local defaults = {
 ---@class CommandManager : Class
 local CommandManager = VLib.NewClass("CommandManager", defaults)
 
+--- TODO handle the UI and call-command systems here
+
 function CommandManager:init()
     VLib.LoadModules(
         self.path,

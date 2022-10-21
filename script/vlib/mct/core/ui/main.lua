@@ -954,6 +954,7 @@ local function inv(obj, e)
     end
 end
 
+--- TODO move this into Command Manager
 --- TODO hook this up more situationally
 core:add_listener(
     "MCT_ContextCommands",
