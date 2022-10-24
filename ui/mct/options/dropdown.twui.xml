@@ -610,13 +610,17 @@
 			priority="65"
 			tooltipslocalised="true"
 			uniqueguid="972C6ACB-5E1F-9266-70E1588FE45D1669"
-			currentstate="2743905F-5168-5143-25F90248F91B906B"
-			comment="Just fill in the context object and context function to display what information you want about the selected context from the dropdown.  Feel free to also add any other children you want like icons, etc that you want to display related to the selected context!">
+			currentstate="2743905F-5168-5143-25F90248F91B906B">
 			<callbackwithcontextlist>
 				<callback_with_context 
                     callback_id="ContextTextLabel"
                     context_object_id="CcoScriptTableNode"
                     context_function_id="FindValueForKey(&quot;text&quot;)"
+                />
+				<callback_with_context 
+                    callback_id="ContextTooltipSetter"
+                    context_object_id="CcoScriptTableNode"
+                    context_function_id="FindValueForKey(&quot;tooltip&quot;)"
                 />
 			</callbackwithcontextlist>
 			<userproperties>
@@ -790,8 +794,34 @@
 				<callback_with_context 
                     callback_id="List"
                     context_object_id="CcoScriptObject"
-                    context_function_id="Join(Join(this.TableValue.Value).Filter(Key == &quot;values&quot;).FirstContext.Value).Sort(ValueForKey(&quot;sort_order&quot;), true)"
-                />
+                    context_function_id="Join(Join(this.TableValue.Value).Filter(Key == &quot;values&quot;).FirstContext.Value).Sort(ValueForKey(&quot;sort_order&quot;), true)">
+					<child_m_user_properties>
+						<!-- <property
+							name="dont_recreate"
+							value=""/> -->
+						<!-- <property
+							name="event0"
+							value="CampaignAncillaryAssigned"/> -->
+						<!-- <property
+							name="event4"
+							value="AncillaryAddedToPool"/> -->
+						<property
+							name="refresh_if_not_visible"
+							value=""/>
+						<!-- <property
+							name="hide_if_empty"
+							value=""/> -->
+						<!-- <property
+							name="list_init_self"
+							value=""/> -->
+						<!-- <property
+							name="sort_desc"
+							value=""/> -->
+						<!-- <property
+							name="sort_func"
+							value="AncillaryRecordContext.UniquenessScore"/> -->
+					</child_m_user_properties>
+                </callback_with_context>
 			</callbackwithcontextlist>
 			<userproperties>
 				<property
@@ -906,18 +936,19 @@
                     context_function_id="FindValueForKey(&quot;tooltip&quot;)"
                 />
 				<!-- TODO get this workin' to inform MCT -->
-				<!-- <callback_with_context 
+				<callback_with_context 
                     callback_id="ContextCommandLeftClick"
                     context_object_id="CcoScriptTableNode"
                     context_function_id="TriggerScriptEvent(
                             Format(
-                                &quot;%s|%s|%s&quot;, 
-                                self.StoredContextFromParent(&quot;CcoScriptObject&quot;).Id, 
-                            	Key,
-								self.ParentContext.ParentContext.ParentContext.ParentContext.ParentContext.GetProperty(&quot;mct_mod&quot;)
+                                &quot;%s|%s|%s|%s&quot;, 
+                                &quot;mct_dropdown_item_selected&quot;, 
+								self.ParentContext.ParentContext.ParentContext.ParentContext.ParentContext.GetProperty(&quot;mct_mod&quot;),
+                            	self.ParentContext.ParentContext.ParentContext.ParentContext.ParentContext.GetProperty(&quot;mct_option&quot;),
+								Key
 							)
                         )"
-                /> -->
+                />
 			</callbackwithcontextlist>
 			<userproperties>
 				<property

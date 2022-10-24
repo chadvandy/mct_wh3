@@ -446,8 +446,7 @@
 				<callback_with_context 
                     callback_id="List"
                     context_object_id="CcoScriptObject"
-                    context_function_id="Join(Join(this.TableValue.Value).Filter(Key == &quot;commands&quot;).FirstContext.Value)"
-                />
+                    context_function_id="Join(Join(this.TableValue.Value).Filter(Key == &quot;commands&quot;).FirstContext.Value)"/>
 			</callbackwithcontextlist>
 			<userproperties>
 				<property

@@ -464,9 +464,11 @@ function Registry:load()
     logf("MCT Load is being called.")
 
     -- self:save_all_mods()
-    self:read_registry_file()
-    self:read_profiles_file()
-    self:port_forward()
+    if not cm then
+        self:read_registry_file()
+        self:read_profiles_file()
+        self:port_forward()
+    end
 
     if cm then
         local is_mp = cm.game_interface:model():is_multiplayer()
@@ -477,6 +479,9 @@ function Registry:load()
         --- read the saved settings for current options!
         cm:add_loading_game_callback(function(context)
             local ok, err = pcall(function()
+                self:read_registry_file()
+                self:read_profiles_file()
+                
                 self:load_game(context)
                 logf("Trigger MctInitialized")
                 core:trigger_custom_event("MctInitialized", {["mct"] = mct, ["is_multiplayer"] = is_mp})

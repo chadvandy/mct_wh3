@@ -151,7 +151,13 @@
 					uniqueguid="991FE21A-5E60-48F0-8B4B2A4D7B692702"/>
 			</component_image_uniqueguids>
 			<callbacks_with_context>
-				<callback_with_context callback_id="VSlider"/>
+				<callback_with_context callback_id="VSlider">
+					<child_m_user_properties>
+						<property
+							name="slide_speed"
+							value="10"/>
+					</child_m_user_properties>
+				</callback_with_context>
 			</callbacks_with_context>
 			<user_properties>
 				<property
@@ -162,10 +168,13 @@
 					value="0"/>
 				<property
 					name="maxValue"
-					value="100"/>
+					value="1000"/>
 				<property
 					name="minValue"
 					value="0"/>
+				<property
+					name="step_size"
+					value="1"/>
 			</user_properties>
 			<localised_texts>
 				<localised_text/>

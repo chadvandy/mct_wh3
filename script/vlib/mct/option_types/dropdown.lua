@@ -57,6 +57,7 @@ function Dropdown:get_fallback_value()
     return values[1]
 end
 
+--- TODO use a Cco call instead somehow?
 --- Select a value within the UI; ie., change from the first dropdown value to the second.
 function Dropdown:ui_select_value(val)
     local valid,new = self:check_validity(val)
@@ -78,13 +79,30 @@ function Dropdown:ui_select_value(val)
 
     -- ditto
     local popup_menu = UIComponent(dropdown_box_uic:Find("popup_menu"))
-    local popup_list = UIComponent(popup_menu:Find("popup_list"))
-    local new_selected_uic = find_uicomponent(popup_list, val)
+    local popup_list = find_uicomponent(popup_menu, "listview", "list_clip", "list_box")
 
+    local new_selected_uic = nil
     local currently_selected_uic = nil
+
+    local new_selected_node = nil
+
+    VLib.Log("Trying to set the UI value of dropdown %s to %s", self:get_key(), val)
 
     for i = 0, popup_list:ChildCount() - 1 do
         local child = UIComponent(popup_list:Find(i))
+        local table_node = child:GetContextObject("CcoScriptTableNode")
+
+        if table_node then
+            VLib.Log("Found CcoScriptTableNode for " .. child:Id())
+            local key = table_node:Call("Key")
+            VLib.Log("Table node key is " .. key)
+
+            if key == val then
+                new_selected_node = table_node
+                new_selected_uic = child
+            end
+        end
+
         if child:CurrentState() == "selected" then
             currently_selected_uic = child
         end
@@ -103,11 +121,12 @@ function Dropdown:ui_select_value(val)
     --self:set_selected_setting(val)
 
     -- set the state text of the dropdown box to be the state text of the row
-    local t = find_uicomponent(new_selected_uic, "row_tx"):GetStateText()
-    local tt = find_uicomponent(new_selected_uic, "row_tx"):GetTooltipText()
-    local tx = find_uicomponent(dropdown_box_uic, "dy_selected_txt")
+    local t = new_selected_node:Call("ValueForKey('text')")
+    local tt = new_selected_node:Call("ValueForKey('tooltip')")
+    local current_display = find_uicomponent(dropdown_box_uic, "selected_context_display")
 
-    tx:SetStateText(t)
+    current_display:SetContextObject(new_selected_node)
+    current_display:SetStateText(t)
     dropdown_box_uic:SetTooltipText(tt, true)
 
     -- set the menu invisible and unclick the box
@@ -115,8 +134,8 @@ function Dropdown:ui_select_value(val)
         dropdown_box_uic:SetState("active")
     end
 
-    popup_menu:SetVisible(false)
-    popup_menu:RemoveTopMost()
+    -- popup_menu:SetVisible(false)
+    -- popup_menu:RemoveTopMost()
 
     Super.ui_select_value(self, val)
 end
@@ -154,6 +173,8 @@ function Dropdown:ui_create_option(dummy_parent)
     --- TODO build a CcoScriptObject for this dropdown, and truly all options
     --- 
     local dd = {
+        mod_key = self:get_mod_key(),
+        option_key = self:get_key(),
         values = {}
     }
 
@@ -169,14 +190,21 @@ function Dropdown:ui_create_option(dummy_parent)
     common.set_context_value(context_key, dd)
 
     local new_uic = core:get_or_create_component("mct_dropdown_box", box_template, dummy_parent)
-    new_uic:SetContextObject(cco("CcoScriptObject", context_key))
-    new_uic:SetVisible(true)
-    new_uic:Resize(dummy_parent:Width() * 0.4, new_uic:Height())
-
     new_uic:SetProperty("mct_option", self:get_key())
     new_uic:SetProperty("mct_mod", self:get_mod_key())
 
+    new_uic:SetVisible(true)
+    new_uic:Resize(dummy_parent:Width() * 0.4, new_uic:Height())
+    
+    new_uic:SetContextObject(cco("CcoScriptObject", context_key))
+
     self:set_uic_with_key("option", new_uic, true)
+
+    -- TODO this is done to force a refresh of the dropdown menu; I don't like it and want it to immediately be removed.
+    -- new_uic:SimulateLClick()
+    -- find_uicomponent(new_uic, "popup_menu"):SetVisible(false)
+
+
 
     --- TODO grab selected value and click it UP
 
@@ -265,183 +293,138 @@ function Dropdown:add_dropdown_value(key, text, tt, is_default)
 
     -- if the UI already exists, refresh the dropdown box!
     if is_uicomponent(self:get_uic_with_key("option")) then
-        self:refresh_dropdown_box()
+        -- self:refresh_dropdown_box()
+        self:get_uic_with_key("option"):Layout()
     end
 end
 
 
---- Only called on creation & add_dropdown_value, if the latter is called after the UI is created
---- Allows for dynamic dropdowns!
-function Dropdown:refresh_dropdown_box()
-    local uic = self:get_uic_with_key("option")
+-- --- Only called on creation & add_dropdown_value, if the latter is called after the UI is created
+-- --- Allows for dynamic dropdowns!
+-- function Dropdown:refresh_dropdown_box()
+--     local uic = self:get_uic_with_key("option")
 
-    local popup_menu = UIComponent(uic:Find("popup_menu"))
-    local popup_list = UIComponent(popup_menu:Find("popup_list"))
+--     local popup_menu = UIComponent(uic:Find("popup_menu"))
+--     local popup_list = UIComponent(popup_menu:Find("popup_list"))
 
-    -- clear out any extant chil'uns
-    popup_list:DestroyChildren()
+--     -- clear out any extant chil'uns
+--     popup_list:DestroyChildren()
 
-    local selected_tx = UIComponent(uic:Find("dy_selected_txt"))
-    selected_tx:SetTextHAlign('left')
-    selected_tx:SetTextVAlign('centre')
+--     local selected_tx = UIComponent(uic:Find("dy_selected_txt"))
+--     selected_tx:SetTextHAlign('left')
+--     selected_tx:SetTextVAlign('centre')
     
-    local selected_value = self:get_selected_setting()
+--     local selected_value = self:get_selected_setting()
 
-    local dropdown_values = self:get_values()
+--     local dropdown_values = self:get_values()
 
-    local dropdown_option_template = "ui/vandy_lib/dropdown_option"
+--     local dropdown_option_template = "ui/vandy_lib/dropdown_option"
 
-    for i = 1, #dropdown_values do
-        local dropdown_value = dropdown_values[i]
+--     for i = 1, #dropdown_values do
+--         local dropdown_value = dropdown_values[i]
 
-        local key = dropdown_value.key
-        local text = dropdown_value.text
-        local tt = dropdown_value.tt
+--         local key = dropdown_value.key
+--         local text = dropdown_value.text
+--         local tt = dropdown_value.tt
 
-        local new_entry = core:get_or_create_component(key, dropdown_option_template, popup_list)
-        new_entry:SetProperty("mct_option", self:get_key())
-        new_entry:SetProperty("mct_mod", self:get_mod_key())
+--         local new_entry = core:get_or_create_component(key, dropdown_option_template, popup_list)
+--         new_entry:SetProperty("mct_option", self:get_key())
+--         new_entry:SetProperty("mct_mod", self:get_mod_key())
         
-        -- if they're localised text strings, localise them!
-        do
-            local test_tt = common.get_localised_string(tt)
-            if test_tt ~= "" then
-                tt = test_tt
-            end
+--         -- if they're localised text strings, localise them!
+--         do
+--             local test_tt = common.get_localised_string(tt)
+--             if test_tt ~= "" then
+--                 tt = test_tt
+--             end
 
-            local test_text = common.get_localised_string(text)
-            if test_text ~= "" then
-                text = test_text
-            end
-        end
+--             local test_text = common.get_localised_string(text)
+--             if test_text ~= "" then
+--                 text = test_text
+--             end
+--         end
 
-        new_entry:SetTooltipText(tt, true)
+--         new_entry:SetTooltipText(tt, true)
 
-        local off_y = 5 + (new_entry:Height() * (i-1))
+--         local off_y = 5 + (new_entry:Height() * (i-1))
 
-        new_entry:SetDockingPoint(2)
-        new_entry:SetDockOffset(0, off_y)
+--         new_entry:SetDockingPoint(2)
+--         new_entry:SetDockOffset(0, off_y)
 
-        w,h = new_entry:Dimensions()
+--         w,h = new_entry:Dimensions()
 
-        local txt = find_uicomponent(new_entry, "row_tx")
+--         local txt = find_uicomponent(new_entry, "row_tx")
 
-        txt:SetStateText(text)
+--         txt:SetStateText(text)
 
-        -- check if this is the default value
-        if selected_value == key then
-            new_entry:SetState("selected")
+--         -- check if this is the default value
+--         if selected_value == key then
+--             new_entry:SetState("selected")
 
-            -- add the value's tt to the actual dropdown box
-            selected_tx:SetStateText(text)
-            uic:SetTooltipText(tt, true)
-        end
+--             -- add the value's tt to the actual dropdown box
+--             selected_tx:SetStateText(text)
+--             uic:SetTooltipText(tt, true)
+--         end
 
-        new_entry:SetCanResizeHeight(false)
-        new_entry:SetCanResizeWidth(false)
-    end
+--         new_entry:SetCanResizeHeight(false)
+--         new_entry:SetCanResizeWidth(false)
+--     end
 
 
-    local border_top = find_uicomponent(popup_menu, "border_top")
-    local border_bottom = find_uicomponent(popup_menu, "border_bottom")
+--     local border_top = find_uicomponent(popup_menu, "border_top")
+--     local border_bottom = find_uicomponent(popup_menu, "border_bottom")
     
-    border_top:SetCanResizeHeight(true)
-    border_top:SetCanResizeWidth(true)
-    border_bottom:SetCanResizeHeight(true)
-    border_bottom:SetCanResizeWidth(true)
+--     border_top:SetCanResizeHeight(true)
+--     border_top:SetCanResizeWidth(true)
+--     border_bottom:SetCanResizeHeight(true)
+--     border_bottom:SetCanResizeWidth(true)
 
-    popup_list:SetCanResizeHeight(true)
-    popup_list:SetCanResizeWidth(true)
-    popup_list:Resize(w * 1.1, h * (#dropdown_values) + 10)
-    --popup_list:MoveTo(popup_menu:Position())
-    popup_list:SetDockingPoint(2)
-    --popup_list:SetDocKOffset()
+--     popup_list:SetCanResizeHeight(true)
+--     popup_list:SetCanResizeWidth(true)
+--     popup_list:Resize(w * 1.1, h * (#dropdown_values) + 10)
+--     --popup_list:MoveTo(popup_menu:Position())
+--     popup_list:SetDockingPoint(2)
+--     --popup_list:SetDocKOffset()
 
-    popup_menu:SetCanResizeHeight(true)
-    popup_menu:SetCanResizeWidth(true)
-    popup_list:SetCanResizeHeight(false)
-    popup_list:SetCanResizeWidth(false)
+--     popup_menu:SetCanResizeHeight(true)
+--     popup_menu:SetCanResizeWidth(true)
+--     popup_list:SetCanResizeHeight(false)
+--     popup_list:SetCanResizeWidth(false)
     
-    local w, h = popup_list:Bounds()
-    popup_menu:Resize(w,h)
-end
+--     local w, h = popup_list:Bounds()
+--     popup_menu:Resize(w,h)
+-- end
 
 ---- Specific listeners for the UI ----
 
---- TODO listen for ContextTriggerEvent for `mct_dropdown_click|%MOD_KEY%|%OPTION_KEY%|%VALUE_KEY`
+--- TODO listen for ContextTriggerEvent for `mct_dropdown_item_selected|%MOD_KEY%|%OPTION_KEY%|%VALUE_KEY`
 core:add_listener(
-    "mct_dropdown_box",
-    "ComponentLClickUp",
+    "mct_dropdown_box_option_selected",
+    "ContextTriggerEvent",
     function(context)
-        return context.string == "mct_dropdown_box"
+        return context.string:starts_with("mct_dropdown_item_selected|")
     end,
     function(context)
-        -- local ok, err = pcall(function()
-        local box = UIComponent(context.component)
-        local menu = find_uicomponent(box, "popup_menu")
+        VLib.Log("MCT DROPDOWN CLICK: " .. context.string)
 
-        local mod_key = box:GetProperty("mct_mod")
-        local option_key = box:GetProperty("mct_option")
+        --- TODO handle command stripping entirely through command_manager.
+        ---@type string
+        local command = context.string
+
+        -- remove the header, leave just the args.
+        local args = command:gsub("mct_dropdown_item_selected|", "")
+
+        local mod_key = args:match("([^|]-)|")
+        local option_key = args:match("|([^|]-)|")
+        local setting_key = args:match("|([^|]-)$")
+
         local mod_obj = mct:get_mod_by_key(mod_key)
-
         if mod_obj then
             local option_obj = mod_obj:get_option_by_key(option_key)
             if option_obj then
-                logf("Clickingt dropdown box %s in mod %s", option_key, mod_key)
-                
+                option_obj:set_selected_setting(setting_key)
             end
         end
-
-
-    --     if is_uicomponent(menu) then
-    --         if menu:Visible() then
-    --             logf("Menu is visible, hiding!")
-    --             menu:SetVisible(false)
-    --         else
-    --             logf("Menu is invisible, showing!")
-    --             menu:SetVisible(true)
-    --             menu:RegisterTopMost()
-    --             -- next time you click something, close the menu!
-    --             core:add_listener(
-    --                 "mct_dropdown_box_close",
-    --                 "ComponentLClickUp",
-    --                 true,
-    --                 function(context)
-    --                     core:remove_listener("mct_dropdown_box_option_selected")
-    --                     if box:CurrentState() == "selected" then
-    --                         box:SetState("active")
-    --                     end
-
-    --                     menu:SetVisible(false)
-    --                     menu:RemoveTopMost()
-    --                 end,
-    --                 false
-    --             )
-
-    --             -- Set Selected listeners
-    --             core:add_listener(
-    --                 "mct_dropdown_box_option_selected",
-    --                 "ComponentLClickUp",
-    --                 function(context)
-    --                     local uic = UIComponent(context.component)
-                        
-    --                     return UIComponent(uic:Parent()):Id() == "popup_list" and uicomponent_descended_from(uic, "mct_dropdown_box")
-    --                 end,
-    --                 function(context)
-    --                     -- core:remove_listener("mct_dropdown_box_close")
-    --                     log("mct_dropdown_box_option_selected")
-    --                     local uic = UIComponent(context.component)
-
-    --                     -- this operation is set externally (so we can perform the same operation outside of here)
-    --                     local ok, msg = pcall(function()
-    --                     option_obj:set_selected_setting(uic:Id())
-    --                     end) if not ok then err(msg) end
-    --                 end,
-    --                 false
-    --             )
-    --         end
-    --     end
-    -- end) if not ok then VLib.Error(err) end
     end,
     true
 )
