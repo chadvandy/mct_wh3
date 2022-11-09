@@ -20,30 +20,33 @@ function Sync:new_frontend()
             return context.string == "mp_grand_campaign"
         end,
         function(context)
-            core:get_tm():real_callback(function()
-                self.local_is_host = common.get_context_value("CcoFrontendRoot", "", "CampaignLobbyContext.IsLocalPlayerHost")
-                core:svr_save_bool("mct_local_is_host", self.local_is_host)
+            local panel = find_uicomponent("mp_grand_campaign")
 
-                --- TODO trigger popup!
+            core:get_tm():repeat_real_callback(function()
+                local ready_button = find_uicomponent(panel, "ready_parent", "ready_button_frame", "button_ready")
+                if ready_button and ready_button:Visible(true) then
+                    core:get_tm():remove_real_callback("mct_sync_host_test")
 
-                core:get_tm():real_callback(function()
-                    local text = "Mod Configuration Tool\n\n"
-                    if self.local_is_host then
-                        text = text .. "\nYou are the host, which means your settings will be used for the duration of the campaign. You can set them now, or edit them at any point during the campaign to apply them to other players."
-                    else
-                        text = text .. "\n" .. common.get_context_value("CcoFrontendRoot", "", "HostSlotContext.Name") .. " is the host, which means their settings will be used for the duration of the campaign. Confirm with them what settings you all would like, if any, before starting a new game. You will not be able to see their settings until you load the campaign, and only the host can edit."
-                    end
+                    self.local_is_host = common.get_context_value("CcoFrontendRoot", "", "CampaignLobbyContext.IsLocalPlayerHost")
+                    core:svr_save_bool("mct_local_is_host", self.local_is_host)
 
-                    VLib.TriggerPopup("mct_sync_popup", text, false)
-                end, 2500)
-            end, 2000)
+                    core:get_tm():real_callback(function()
+                        local text = "Mod Configuration Tool\n\n"
+                        if self.local_is_host then
+                            text = text .. "\nYou are the host, which means your settings will be used for the duration of the campaign. You can set them now, or edit them at any point during the campaign to apply them to other players."
+                        else
+                            text = text .. "\n" .. common.get_context_value("CcoFrontendRoot", "", "HostSlotContext.Name") .. " is the host, which means their settings will be used for the duration of the campaign. Confirm with them what settings you all would like, if any, before starting a new game. You will not be able to see their settings until you load the campaign, and only the host can edit."
+                        end
+    
+                        VLib.TriggerPopup("mct_sync_popup", text, false)
+                    end, 100)
+                end
+            end, 10, "mct_sync_host_test")
         end,
         true
     )
 end
 
---- TODO initial sync on new game
---- TODO only handle campaign settings
 --- TODO multiple-sync (probably later)
 --- TODO save campaign data in global registry, w/ bool for "is_multiplayer" and faction key for "mct_host" (if needed)
 

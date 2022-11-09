@@ -897,14 +897,11 @@ end
 ---- Setter for this option's text, which displays next to the dropdown box/checkbox.
 --- MCT will automatically read for text if there's a loc key with the format `mct_[mct_mod_key]_[mct_option_key]_text`.
 ---@param text string The text string for this option. You can either supply hard text - ie., "My Cool Option" - or a loc key - ie., "`ui_text_replacements_my_cool_option`".
----@param is_localised boolean?  True if a loc key was supplied for the text parameter.
-function mct_option:set_text(text, is_localised)
+function mct_option:set_text(text)
     if not is_string(text) then
         err("set_text() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the text supplied is not a string! Returning false.")
         return false
     end
-
-    if is_localised then text = "{{loc:" .. text .. "}}" end
 
     self._text = text
 end
@@ -912,34 +909,18 @@ end
 ---- Setter for this option's tooltip, which displays when hovering over the option or the text.
 --- MCT will automatically read for text if there's a loc key with the format `mct_[mct_mod_key]_[mct_option_key]_tooltip`.
 ---@param text string The tootlip string for this option. You can either supply hard text - ie., "My Cool Option's Tooltip" - or a loc key - ie., "`ui_text_replacements_my_cool_option_tt`".
----@param is_localised boolean? True if a loc key was supplied for the text parameter.
-function mct_option:set_tooltip_text(text, is_localised)
+function mct_option:set_tooltip_text(text)
     if not is_string(text) then
         err("set_tooltip_text() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the tooltip_text supplied is not a string! Returning false.")
         return false
     end
-
-    if is_localised then text = "{{loc:" .. text .. "}}" end
 
     self._tooltip_text = text
 end
 
 ---- Getter for this option's text. Will read the loc key, `mct_[mct_mod_key]_[mct_option_key]_text`, before seeing if any was supplied through @{mct_option:set_text}.
 function mct_option:get_text()
-    -- default to checking the loc files
-    local text = common.get_localised_string("mct_"..self:get_mod():get_key().."_"..self:get_key().."_text")
-    if text ~= "" then
-        return text
-    end
-
-    -- nothing found, check for anything supplied by `set_text()`, or send the default "No text assigned"
-    text = VLib.FormatText(self._text)
-
-    if not is_string(text) or text == "" then
-        text = "No text assigned"
-    end
-    
-    return text
+    return VLib.HandleLocalisedText(self._text, "No text assigned", "mct_"..self:get_mod():get_key().."_"..self:get_key().."_text")
 end
 
 function mct_option:get_localised_text()
@@ -948,19 +929,7 @@ end
 
 ---- Getter for this option's text. Will read the loc key, `mct_[mct_mod_key]_[mct_option_key]_tooltip`, before seeing if any was supplied through @{mct_option:set_tooltip_text}.
 function mct_option:get_tooltip_text()
-    local text = common.get_localised_string("mct_"..self:get_mod_key().."_"..self:get_key().."_tooltip")
-    if text ~= "" then
-        return text
-    end
-
-    -- nothing found, check for anything supplied by `set_tooltip()`, or send the default "No tooltip assigned"
-    text = VLib.FormatText(self._tooltip_text)
-
-    if not is_string(text) then
-        text = ""
-    end
-
-    return text
+    return VLib.HandleLocalisedText(self._tooltip_text, "No text assigned", "mct_"..self:get_mod_key().."_"..self:get_key().."_tooltip")
 end
 
 return mct_option

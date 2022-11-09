@@ -1,26 +1,3 @@
---- Testing testing
----@param text string
----@return string
-function VLib.FormatText(text)
-    if not is_string(text) then
-        return ""
-    end
-
-    -- check for wrapped {{loc:loc_key}} text. If there's any, automatically replace it with the localised string.
-    local x,start = text:find("{{loc:")
-    if x then
-        local close,y = text:find("}}", start+1)
-        if close then
-            local loc_key = text:sub(start+1, close-1)
-
-            local loc_text = common.get_localised_string(loc_key)
-            
-            return table.concat({text:sub(1, x-1), loc_text, text:sub(y+1, -1)})
-        end
-    end
-
-    return text
-end
 
 
 --- TODO handle the formatted auto-names, ie. `mct_mod_[key]_description
@@ -32,23 +9,29 @@ end
 function VLib.HandleLocalisedText(str, default, auto)
     if not is_string(str) then return "" end
 
+    -- Test auto first
     auto = common.get_localised_string(auto)
     if is_string(auto) and auto ~= "" then return auto end
 
+    -- Test for a loc syntax in the string
     local catch = str:match("{{loc:(.-)}}")
     if catch then
+        -- TODO this needs to be handled better, by swapping each {{loc:}} with the localised text if there's multiple, etc.
         return common.get_localised_string(catch)
     end
 
-    local test = common.get_localised_string(str)
-    if test == "" then
-        return str
-    --- Why do I do this?
-    elseif test == str then
-        return default
-    else
-        return test
+    -- Prioritize the provided string.
+    if str ~= "" then
+        -- if the tested string cannot be localised and isn't empty and isn't a loc key (ie., doesn't have any underscores), then return it.
+        local test = common.get_localised_string(str)
+        if test ~= "" then
+            return test
+        else
+            return str
+        end
     end
+
+    return default
 end
 
 --- Weird name. Takes a string, and add "ui/skins/default/" and ".png" to the front and back of it. That way, you can supply `skin_image("icon_plus") and get "ui/skins/default/icon_plus.png"

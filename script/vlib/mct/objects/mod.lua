@@ -203,9 +203,8 @@ end
 -- mct_option.
 --- @param section_key string The unique identifier for this section.
 --- @param localised_name string? The localised text for this section. You can provide a direct string - "My Section Name" - or a loc key - "`loc_key_example_my_sect ion_name`". If a loc key is provided, it will check first at runtime to see if that localised text exists. If no localised_name is provided, it will default to "No Text Assigned". Can leave this and the other blank, and use @{mct_section:set_localised_text} instead.
---- @param is_localised boolean? If a loc key is provided in localised_name, set this to true, please.
 --- @return MCT.Section? # Returns the mct_section object created from this call.
-function mct_mod:add_new_section(section_key, localised_name, is_localised)
+function mct_mod:add_new_section(section_key, localised_name)
     if not is_string(section_key) then
         err("add_new_section() tried on mct_mod with key ["..self:get_key().."], but the section_key supplied was not a string! Returning false.")
         return nil
@@ -216,13 +215,6 @@ function mct_mod:add_new_section(section_key, localised_name, is_localised)
         --err("add_new_section() tried on mct_mod with key ["..self:get_key().."], but the localised_name supplied was not a string! Returning false.")
         --return false
     end
-
-    -- if is_nil(is_localised) then is_localised = false end
-
-    -- if not is_boolean(is_localised) then
-    --     err("add_new_section() tried on mct_mod with key ["..self:get_key().."], but the is_localised supplied was not nil or a boolean! Returning false.")
-    --     return false
-    -- end
 
     local new_section = mct._MCT_SECTION.new(section_key, self)
 
@@ -708,14 +700,7 @@ function mct_mod:set_tooltip_text(text)
 end
 
 function mct_mod:get_tooltip_text()
-    local tooltip = common.get_localised_string("mct_"..self:get_key().."_tooltip_text")
-    if tooltip ~= "" then
-        return tooltip
-    end
-
-    tooltip = VLib.FormatText(self._tooltip_text)
-
-    return tooltip or ""
+    return VLib.HandleLocalisedText(self._tooltip_text, "", "mct_"..self:get_key().."_tooltip_text")
 end
 
 function mct_mod:set_workshop_link(link_text)
@@ -727,36 +712,13 @@ end
 --- Grabs the title text. First checks for a loc-key `mct_[mct_mod_key]_title`, then checks to see if anything was set using @{mct_mod:set_title}. If not, "No title assigned" is returned.
 --- @return string title_text The returned string for this mct_mod's title.
 function mct_mod:get_title()
-    -- check if a title exists in the localised texts!
-    local title = common.get_localised_string("mct_"..self:get_key().."_title")
-    if title ~= "" then
-        return title
-    end
-
-    title = VLib.FormatText(self._title)
-    -- if title.is_localised then
-    --     local test = effect.get_localised_string(title.text)
-    --     if test ~= "" then
-    --         return test
-    --     end
-    -- end
-
-    return title or "No title assigned"
+    return VLib.HandleLocalisedText(self._title, "No title set", "mct_"..self:get_key().."_title")
 end
 
 --- Grabs the author text. First checks for a loc-key `mct_[mct_mod_key]_author`, then checks to see if anything was set using @{mct_mod:set_author}. If not, "No author assigned" is returned.
 --- @return string author_text The returned string for this mct_mod's author.
 function mct_mod:get_author()
-    local author = common.get_localised_string("mct_"..self:get_key().."_author")
-    if author ~= "" then
-        return author
-    end
-
-    --if author == "" then
-        --return
-    --end
-
-    return VLib.FormatText(self._author) --or "No author assigned"
+    return VLib.HandleLocalisedText(self._author, "No author assigned", "mct_"..self:get_key().."_author")
 end
 
 --- Grabs the description text. First checks for a loc-key `mct_[mct_mod_key]_description`, then checks to see if anything was set using @{mct_mod:set_description}. If not, "No description assigned" is returned.

@@ -440,7 +440,7 @@ end
 -- or the text provided using @{mct_section:set_localised_text}
 -- @return string The localised text for this section, used as the title.
 function mct_section:get_localised_text()
-    return VLib.HandleLocalisedText(self._text, "Default Section", common.get_localised_string("mct_"..self:get_mod():get_key().."_"..self:get_key().."_section_text"))
+    return VLib.HandleLocalisedText(self._text, "Default Section", "mct_"..self:get_mod():get_key().."_"..self:get_key().."_section_text")
 end
 
 --- Set tooltip text for this section, which'll appear when hovered over.
@@ -452,7 +452,7 @@ function mct_section:set_tooltip_text(text)
 end
 
 function mct_section:get_tooltip_text()
-    return VLib.HandleLocalisedText(self._tooltip_text, "", common.get_localised_string("mct_"..self:get_mod():get_key().."_"..self:get_key().."_section_tooltip_text"))
+    return VLib.HandleLocalisedText(self._tooltip_text, "", "mct_"..self:get_mod():get_key().."_"..self:get_key().."_section_tooltip_text")
 end
 
 function mct_section:set_description(t)
@@ -463,7 +463,7 @@ end
 
 ---@return string 
 function mct_section:get_description()
-    return VLib.HandleLocalisedText(self._description, "", common.get_localised_string("mct_"..self:get_mod():get_key().."_"..self:get_key().."_section_description"))
+    return VLib.HandleLocalisedText(self._description, "", "mct_"..self:get_mod():get_key().."_"..self:get_key().."_section_description")
 end
 
 --- Assign an option to this section.
