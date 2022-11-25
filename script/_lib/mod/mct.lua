@@ -108,9 +108,16 @@ function mct:load_modules()
     ---@type table<string, MCT.Page>
     self._MCT_PAGE_TYPES = { }
 
-    --- TODO use the func_for_each thing 
     --- Load all Page types 
-    load_modules(layout_path, "*.lua")
+    load_modules(
+        layout_path,
+        "*.lua",
+        function(filename, module)
+            if is_table(module) and module.className then
+                self:add_new_page_type(module.className, module)
+            end
+        end
+    )
 
     ---@type table<string, MCT.Option>
     self._MCT_TYPES = { }

@@ -61,7 +61,14 @@ local a = mct_mod:add_new_section("section_a", "Section A (key first)")
 mct_mod:add_new_option("test", 'checkbox'):set_text("Testing Checkbox")
 
 local c = mct_mod:add_new_section("section_c", "AAA Section C (text first)")
+c:set_is_collapsible(true)
 mct_mod:add_new_option("test_c", 'checkbox'):set_text("Testing Checkbox")
+
+for i = 1, 100 do
+    local o = mct_mod:add_new_option("test_"..i, "checkbox"):set_text("Checkbox: " ..i)
+end
+
+c:set_collapsed(true)
 
 -- page:set_section_sort_function("text_sort")
 -- page:assign_section_to_page(a)

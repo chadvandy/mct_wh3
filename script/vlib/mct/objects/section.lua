@@ -304,7 +304,7 @@ end
 
 --- create this section in the UI.
 ---@param this_column UIC The column UIC to pour this section into.
-function mct_section:populate(this_column)
+function mct_section:populate(this_column, expected_width)
     local can_collapse = self._is_collapsible
     local key = self:get_key()
     local mod = self:get_mod()
@@ -312,10 +312,12 @@ function mct_section:populate(this_column)
     ---@type UIC
     local panel = mct.ui.mod_settings_panel
 
-    local section_holder = core:get_or_create_component("mct_section_"..key, "ui/mct/layouts/resize_column", this_column)
+    local section_holder = core:get_or_create_component("mct_section_"..key, "ui/mct/layouts/resize_column_auto", this_column)
     section_holder:SetCanResizeHeight(true)
-    section_holder:Resize(this_column:Width(), 34, false)
+    section_holder:Resize(expected_width, 34, false)
     section_holder:SetCanResizeWidth(false)
+
+    -- section_holder:SetContextObject()
 
     self._holder = section_holder
 
@@ -334,11 +336,11 @@ function mct_section:populate(this_column)
     -- set text & width and shit
     section_header:SetCanResizeWidth(true)
     section_header:SetCanResizeHeight(true)
-    section_header:Resize(this_column:Width() * 0.95, 34, false)
+    section_header:Resize(expected_width * 0.95, 34, false)
     section_header:SetCanResizeWidth(false)
     section_header:SetCanResizeHeight(false)
 
-    h = h + 34
+    h = h + section_header:Height()
     
     section_header:SetDockingPoint(2)
     section_header:SetState("selected")
@@ -369,7 +371,7 @@ function mct_section:populate(this_column)
         dy_desc:SetTextHAlign("centre")
         dy_desc:SetTextVAlign("top")
 
-        dy_desc:Resize(this_column:Width() * 0.85, dy_desc:Height())
+        dy_desc:Resize(expected_width * 0.85, dy_desc:Height())
         dy_desc:SetCanResizeWidth(false)
         
         local tw,th = dy_desc:TextDimensionsForText(desc)
@@ -390,12 +392,12 @@ function mct_section:populate(this_column)
     -- local options_table, num_remaining_options = section_obj:get_ordered_options()
 
     local options_holder = core:get_or_create_component("options_holder", "ui/mct/layouts/resize_column", section_holder)
-    options_holder:Resize(this_column:Width() * 0.95, options_holder:Height())
+    options_holder:Resize(expected_width * 0.95, options_holder:Height())
     options_holder:SetDockingPoint(8)
 
     for i,option_key in ipairs(self._true_ordered_options) do
         local option_obj = mod:get_option_by_key(option_key)
-        get_mct().ui:new_option_row_at_pos(option_obj, options_holder, this_column:Width() * 0.95, this_column:Height() * 0.12)
+        get_mct().ui:new_option_row_at_pos(option_obj, options_holder, expected_width * 0.95, this_column:Height() * 0.12)
     end
 
     -- section_holder:SetCanResizeHeight(true)
@@ -411,7 +413,9 @@ function mct_section:populate(this_column)
     self:ui_set_collapsed(true)
     self:ui_set_visibility()
 
-    return section_holder:Width(), section_holder:Height()
+    local _,oh = options_holder:Bounds()
+
+    return section_holder:Width(), h + oh
 end
 
 --- Set the visibility for the mct_section.

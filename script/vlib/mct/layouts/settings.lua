@@ -18,7 +18,6 @@ local defaults = {
 ---@class MCT.Page.Settings : MCT.Page, Class
 ---@field __new fun():MCT.Page.Settings
 local SettingsPage = Super:extend("Settings", defaults)
-get_mct():add_new_page_type("Settings", SettingsPage)
 
 function SettingsPage:new(key, mod, num_columns, row_based)
     local o = self:__new()    
@@ -148,14 +147,15 @@ function SettingsPage:populate(box)
 
     settings_canvas:SetCanResizeWidth(false)
 
-    local layout = "ui/mct/layouts/column"
+    local layout = "ui/mct/layouts/resize_column"
     if self.is_row_based then
         layout = "ui/mct/layouts/column_three_items"
     end
 
     for i = 1, self.num_columns do
         local column = core:get_or_create_component("settings_column_"..i, layout, settings_canvas)
-        column:SetCanResizeHeight(true)
+        column:SetCanResizeHeight(false)
+        column:SetCanResizeWidth(true)
         column:Resize(settings_canvas:Width() / self.num_columns, panel:Height(), false)
 
         column:SetCanResizeWidth(false)
@@ -176,28 +176,6 @@ function SettingsPage:populate(box)
         VLib.Log("Docking point for column %d is %d", i, docking_point)
 
         column:SetDockingPoint(docking_point)
-    end
-
-    --- TODO do this at the end
-    local num_dividers = self.num_columns - 1
-    if num_dividers > 0 then
-        for i = 1, num_dividers do
-            local divider = core:get_or_create_component("divider_"..i, "ui/vandy_lib/image", settings_canvas)
-            divider:SetImagePath("ui/skins/default/parchment_divider_height.png")
-            -- divider:SetImageRotation(0, math.rad(90))
-            divider:SetCurrentStateImageTiled(0, true)
-            divider:SetCurrentStateImageMargins(0, 0, 2, 0, 2)
-
-            local pre_column = find_uicomponent(settings_canvas, "settings_column_"..i)
-    
-            local cx, cy = pre_column:Position()
-            local cw, ch = settings_canvas:Dimensions()
-            divider:MoveTo(cx + pre_column:Width(), cy)
-
-            divider:SetCanResizeWidth(true)
-            divider:SetCanResizeHeight(true)
-            divider:Resize(13, ch, false)
-        end
     end
 
     --- TODO cleanly split the sections between the columns
@@ -233,7 +211,7 @@ function SettingsPage:populate(box)
         if not section_obj or section_obj._options == nil or next(section_obj._options) == nil then
             -- skip
         else
-            local w,h = section_obj:populate(column)
+            local w,h = section_obj:populate(column, settings_canvas:Width() / self.num_columns)
             column_h[column_num] = column_h[column_num] + h
         end
     end
@@ -244,9 +222,18 @@ function SettingsPage:populate(box)
         local max_h = settings_canvas:Height()
         for i = 1, self.num_columns do
             local column = find_uicomponent(settings_canvas, "settings_column_" .. i)
-            column:Resize(column:Width(), column_h[i], false)
+            -- column:Resize(column:Width(), column_h[i], false)
 
-            if column:Height() > max_h then max_h = column:Height() end
+            local column_height = column:Height()
+
+            -- for j = 0, column:ChildCount() -1 do
+            --     local section_uic = UIComponent(column:Find(j))
+            --     local header = find_uicomponent(section_uic, "section_header")
+            --     local options = find_uicomponent(section_uic, "options_holder")
+
+            --     column_height = column_height + options:Height() + header:Height()
+            -- end
+            if column_height > max_h then max_h = column_height end
 
             column:SetCanResizeHeight(false)
 
@@ -254,7 +241,30 @@ function SettingsPage:populate(box)
         end
         -- local _,max_h = settings_canvas:Bounds()
         settings_canvas:Resize(settings_canvas:Width(), max_h, false)
+
+        --- TODO do this at the end
+        local num_dividers = self.num_columns - 1
+        if num_dividers > 0 then
+            for i = 1, num_dividers do
+                local divider = core:get_or_create_component("divider_"..i, "ui/vandy_lib/image", settings_canvas)
+                divider:SetImagePath("ui/skins/default/parchment_divider_height.png")
+                -- divider:SetImageRotation(0, math.rad(90))
+                divider:SetCurrentStateImageTiled(0, true)
+                divider:SetCurrentStateImageMargins(0, 0, 2, 0, 2)
+    
+                local pre_column = find_uicomponent(settings_canvas, "settings_column_"..i)
+        
+                local cx, cy = pre_column:Position()
+                divider:MoveTo(cx + pre_column:Width(), cy)
+    
+                divider:SetCanResizeWidth(true)
+                divider:SetCanResizeHeight(true)
+                divider:Resize(13, max_h, false)
+            end
+        end
     end, 10)
 
     -- settings_canvas:Resize(panel:Width() * 0.95, panel:Height() * 2)
 end
+
+return SettingsPage

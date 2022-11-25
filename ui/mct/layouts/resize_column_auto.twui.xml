@@ -62,12 +62,27 @@
 					texthbehaviour="Never split"
 					uniqueguid="41109699-3984-EE8D-B0C4173FCB55DB65"/>
 			</states>
-			<LayoutEngine
+			<callbackwithcontextlist>
+				<callback_with_context callback_id="ResizeToFitTarget">
+					<child_m_user_properties>
+						<property
+							name="parent_id"
+							value="listview"/>
+						<property
+							name="resize_children"
+							value=""/>
+						<property
+							name="target"
+							value="list_clip"/>
+					</child_m_user_properties>
+				</callback_with_context>
+			</callbackwithcontextlist>
+			<!-- <LayoutEngine
 				type="List"
 				sizetocontent="true"
 				is_listview_lookup_enabled="false"
 				horizontal_alignment="Center">
-			</LayoutEngine>
+			</LayoutEngine> -->
 		</holder>
     </components>
 </layout>

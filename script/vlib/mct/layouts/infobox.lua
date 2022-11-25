@@ -10,8 +10,6 @@ local defaults = {}
 ---@field __new fun():MCT.Page.Infobox
 local Infobox = Super:extend("Infobox", defaults)
 
-mct:add_new_page_type("Infobox", Infobox)
-
 function Infobox:new(key, mod)
     VLib.Log("In infobox:new()")
 
@@ -97,3 +95,5 @@ function Infobox:populate(box)
         t:SetStateText(d)
     end
 end
+
+return Infobox

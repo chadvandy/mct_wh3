@@ -203,10 +203,11 @@ end
 -- mct_option.
 --- @param section_key string The unique identifier for this section.
 --- @param localised_name string? The localised text for this section. You can provide a direct string - "My Section Name" - or a loc key - "`loc_key_example_my_sect ion_name`". If a loc key is provided, it will check first at runtime to see if that localised text exists. If no localised_name is provided, it will default to "No Text Assigned". Can leave this and the other blank, and use @{mct_section:set_localised_text} instead.
---- @return MCT.Section? # Returns the mct_section object created from this call.
+--- @return MCT.Section # Returns the mct_section object created from this call.
 function mct_mod:add_new_section(section_key, localised_name)
     if not is_string(section_key) then
         err("add_new_section() tried on mct_mod with key ["..self:get_key().."], but the section_key supplied was not a string! Returning false.")
+        ---@diagnostic disable-next-line
         return nil
     end
 
