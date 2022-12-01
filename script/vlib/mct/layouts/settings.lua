@@ -118,8 +118,8 @@ function SettingsPage:sort_sections()
     return self:_section_sort_order_function()
 end
 
----@param box UIC
-function SettingsPage:populate(box)
+---@param panel UIC
+function SettingsPage:populate(panel)
     local sections = self:sort_sections()
 
     --- TODO do the "pull into page" on the MCT.Mod level - grab any orphaned sections and toss them into main?
@@ -138,27 +138,29 @@ function SettingsPage:populate(box)
     -- set the positions for all options in the mod
     mod:set_positions_for_options()
 
-    ---@type UIC
-    local panel = get_mct().ui.mod_settings_panel
+    -- local settings_canvas = core:get_or_create_component("settings_canvas", 'ui/campaign ui/script_dummy', panel)
+    -- settings_canvas:Resize(panel:Width(), panel:Height(), false)
+    -- settings_canvas:SetDockingPoint(5)
 
-    local settings_canvas = core:get_or_create_component("settings_canvas", 'ui/campaign ui/script_dummy', box)
-    settings_canvas:Resize(panel:Width() * 0.95, panel:Height(), false)
-    settings_canvas:SetDockingPoint(1)
+    -- settings_canvas:SetCanResizeWidth(false)
 
-    settings_canvas:SetCanResizeWidth(false)
+    -- local layout = "ui/mct/layouts/resize_column"
+    -- if self.is_row_based then
+    --     layout = "ui/mct/layouts/column_three_items"
+    -- end
 
-    local layout = "ui/mct/layouts/resize_column"
-    if self.is_row_based then
-        layout = "ui/mct/layouts/column_three_items"
-    end
+    --- TODO horizontal view support for row-based bullshit as before
+    local layout = "ui/mct/listview"
 
     for i = 1, self.num_columns do
-        local column = core:get_or_create_component("settings_column_"..i, layout, settings_canvas)
-        column:SetCanResizeHeight(false)
+        local column = core:get_or_create_component("settings_column_"..i, layout, panel)
+        column:SetCanResizeHeight(true)
         column:SetCanResizeWidth(true)
-        column:Resize(settings_canvas:Width() / self.num_columns, panel:Height(), false)
+        column:Resize(panel:Width() / self.num_columns, panel:Height(), false)
 
         column:SetCanResizeWidth(false)
+
+        local column_box = find_uicomponent(column, "list_clip", "list_box")
 
         --- 2 if num_columns = 1
         --- 1 and 3 if num_columns = 2
@@ -206,63 +208,79 @@ function SettingsPage:populate(box)
 
         VLib.Log("Assigning section %s to column %d", section_key, column_num)
 
-        local column = find_uicomponent(settings_canvas, "settings_column_"..column_num)
+        local column = find_uicomponent(panel, "settings_column_"..column_num)
+        local box = find_uicomponent(column, "list_clip", "list_box")
 
         if not section_obj or section_obj._options == nil or next(section_obj._options) == nil then
             -- skip
         else
-            local w,h = section_obj:populate(column, settings_canvas:Width() / self.num_columns)
+            local w,h = section_obj:populate(box, panel:Width() / self.num_columns)
             column_h[column_num] = column_h[column_num] + h
         end
     end
 
+    for i = 1, self.num_columns do 
+        local column = find_uicomponent(panel, "settings_column_"..i)
 
-    --- TODO wish there were a better way to do this
-    core:get_tm():real_callback(function()
-        local max_h = settings_canvas:Height()
-        for i = 1, self.num_columns do
-            local column = find_uicomponent(settings_canvas, "settings_column_" .. i)
-            -- column:Resize(column:Width(), column_h[i], false)
+        if column then
+            local clip = find_uicomponent(column, "list_clip")
+            local box = find_uicomponent(clip, "list_box")
 
-            local column_height = column:Height()
+            box:Layout()
 
-            -- for j = 0, column:ChildCount() -1 do
-            --     local section_uic = UIComponent(column:Find(j))
-            --     local header = find_uicomponent(section_uic, "section_header")
-            --     local options = find_uicomponent(section_uic, "options_holder")
+            clip:Resize(column:Width(), column:Height())
+            box:Resize(column:Width(), column:Height())
 
-            --     column_height = column_height + options:Height() + header:Height()
-            -- end
-            if column_height > max_h then max_h = column_height end
-
-            column:SetCanResizeHeight(false)
-
-            -- column:Layout()
         end
+    end
+
+
+    -- --- TODO wish there were a better way to do this
+    -- core:get_tm():real_callback(function()
+    --     local max_h = settings_canvas:Height()
+    --     for i = 1, self.num_columns do
+    --         local column = find_uicomponent(settings_canvas, "settings_column_" .. i)
+    --         -- column:Resize(column:Width(), column_h[i], false)
+
+    --         local column_height = column:Height()
+
+    --         -- for j = 0, column:ChildCount() -1 do
+    --         --     local section_uic = UIComponent(column:Find(j))
+    --         --     local header = find_uicomponent(section_uic, "section_header")
+    --         --     local options = find_uicomponent(section_uic, "options_holder")
+
+    --         --     column_height = column_height + options:Height() + header:Height()
+    --         -- end
+    --         if column_height > max_h then max_h = column_height end
+
+    --         column:SetCanResizeHeight(false)
+
+    --         -- column:Layout()
+    --     end
         -- local _,max_h = settings_canvas:Bounds()
-        settings_canvas:Resize(settings_canvas:Width(), max_h, false)
+    --     settings_canvas:Resize(settings_canvas:Width(), max_h, false)
 
         --- TODO do this at the end
-        local num_dividers = self.num_columns - 1
-        if num_dividers > 0 then
-            for i = 1, num_dividers do
-                local divider = core:get_or_create_component("divider_"..i, "ui/vandy_lib/image", settings_canvas)
-                divider:SetImagePath("ui/skins/default/parchment_divider_height.png")
-                -- divider:SetImageRotation(0, math.rad(90))
-                divider:SetCurrentStateImageTiled(0, true)
-                divider:SetCurrentStateImageMargins(0, 0, 2, 0, 2)
+        -- local num_dividers = self.num_columns - 1
+        -- if num_dividers > 0 then
+        --     for i = 1, num_dividers do
+        --         local divider = core:get_or_create_component("divider_"..i, "ui/vandy_lib/image", settings_canvas)
+        --         divider:SetImagePath("ui/skins/default/parchment_divider_height.png")
+        --         -- divider:SetImageRotation(0, math.rad(90))
+        --         divider:SetCurrentStateImageTiled(0, true)
+        --         divider:SetCurrentStateImageMargins(0, 0, 2, 0, 2)
     
-                local pre_column = find_uicomponent(settings_canvas, "settings_column_"..i)
+        --         local pre_column = find_uicomponent(settings_canvas, "settings_column_"..i)
         
-                local cx, cy = pre_column:Position()
-                divider:MoveTo(cx + pre_column:Width(), cy)
+        --         local cx, cy = pre_column:Position()
+        --         divider:MoveTo(cx + pre_column:Width(), cy)
     
-                divider:SetCanResizeWidth(true)
-                divider:SetCanResizeHeight(true)
-                divider:Resize(13, max_h, false)
-            end
-        end
-    end, 10)
+        --         divider:SetCanResizeWidth(true)
+        --         divider:SetCanResizeHeight(true)
+        --         divider:Resize(13, max_h, false)
+        --     end
+        -- end
+    -- end, 10)
 
     -- settings_canvas:Resize(panel:Width() * 0.95, panel:Height() * 2)
 end

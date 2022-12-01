@@ -23,7 +23,7 @@ local UI_Main = {
     mod_row_list_box = nil,
 
     -- right bottom UICs
-    mod_settings_panel = nil,
+    right_side_panel = nil,
 
     -- currently selected mod UIC
     selected_mod_row = nil,
@@ -358,17 +358,19 @@ function UI_Main:set_selected_mod(mod_obj, page)
         --     page_uic:SetState("active")
         -- end
 
-        local uic = self.mod_settings_panel
-        local list = find_uicomponent(uic, "list_view")
-        local box = find_uicomponent(list, "list_clip", "list_box")
-        box:DestroyChildren()
-        box:Layout()
-        box:Resize(list:Width(), list:Height())
+        ---@type UIC
+        local uic = self.right_side_panel
+        uic:DestroyChildren()
+        -- local list = find_uicomponent(uic, "list_view")
+        -- local box = find_uicomponent(list, "list_clip", "list_box")
+        -- box:DestroyChildren()
+        -- box:Layout()
+        -- box:Resize(list:Width(), list:Height())
     
         self:set_title(mod_obj)
-        page:populate(box)
+        page:populate(uic)
 
-        box:Layout()
+        -- box:Layout()
 
         core:trigger_custom_event("MctPanelPopulated", {["mct"] = mct, ["ui_obj"] = self, ["mod"] = mod_obj, ["page"] = page})
         
@@ -377,12 +379,23 @@ end
 
 function UI_Main:create_notifications_button()
     local panel = self.panel
-    local profiles_button = core:get_or_create_component("button_mct_notifications", "ui/templates/square_medium_text_button", panel)
-    profiles_button:SetDockingPoint(3)
-    profiles_button:Resize(profiles_button:Width() * 0.7, profiles_button:Height())
-    profiles_button:SetDockOffset(-10, profiles_button:Height() * 0.6)
+    local notifications_button = core:get_or_create_component("button_mct_notifications", "ui/groovy/notifications_button", panel)
+    notifications_button:SetDockingPoint(3)
+    notifications_button:SetDockOffset(-10, 10)
+    -- local profiles_button = core:get_or_create_component("button_mct_notifications", "ui/templates/round_medium_button", panel)
 
-    find_uicomponent(profiles_button, "button_txt"):SetStateText("Notifications")
+    -- profiles_button:SetCanResizeHeight(true)
+    -- profiles_button:SetCanResizeWidth(true)
+    -- profiles_button:Resize(profiles_button:Width() * 0.8, profiles_button:Height() * 0.8)
+    -- profiles_button:SetCanResizeHeight(false)
+    -- profiles_button:SetCanResizeWidth(false)
+
+    -- profiles_button:SetImagePath("ui/skins/default/icon_end_turn_notification_generic.png")
+    -- profiles_button:SetTooltipText("Notifications||Review any notifications", true)
+
+    --- TODO dynamic tooltip w/ different state text
+    --- TODO label showing number of unread notifications
+    --- TODO pulse (or something) if there's urgent notifs
 end
 
 
@@ -524,7 +537,7 @@ function UI_Main:close_frame(already_dead)
     self.mod_row_list_view = nil
     self.mod_row_list_box = nil
     -- self.mod_details_panel = nil
-    self.mod_settings_panel = nil
+    self.right_side_panel = nil
     self.selected_mod_row = nil
     self.actions_panel = nil
 
@@ -633,12 +646,12 @@ function UI_Main:create_right_panel()
     local left_panel = self.left_panel
 
     -- right side
-    local mod_settings_panel = core:get_or_create_component("mod_settings_panel", "ui/vandy_lib/image", panel)
-    mod_settings_panel:SetImagePath(img_path)
-    mod_settings_panel:SetCurrentStateImageMargins(0, 50, 50, 50, 50) -- 50/50/50/50 margins
-    mod_settings_panel:SetDockingPoint(6)
-    mod_settings_panel:SetDockOffset(-20, 10)
-    mod_settings_panel:SetCanResizeWidth(true) mod_settings_panel:SetCanResizeHeight(true)
+    local right_side_panel = core:get_or_create_component("right_side_panel", "ui/vandy_lib/image", panel)
+    right_side_panel:SetImagePath(img_path)
+    right_side_panel:SetCurrentStateImageMargins(0, 50, 50, 50, 50) -- 50/50/50/50 margins
+    right_side_panel:SetDockingPoint(6)
+    right_side_panel:SetDockOffset(-20, 10)
+    right_side_panel:SetCanResizeWidth(true) right_side_panel:SetCanResizeHeight(true)
     
     -- edit the name
     local title = core:get_or_create_component("title", "ui/templates/panel_title", panel)
@@ -651,9 +664,9 @@ function UI_Main:create_right_panel()
     title_text:Resize(title:Width() * 0.8, title:Height() * 0.7)
     title_text:SetDockingPoint(5)
     
-    mod_settings_panel:Resize(panel:Width() - (left_panel:Width() + 60), panel:Height() * 0.95 - title:Height(), false)
+    right_side_panel:Resize(panel:Width() - (left_panel:Width() + 60), panel:Height() * 0.95 - title:Height(), false)
     
-    mod_settings_panel:SetCanResizeWidth(false) mod_settings_panel:SetCanResizeHeight(false)
+    right_side_panel:SetCanResizeWidth(false) right_side_panel:SetCanResizeHeight(false)
 
     --- Create the close button
     local close_button_uic = core:get_or_create_component("button_mct_close", "ui/templates/round_small_button", panel)
@@ -662,36 +675,36 @@ function UI_Main:create_right_panel()
     close_button_uic:SetDockingPoint(3+9)
     close_button_uic:SetDockOffset(-close_button_uic:Width() / 2, close_button_uic:Height() / 2)
 
-    local w,h = mod_settings_panel:Dimensions()
+    local w,h = right_side_panel:Dimensions()
 
-    local mod_settings_listview = core:get_or_create_component("list_view", "ui/mct/listview", mod_settings_panel)
-    mod_settings_listview:SetDockingPoint(1)
-    mod_settings_listview:SetDockOffset(0, 0)
-    mod_settings_listview:SetCanResizeWidth(true) mod_settings_listview:SetCanResizeHeight(true)
-    mod_settings_listview:Resize(w,h)
+    -- local mod_settings_listview = core:get_or_create_component("list_view", "ui/mct/listview", right_side_panel)
+    -- mod_settings_listview:SetDockingPoint(1)
+    -- mod_settings_listview:SetDockOffset(0, 0)
+    -- mod_settings_listview:SetCanResizeWidth(true) mod_settings_listview:SetCanResizeHeight(true)
+    -- mod_settings_listview:Resize(w,h)
 
-    local list_clip = find_uicomponent(mod_settings_listview, "list_clip")
-    list_clip:SetCanResizeWidth(true) list_clip:SetCanResizeHeight(true)
-    list_clip:SetDockingPoint(1)
-    list_clip:SetDockOffset(0, 0)
-    list_clip:Resize(w,h)
+    -- local list_clip = find_uicomponent(mod_settings_listview, "list_clip")
+    -- list_clip:SetCanResizeWidth(true) list_clip:SetCanResizeHeight(true)
+    -- list_clip:SetDockingPoint(1)
+    -- list_clip:SetDockOffset(0, 0)
+    -- list_clip:Resize(w,h)
 
-    local list_box = find_uicomponent(list_clip, "list_box")
-    list_box:SetCanResizeWidth(true) list_box:SetCanResizeHeight(true)
-    list_box:SetDockingPoint(1)
-    list_box:SetDockOffset(0, 0)
-    list_box:Resize(w,h)
+    -- local list_box = find_uicomponent(list_clip, "list_box")
+    -- list_box:SetCanResizeWidth(true) list_box:SetCanResizeHeight(true)
+    -- list_box:SetDockingPoint(1)
+    -- list_box:SetDockOffset(0, 0)
+    -- list_box:Resize(w,h)
 
-    list_box:Layout()
+    -- list_box:Layout()
 
-    local l_handle = find_uicomponent(mod_settings_listview, "vslider")
-    l_handle:SetDockingPoint(6)
-    l_handle:SetDockOffset(-20, 0)
+    -- local l_handle = find_uicomponent(mod_settings_listview, "vslider")
+    -- l_handle:SetDockingPoint(6)
+    -- l_handle:SetDockOffset(-20, 0)
 
-    mod_settings_listview:SetVisible(true)
+    -- mod_settings_listview:SetVisible(true)
 
     self.mod_title = title_text
-    self.mod_settings_panel = mod_settings_panel
+    self.right_side_panel = right_side_panel
 end
 
 function UI_Main:set_title(mod_obj)
@@ -706,7 +719,7 @@ end
 ---@param option_obj MCT.Option
 ---@param this_layout UIC
 function UI_Main:new_option_row_at_pos(option_obj, this_layout, w, h)
-    -- local panel = self.mod_settings_panel
+    -- local panel = self.right_side_panel
 
     -- local w,h = this_layout:Width(), panel:Height()
     -- --- TODO better dynamic height! Handle Arrays and the like!

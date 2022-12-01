@@ -175,6 +175,20 @@ function mct_mod:create_settings_page(title, num_columns)
     return page
 end
 
+--- Create a new MCT Page that's a blank canvas to draw whatever on.
+---@param key string The key for this Page, to get it later.
+---@param creation_callback fun(UIC) The creation function run when the Canvas is populated.
+---@return MCT.Page.Canvas
+function mct_mod:create_canvas_page(key, creation_callback)
+    local page_class = mct:get_page_type("Canvas")
+    ---@cast page_class MCT.Page.Canvas
+    local page = page_class:new(key, self, creation_callback)
+
+    self._pages[key] = page
+
+    return page
+end
+
 --- Getter for any @{mct_section}s linked to this mct_mod.
 ---@param section_key string The identifier for the section searched for.
 ---@return MCT.Section
@@ -766,16 +780,19 @@ end
 
 --- Returns a @{mct_option} with the specific key on the mct_mod.
 ---@param option_key string The unique identifier for the desired mct_option.
+---@param is_test boolean Whether we're testing for an existing option with this key, to ignore the error when none are found.
 ---@return MCT.Option?
-function mct_mod:get_option_by_key(option_key)
+function mct_mod:get_option_by_key(option_key, is_test)
     if not is_string(option_key) then
-        err("Trying `get_option_by_key` for mod ["..self:get_key().."] but key provided ["..tostring(option_key).."] is not a string! Returning false.")
+        err("Trying `get_option_by_key` for mod ["..self:get_key().."] but key provided ["..tostring(option_key).."] is not a string! Returning nil.")
         return nil
     end
-
+    
     if not self._options[option_key] then
-        VLib.Warn("Trying `%s:get_option_by_key(%s)`, but no option exists with that key!", self:get_key(), option_key)
-        return nil
+        if not is_test == true then
+            VLib.Warn("Trying `%s:get_option_by_key(%s)`, but no option exists with that key!", self:get_key(), option_key)
+            return nil
+        end
     end
 
     return self._options[option_key]
@@ -795,7 +812,7 @@ end
 function mct_mod:add_new_option(option_key, option_type)
     logf("Creating a new option %s to mod %s", option_key, self:get_key())
     -- check first to see if an option with this key already exists; if it does, return that one!
-    local test = self:get_option_by_key(option_key)
+    local test = self:get_option_by_key(option_key, true)
     if mct:is_mct_option(test) then
         log("Trying `add_new_option` for mod ["..self:get_key().."], but there's already an option with the key ["..option_key.."]. Returning that option!")
         return test

@@ -36,11 +36,11 @@ end
 --- draw in the UI
 function Infobox:populate(box)
     --- infobox_holder is needed because list_box automatically reorders and spaces its children; this way, we can control spacing far better.
-    local infobox_holder = core:get_or_create_component("infobox_holder", "ui/campaign ui/script_dummy", box)
-    infobox_holder:Resize(box:Width(), box:Height())
+    -- local infobox_holder = core:get_or_create_component("infobox_holder", "ui/campaign ui/script_dummy", box)
+    -- infobox_holder:Resize(box:Width(), box:Height())
 
     --- TODO listview without scrollbar, center of screen
-    local uic = core:get_or_create_component("infobox", "ui/vandy_lib/image", infobox_holder)
+    local uic = core:get_or_create_component("infobox", "ui/vandy_lib/image", box)
     uic:SetDockingPoint(2)
     uic:SetDockOffset(0, 10)
     uic:Resize(box:Width() * 0.4, box:Height() * 0.94)

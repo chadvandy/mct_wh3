@@ -17,6 +17,8 @@ local defaults = {
 ---@class MCT.UI.Notifications : Class
 local UI_Notifications = VLib.NewClass("UI_Notifications", defaults)
 
+
+--- TODO open up the notifications panel
 function UI_Notifications:open()
 
 end

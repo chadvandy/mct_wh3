@@ -677,6 +677,9 @@ function mct_option:ui_create_option_base(parent, w, h)
     -- give priority over column
     dummy_option:PropagatePriority(parent:Priority() +1)
 
+    dummy_option:SetProperty("mct_option", self:get_key())
+    dummy_option:SetProperty("mct_mod", self:get_mod_key())
+
     --- Create the border if necessary
     local dummy_border = core:get_or_create_component("border", "ui/vandy_lib/image", dummy_option)
     dummy_border:Resize(w, h)

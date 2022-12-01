@@ -222,3 +222,18 @@ c:set_collapsed(true)
 
 -- mct_mod:add_new_option("Testing Faction Context", "dropdown_game_object")
 
+local test_canvas = mct_mod:create_canvas_page(
+    "My New Canvas",
+    ---@param panel UIC
+    function (panel)
+        local icon = core:get_or_create_component("my_icon", "ui/vandy_lib/image", panel)
+        icon:SetImagePath("ui/skins/default/advisor_beastmen_2d.png")
+        icon:SetDockingPoint(3)
+        icon:SetDockOffset(-20, 60)
+
+        local text = core:get_or_create_component("text", "ui/vandy_lib/text/paragraph_header", panel)
+        text:SetStateText("Hello! Example text!")
+        text:SetDockingPoint(7)
+        text:SetDockOffset(30, -90)
+    end
+)

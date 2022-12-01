@@ -151,30 +151,33 @@
 					uniqueguid="991FE21A-5E60-48F0-8B4B2A4D7B692702"/>
 			</component_image_uniqueguids>
 			<callbacks_with_context>
-				<callback_with_context callback_id="VSlider">
+				<callback_with_context 
+					callback_id="VSlider"
+					context_object_id="CcoStaticObject"
+					>
 					<child_m_user_properties>
 						<property
 							name="slide_speed"
-							value="10"/>
+							value="100"/>
 					</child_m_user_properties>
 				</callback_with_context>
 			</callbacks_with_context>
 			<user_properties>
-				<property
+				<!-- <property
 					name="Notify"
-					value=""/>
+					value=""/> -->
 				<property
 					name="Value"
 					value="0"/>
 				<property
 					name="maxValue"
-					value="1000"/>
+					value="100"/>
 				<property
 					name="minValue"
 					value="0"/>
 				<property
 					name="step_size"
-					value="1"/>
+					value="10"/>
 			</user_properties>
 			<localised_texts>
 				<localised_text/>
@@ -239,7 +242,7 @@
 					value="resizable"/>
 				<property
 					name="stepSize"
-					value="10"/>
+					value="1"/>
 			</user_properties>
 			<localised_texts>
 				<localised_text/>
@@ -448,7 +451,7 @@
 					value="resizable"/>
 				<property
 					name="stepSize"
-					value="10"/>
+					value="1"/>
 			</user_properties>
 			<localised_texts>
 				<localised_text/>
@@ -518,8 +521,8 @@
 				<newstate
 					this="762F2D87-F81E-4EB3-9587D6380A6E7F44"
 					name="NewState"
-					width="1"
-					height="1"
+					width="300"
+					height="500"
 					font_m_size="12"
 					font_m_colour="#FFFFE0FF"
 					font_m_leading="3"
@@ -530,19 +533,16 @@
 			<LayoutEngine
 				type="List"
 				sizetocontent="false">
-				<columnwidths>
-					<column width="1"/>
-				</columnwidths>
 			</LayoutEngine>
 		</list_box>
 		<list_clip
 			this="FFA4E0F5-A62E-4595-8396308477FD4348"
 			id="list_clip"
-			offset="5.00,10.00"
+			offset="0.00,0.00"
 			clipchildren="true"
 			docking="Center Left"
-			dock_offset="5.00,0.00"
-			component_anchor_point="0.00,0.50"
+			dock_offset="0.00,0.00"
+			component_anchor_point="0.00,0.00"
 			priority="45"
 			tooltipslocalised="true"
 			uniqueguid="FFA4E0F5-A62E-4595-8396308477FD4348"
@@ -552,8 +552,8 @@
 				<newstate
 					this="3C006960-7924-40D4-845E86DE8A0628CD"
 					name="NewState"
-					width="270"
-					height="480"
+					width="300"
+					height="500"
 					font_m_size="12"
 					font_m_colour="#FFF8D7FF"
 					font_m_leading="3"
@@ -565,7 +565,7 @@
 		<listview
 			this="54C6DEFC-946D-4744-A48A8DD06EAC0B8F"
 			id="listview"
-			offset="278.00,155.00"
+			offset="0.00,0.00"
 			priority="45"
 			tooltipslocalised="true"
 			uniqueguid="54C6DEFC-946D-4744-A48A8DD06EAC0B8F"
@@ -596,13 +596,13 @@
 							this="F4C4493B-AE24-4AA6-93B34DE39E90B768"
 							uniqueguid="F4C4493B-AE24-4AA6-93B34DE39E90B768"
 							componentimage="FB65A645-3496-4EC6-B43ECF027FD3D825"
-							offset="-5.00,-10.00"
-							width="310"
-							height="510"
+							offset="0.00,0.00"
+							width="300"
+							height="500"
 							tile="true"
 							dockpoint="Bottom Center"
 							margin="30.00,30.00,15.00,30.00"
-							isrelativeresize="true"/>
+							isrelativeresize="false"/>
 					</imagemetrics>
 				</newstate>
 			</states>
