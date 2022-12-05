@@ -101,18 +101,18 @@ function Slider:ui_select_value(val)
     local step_size_precision = values.step_size_precision
 
     -- enable both buttons & push new value
-    _SetState(right_button, "active")
-    _SetState(left_button, "active")
+    right_button:SetState("active")
+    left_button:SetState("active")
 
 
     if val >= max then
-        _SetState(right_button, "inactive")
-        _SetState(left_button, "active")
+        right_button:SetState("inactive")
+        left_button:SetState("active")
 
         val = max
     elseif val <= min then
-        _SetState(left_button, "inactive")
-        _SetState(right_button, "active")
+        right_button:SetState("active")
+        left_button:SetState("inactive")
 
         val = min
     end
@@ -120,8 +120,8 @@ function Slider:ui_select_value(val)
     -- TODO move step size edits out of this one?
     local step_size_str = self:slider_get_precise_value(step_size, true, step_size_precision)
 
-    _SetTooltipText(left_button, "-"..step_size_str, true)
-    _SetTooltipText(right_button, "+"..step_size_str, true)
+    right_button:SetTooltipText("+"..step_size_str, true)
+    left_button:SetTooltipText("-"..step_size_str, true)
 
     --local current = self:get_precise_value(self:get_selected_setting(), false)
     local current_str = self:slider_get_precise_value(self:get_selected_setting(), true)
@@ -152,9 +152,9 @@ function Slider:ui_change_state()
     end
 
     --_SetInteractive(text_input, not locked)
-    _SetState(left_button, state)
-    _SetState(right_button, state)
-    _SetTooltipText(text_uic, tt, true)
+    right_button:SetState(state)
+    left_button:SetState(state)
+    text_uic:SetTooltipText(tt, true)
 end
 
 -- UIC Properties:

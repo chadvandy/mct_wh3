@@ -56,7 +56,7 @@ function TextInput:ui_select_value(val)
     end
     
     -- auto-type the text
-    _SetStateText(option_uic, val)
+    option_uic:SetStateText(val)
 
     Super.ui_select_value(self, val)
 end
@@ -82,7 +82,7 @@ function TextInput:ui_change_state()
 
     option_uic:SetInteractive(not locked)
     -- _SetState(edit_button, state)
-    _SetTooltipText(text_uic, tt, true)
+    text_uic:SetTooltipText(tt, true)
 end
 
 --- Creates the option in UI.

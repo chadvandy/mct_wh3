@@ -703,7 +703,7 @@ function mct_option:ui_create_option_base(parent, w, h)
 
     -- make some text to display deets about the option
     local option_text = core:get_or_create_component("text", "ui/vandy_lib/text/dev_ui", dummy_option)
-    _SetVisible(option_text, true)
+    option_text:SetVisible(true)
     option_text:SetDockingPoint(4)
     option_text:SetDockOffset(15, 0)
 
@@ -712,7 +712,7 @@ function mct_option:ui_create_option_base(parent, w, h)
     option_text:SetInteractive(false)
 
     if self:get_tooltip_text() ~= "No tooltip assigned" then
-        _SetTooltipText(dummy_option, self:get_tooltip_text(), true)
+        dummy_option:SetTooltipText(self:get_tooltip_text(), true)
     end
 
     -- create the interactive option
@@ -735,7 +735,7 @@ function mct_option:ui_create_option_base(parent, w, h)
         -- local w, h = option_text:TextDimensionsForText(option_obj:get_text())
         option_text:ResizeTextResizingComponentToInitialSize(ow, oh)
 
-        _SetStateText(option_text, self:get_text())
+        option_text:SetStateText(self:get_text())
 
         -- w,h = option_text:TextDimensionsForText(option_obj:get_text())
         -- option_text:ResizeTextResizingComponentToInitialSize(ow, oh)

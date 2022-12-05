@@ -85,7 +85,7 @@ function Page:create_row_uic()
     txt:SetDockingPoint(2)
     txt:SetDockOffset(10,0)
 
-    _SetStateText(txt, page_key)
+    txt:SetStateText(page_key)
 
     -- local tt = mod_obj:get_tooltip_text()
 

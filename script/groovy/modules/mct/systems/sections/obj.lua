@@ -20,11 +20,11 @@ local mct_section_defaults = {
     _text = "No text assigned",
 
     ---@type string An optional description for this section.
-    ---@see
+    ---@see MCT.Section.set_description
     _description = "",
 
     ---@type string Hovered-on text for this section.
-    ---@see mct_section.set_tooltip_text
+    ---@see MCT.Section.set_tooltip_text
     _tooltip_text = "",
 
     ---@type UIC UI Object for the header row itself.
@@ -384,7 +384,7 @@ function mct_section:populate(this_column, expected_width)
     dy_title:SetStateText(text)
 
     if tt_text ~= "" then
-        _SetTooltipText(section_header, tt_text, true)
+        section_header:SetTooltipText(tt_text, true)
     end
 
 

@@ -611,7 +611,7 @@ function UI_Main:create_left_panel()
 
     -- make the stationary title (on left_panel_bg, doesn't scroll)
     local left_panel_title = core:get_or_create_component("left_panel_title", "ui/templates/parchment_divider_title", left_panel_bg)
-    _SetStateText(left_panel_title, common.get_localised_string("mct_ui_mods_header"))
+    left_panel_title:SetStateText(common.get_localised_string("mct_ui_mods_header"))
     left_panel_title:Resize(w, left_panel_title:Height())
     left_panel_title:SetDockingPoint(2)
     left_panel_title:SetDockOffset(0,0)
@@ -790,27 +790,27 @@ function UI_Main:new_mod_row(mod_obj)
     row:SetProperty("mct_mod", mod_obj:get_key())
     row:SetProperty("mct_layout", mod_obj:get_main_page():get_key())
 
-    local txt = find_uicomponent(row, "dy_title")
+    local txt_uic = find_uicomponent(row, "dy_title")
 
-    txt:Resize(row:Width() - 28, row:Height() * 0.9)
-    txt:SetDockingPoint(4)
-    txt:SetDockOffset(0,0)
-    txt:SetTextVAlign("centre")
-    txt:SetTextHAlign("left")
-    txt:SetTextXOffset(5, 0)
-    txt:SetTextYOffset(0, 0)
+    txt_uic:Resize(row:Width() - 28, row:Height() * 0.9)
+    txt_uic:SetDockingPoint(4)
+    txt_uic:SetDockOffset(0,0)
+    txt_uic:SetTextVAlign("centre")
+    txt_uic:SetTextHAlign("left")
+    txt_uic:SetTextXOffset(5, 0)
+    txt_uic:SetTextYOffset(0, 0)
 
 
-    local txt_txt = mod_obj:get_title()
+    local title_txt = mod_obj:get_title()
     local author_txt = mod_obj:get_author()
 
-    if not is_string(txt_txt) then
-        txt_txt = "No title assigned"
+    if not is_string(title_txt) then
+        title_txt = "No title assigned"
     end
 
-    txt_txt = txt_txt .. "\n" .. author_txt
+    title_txt = title_txt .. "\n" .. author_txt
 
-    _SetStateText(txt, txt_txt)
+    txt_uic:SetStateText(title_txt)
 
     local tt = mod_obj:get_tooltip_text()
 

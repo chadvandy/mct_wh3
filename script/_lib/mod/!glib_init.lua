@@ -19,7 +19,7 @@ local defaults = {
     },
 
     --- TODO pointers for all of the currently loaded modules
-    _Modules = {},    
+    _Modules = {},
 }
 
 ---@class GLib : Class
@@ -201,6 +201,11 @@ function GLib.Error(t, ...)
     GLib.logs.lib:log(debug.traceback(1))
 end
 
+--- TODO handle the internal loading of modules!
+function GLib.LoadInternalModules()
+
+end
+
 --- Load a single file, and return its contents.
 ---@param module_name string The name of the file, without the ".lua" extension
 ---@param path string The path to the file, from .pack.
@@ -218,6 +223,8 @@ function GLib.LoadModule(module_name, path)
 
         local global_env = core:get_env()
         setfenv(file, global_env)
+
+        -- passing the `file` chunk any parameters turn into the vararg accessible in that file! Useful for localizing file paths.
         local lua_module = file(full_path)
 
         if lua_module ~= false then
@@ -309,3 +316,6 @@ end
 
 
 GLib.init()
+
+-- Backwards compat
+VLib = GLib

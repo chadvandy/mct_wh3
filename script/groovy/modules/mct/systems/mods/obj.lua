@@ -343,7 +343,7 @@ end
 function mct_mod:get_last_section()
     if not self._last_section then
         -- start with a default section, if none are created by the Modder.
-        self:add_new_section("default", "mct_mct_mod_default_section_text", true)
+        self:add_new_section("default", "mct_mct_mod_default_section_text")
     end
 
     -- return the last created section
@@ -515,7 +515,7 @@ function mct_mod:set_positions_for_options()
 
             --log("at key "..option_key)
 
-            if mct:is_mct_option(option_obj) then        
+            if option_obj and mct:is_mct_option(option_obj) then        
                 --log("it's valid")        
                 -- check if it's a valid position for that option's type (sliders only on 2)
                 if valid_for_type(option_obj:get_type(), x, y) then
@@ -780,7 +780,7 @@ end
 
 --- Returns a @{mct_option} with the specific key on the mct_mod.
 ---@param option_key string The unique identifier for the desired mct_option.
----@param is_test boolean Whether we're testing for an existing option with this key, to ignore the error when none are found.
+---@param is_test boolean? Whether we're testing for an existing option with this key, to ignore the error when none are found.
 ---@return MCT.Option?
 function mct_mod:get_option_by_key(option_key, is_test)
     if not is_string(option_key) then
