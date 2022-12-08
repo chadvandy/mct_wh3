@@ -1,5 +1,9 @@
 --- TODO a separate UI object with just all the Profiles systems in them
 
+--- TODO replace a lot of this to enable profiles as they are now.
+--- TODO display the currently selected profile on the topbar or something, say "Editing Profile: XYZ" or "Viewing Profile: XYZ", etc.
+
+
 local mct = get_mct()
 local Registry = mct.registry
 local UI_Main = mct.ui

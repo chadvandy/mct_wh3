@@ -2,6 +2,8 @@
 --- this holds all global information that's valuable to each option type, and is then extended into the individual versions.
 
 
+--- TODO enable the "backend-only" type of options.
+
 ---- MCT Option Object
 ---@class MCT.Option
 ---@field _template string
@@ -44,6 +46,7 @@ local mct_option_defaults = {
     _is_locked = false,
     _lock_reason = "",
 
+    --- TODO rework these.
     _local_only = false,
     _mp_disabled = false,
 
@@ -60,6 +63,7 @@ local mct_option_defaults = {
     _border_visible = false,
     _border_image_path = "ui/skins/default/panel_back_border.png",
 
+    --- TODO rework/remove this
     _pos = {
         x = 0,
         y = 0
