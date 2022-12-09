@@ -64,6 +64,7 @@ local mct_mod_defaults = {
 
     ---@type {path:string, width:number, height:number} The info of a main image for this mod, to display where relevant. Optional w/h overrides (they may be clamped lower, but aspect ratio defined here will be kept!) 
     _main_image = {path = "", width = 100, height = 100,},
+
 }
 
 ---@class MCT.Mod : Class
