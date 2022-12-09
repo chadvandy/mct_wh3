@@ -8,7 +8,7 @@ local mct = get_mct()
 -- local vlib = get_vandy_lib()
 local log,logf,err,errf = get_vlog("[mct]")
 
-local sorting = GLib.LoadModule("options", "script/vlib/mct/sort_functions/")
+local sort_functions = GLib.LoadModule("options", mct:get_path("sorted_objects").."sort_functions/")
 
 
 ---@class MCT.Section
@@ -55,7 +55,7 @@ local mct_section_defaults = {
     ---@type function
     _visibility_change_callback = nil,
 
-    _sort_order_function = sorting.index,
+    _sort_order_function = sort_functions.index,
 }
 
 ---@class MCT.Section : Class
@@ -182,11 +182,11 @@ end
 function mct_section:set_option_sort_function(sort_func)
     if is_string(sort_func) then
         if sort_func == "key_sort" then
-            self._sort_order_function = sorting.key
+            self._sort_order_function = sort_functions.key
         elseif sort_func == "index_sort" then
-            self._sort_order_function = sorting.index
+            self._sort_order_function = sort_functions.index
         elseif sort_func == "text_sort" then
-            self._sort_order_function = sorting.localised_text
+            self._sort_order_function = sort_functions.localised_text
         else
             err("set_option_sort_function() called for section ["..self:get_key().."], but the sort_func provided ["..sort_func.."] is an invalid string!")
             return false
@@ -425,7 +425,7 @@ function mct_section:populate(this_column, expected_width)
     local this_height = this_column:Height() * 0.12
     for i,option_key in ipairs(self._true_ordered_options) do
         local option_obj = mod:get_option_by_key(option_key)
-        get_mct().ui:new_option_row_at_pos(option_obj, section_holder, this_width, this_height)
+        get_mct():get_ui():new_option_row_at_pos(option_obj, section_holder, this_width, this_height)
     end
 
 

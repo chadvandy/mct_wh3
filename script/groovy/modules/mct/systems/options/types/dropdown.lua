@@ -3,7 +3,7 @@
 --- TODO prettify
 
 local mct = get_mct()
-local Super = mct._MCT_OPTION
+local Super = mct:get_mct_option()
 local log,logf,err,errf = get_vlog("[mct]")
 
 ---@type MCT.Option.Dropdown

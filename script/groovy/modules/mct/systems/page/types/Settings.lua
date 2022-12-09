@@ -1,7 +1,8 @@
-local Super = get_mct()._MCT_PAGE
+local Super = get_mct():get_mct_page()
 
+--- TODO do this better prolly
 ---@type {key:fun(), index:fun(), localised_text: fun()}
-local sort_functions = GLib.LoadModule("sections", "script/vlib/mct/sort_functions/")
+local sort_functions = GLib.LoadModule("sections", get_mct():get_path("sorted_objects").."sort_functions/")
 
 ---@class MCT.Page.Settings
 local defaults = {

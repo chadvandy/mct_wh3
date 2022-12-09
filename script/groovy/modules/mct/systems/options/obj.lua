@@ -7,7 +7,7 @@
 ---@field _template string
 
 local mct = get_mct()
-local Registry = mct.registry
+local Registry = mct:get_registry()
 
 local log,logf,err,errf = get_vlog("[mct]")
 
@@ -520,7 +520,7 @@ function mct_option:set_selected_setting(val, is_from_popup)
     -- end
     
     --- Only valid if the panel is open!
-    if not mct.ui:is_open() then
+    if not mct:get_ui():is_open() then
         return
     end
 
@@ -594,7 +594,7 @@ function mct_option:check_validity(val)
 end
 
 function mct_option:ui_select_value(val)
-    -- mct.ui:set_actions_states()
+    -- mct:get_ui():set_actions_states()
 end
 
 --- TODO hook up, cache, campaign-only, etc.
@@ -637,7 +637,7 @@ function mct_option:test_confirmation_popup(new_val, old_val)
                 self:set_selected_setting(old_val, true)
             end,
             nil,
-            mct.ui.panel
+            mct:get_ui().panel
         )
         return true
     end

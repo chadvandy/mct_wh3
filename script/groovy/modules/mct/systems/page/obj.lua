@@ -56,8 +56,8 @@ end
 
 --- Called on UIC creation.
 function Page:create_row_uic()
-    local left_panel = get_mct().ui.mod_row_list_box
-    local list_view = get_mct().ui.mod_row_list_view
+    local left_panel = get_mct():get_ui().mod_row_list_box
+    local list_view = get_mct():get_ui().mod_row_list_view
     local mod_obj = self.mod_obj
     local page_key = self.key
 

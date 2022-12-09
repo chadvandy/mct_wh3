@@ -118,7 +118,7 @@ function Sync:assign_settings_from_host()
             self:apply_mct_data_to_local_user(mct_data)
 
             GLib.Log("Proper settings retrieved from host, saving and finalizing!")
-            mct.registry:save()
+            mct:get_registry():save()
             core:trigger_custom_event("MctFinalized", {["mct"] = mct, ["mp_sent"] = false})
         end
     )
@@ -163,7 +163,7 @@ function Sync:get_mct_data_from_local_user()
         for option_key, option_obj in pairs(all_options) do
             if not option_obj:is_global() then
                 vlog("Looping through option obj ["..option_key.."]")
-                mct_data[mod_key][option_key] = mct.registry:get_selected_setting_for_option(option_obj)
+                mct_data[mod_key][option_key] = mct:get_registry():get_selected_setting_for_option(option_obj)
 
                 vlog("Setting: "..tostring(mct_data[mod_key][option_key]))
             end

@@ -1,7 +1,7 @@
 --- TODO the notifications UI stuff
 
 local mct = get_mct()
-local Registry = mct.registry
+local Registry = mct:get_registry()
 local UI_Main = mct.ui
 
 ---@class MCT.UI.Notifications

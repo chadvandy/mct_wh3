@@ -46,18 +46,17 @@ local UI_Main = {
 }
 
 local mct = get_mct()
-mct.ui = UI_Main
 
---- TODO load these elsewhere!
-local ui_path = "script/vlib/mct/core/ui/"
+-- --- TODO load these elsewhere!
+-- local ui_path = "script/vlib/mct/core/ui/"
 
----@type MCT.UI.Profiles
-local UI_Profiles = GLib.LoadModule("profiles", ui_path)
+-- ---@type MCT.UI.Profiles
+-- local UI_Profiles = GLib.LoadModule("profiles", ui_path)
 
----@type MCT.UI.Notifications
-local UI_Notifications = GLib.LoadModule("notifications", ui_path)
+-- ---@type MCT.UI.Notifications
+-- local UI_Notifications = GLib.LoadModule("notifications", ui_path)
 
-local Registry = mct.registry
+local Registry = mct:get_registry()
 
 local log,logf,logerr,logerrf = get_vlog("[mct_ui]")
 
@@ -1034,6 +1033,8 @@ core:add_listener(
         return context.string == "button_mct_profiles"
     end,
     function(context)
+        ---@type MCT.UI.Profiles
+        local UI_Profiles = mct:get_system_ui("profiles")
         UI_Profiles:open()
     end,
     true
@@ -1046,6 +1047,8 @@ core:add_listener(
         return context.string == "button_mct_notifications"
     end,
     function(context)
+        ---@type MCT.UI.Notifications
+        local UI_Notifications = mct:get_system_ui("notifications")
         UI_Notifications:open()
     end,
     true

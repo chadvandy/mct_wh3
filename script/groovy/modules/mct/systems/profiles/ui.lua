@@ -1,7 +1,7 @@
 --- TODO a separate UI object with just all the Profiles systems in them
 
 local mct = get_mct()
-local Registry = mct.registry
+local Registry = mct:get_registry()
 local UI_Main = mct.ui
 
 ---@class MCT.UI.Profiles

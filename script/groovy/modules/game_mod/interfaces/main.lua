@@ -23,7 +23,7 @@ end
 
 --- TODO verify that this is a valid game object; if not, abort!
 function InterfaceSuper:init()
-    if not cm:model_is_created() then
+    if not cm.model_is_created then
         function self:first_tick_callback()
             self:init()
         end
@@ -32,13 +32,25 @@ function InterfaceSuper:init()
     end
 end
 
+function InterfaceSuper:get_key()
+    return self._key
+end
+
 function InterfaceSuper:first_tick_callback()
 
 end
 
+--- Called every game tick to clear unhealthy internals. 
+function InterfaceSuper:__clear()
+    self._game_object = nil
+end
+
+--- TODO cache the return value and empty it out after a tick?
 ---@return userdata #Get the script interface for this game object!
 function InterfaceSuper:__get()
     --- TODO confirm that the model exists!
-    assert(cm:model_is_created())
+    assert(cm.model_is_created)
+    if self._game_object then return self._game_object end
+    
     return self._get_func()
 end

@@ -1,7 +1,7 @@
 local mct = get_mct()
 
 ---@class MCT.UI
-local ui = mct.ui
+local ui = mct:get_ui()
 
 --- Battle scripts are triggered after UI is already created
 core:get_tm():repeat_real_callback(function()
@@ -10,7 +10,7 @@ core:get_tm():repeat_real_callback(function()
     if is_uicomponent(p) then
         core:get_tm():remove_real_callback("mct_button_test")
 
-        local mct_button = get_mct().ui:create_mct_button(p)
-        get_mct().ui:ui_created()
+        local mct_button = get_mct():get_ui():create_mct_button(p)
+        get_mct():get_ui():ui_created()
     end
 end, 100, "mct_button_test")

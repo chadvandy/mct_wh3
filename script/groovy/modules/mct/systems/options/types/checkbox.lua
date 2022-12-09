@@ -4,7 +4,7 @@
 local mct = get_mct()
 local log,logf,err,errf = get_vlog("[mct]")
 
-local Super = mct._MCT_OPTION
+local Super = mct:get_mct_option()
 
 ---@type MCT.Option.Checkbox
 local defaults = {

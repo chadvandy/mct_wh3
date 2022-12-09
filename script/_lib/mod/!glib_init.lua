@@ -130,24 +130,7 @@ function GLib.init()
         start_flush()
     end
 
-    local helpers_path = path_of_groove .. "helpers/"
-    local modules_path = path_of_groove .. "modules/"
-
-    GLib.LoadModule("extensions", helpers_path)
-    GLib.LoadModule("helpers", helpers_path)
-    GLib.LoadModule("uic", helpers_path)
-
-    
-    -- get individual modules!
-    local function m(p) return modules_path .. p .. "/" end
-    
-    --- load up MCT
-    --- TODO make this prettier; provide a path and autoload main.lua?
-    local mct = GLib.LoadModule("main", m("mct"))
-
-    ---@type CommandManager
-    GLib.CommandManager = GLib.LoadModule("main", m("command_manager"))
-    GLib.CommandManager:init()
+    GLib.LoadInternalModules()
 end
 
 --- Create a new Class object, which can be used to simulate OOP systems.
@@ -203,7 +186,26 @@ end
 
 --- TODO handle the internal loading of modules!
 function GLib.LoadInternalModules()
+    local helpers_path = path_of_groove .. "helpers/"
+    local modules_path = path_of_groove .. "modules/"
 
+    GLib.LoadModule("extensions", helpers_path)
+    GLib.LoadModule("helpers", helpers_path)
+    GLib.LoadModule("uic", helpers_path)
+    
+    -- get individual modules!
+    local function m(p) return modules_path .. p .. "/" end
+    
+    GLib.LoadModule("main", m("mp_communicator"))
+
+    --- load up MCT
+    --- TODO make this prettier; provide a path and autoload main.lua?
+    local mct = GLib.LoadModule("main", m("mct"))
+
+    ---@type CommandManager
+    GLib.CommandManager = GLib.LoadModule("main", m("command_manager"))
+    GLib.CommandManager:init()
+    
 end
 
 --- Load a single file, and return its contents.
@@ -212,6 +214,12 @@ end
 ---@return any
 function GLib.LoadModule(module_name, path)
     local full_path = path .. module_name .. ".lua"
+
+    if GLib._Modules[full_path] then
+        vlogf("Found an existing module %s! Returning that! Yay!", module_name)
+        return GLib._Modules[full_path]
+    end
+
     vlogf("Loading module w/ full path %q", full_path)
     local file, load_error = loadfile(full_path)
 
@@ -231,7 +239,7 @@ function GLib.LoadModule(module_name, path)
             vlog("[" .. module_name .. ".lua] loaded successfully!")
         end
 
-        GLib._Modules[module_name] = lua_module
+        GLib._Modules[full_path] = lua_module
 
         return lua_module
     end

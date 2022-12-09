@@ -231,7 +231,7 @@ function mct_mod:add_new_section(section_key, localised_name)
         --return false
     end
 
-    local new_section = mct._MCT_SECTION.new(section_key, self)
+    local new_section = mct:get_mct_section().new(section_key, self)
 
     if localised_name ~= "" then
         new_section:set_localised_text(localised_name)
@@ -334,7 +334,7 @@ function mct_mod:set_section_visibility(section_key, visible)
 
     section:set_visibility(visible)
 
-    --mct.ui:section_visibility_change(section_key, visible)
+    --mct:get_ui():section_visibility_change(section_key, visible)
 end
 
 --- Internal use only, no real need for use anywhere else.

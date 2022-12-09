@@ -3,7 +3,7 @@
 local mct = get_mct()
 
 ---@class MCT.UI
-local ui = mct.ui
+local ui = mct:get_ui()
 
 
 --- UI initalization
@@ -14,13 +14,13 @@ local function init()
 
     local x,y = existing:Position()
 
-    local mct_button = get_mct().ui:create_mct_button(bar)
+    local mct_button = get_mct():get_ui():create_mct_button(bar)
     mct_button:MoveTo(x, y)
 
     existing:SetVisible(false)
     bar:SetVisible(true)
 
-    get_mct().sync:new_frontend()
+    get_mct():get_sync():new_frontend()
 end
 
 core:add_ui_created_callback(function()
@@ -42,7 +42,7 @@ core:add_listener(
     function(context)
         is_in_campaign = false
 
-        local mct_button = get_mct().ui:get_mct_button()
+        local mct_button = get_mct():get_ui():get_mct_button()
         local parent = UIComponent(mct_button:Parent())
         parent:SetVisible(true)
 
@@ -60,7 +60,7 @@ core:add_listener(
     function(context)
         is_in_campaign = true
 
-        local mct_button = get_mct().ui:get_mct_button()
+        local mct_button = get_mct():get_ui():get_mct_button()
         local parent = UIComponent(mct_button:Parent())
         parent:SetVisible(false)
 
@@ -109,7 +109,7 @@ core:add_listener(
     end,
     function(context)
         local frame = find_uicomponent("campaign_select_new", "right_holder", "tab_mct", "mct_holder")
-        get_mct().ui:open_frame(frame, true)
+        get_mct():get_ui():open_frame(frame, true)
         local close_button = find_uicomponent(frame, "button_mct_close")
         close_button:SetVisible(false)
 

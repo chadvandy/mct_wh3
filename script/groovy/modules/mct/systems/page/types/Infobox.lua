@@ -1,7 +1,7 @@
 --- TODO an infobox layout - description, optional image, optional link to workshop, optional patch notes or something that can be collapsed.
 
 local mct = get_mct()
-local Super = mct._MCT_PAGE
+local Super = mct:get_mct_page()
 
 ---@class MCT.Page.Infobox
 local defaults = {}

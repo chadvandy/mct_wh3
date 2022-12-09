@@ -5,9 +5,6 @@
 
 ---@class Interface.Faction : Interface.Super
 local defaults = {
-    _key = "",
-    _game_object = nil,
-
     ---@param self Interface.Faction
     _get_func = function(self) return cm:get_faction(self._key) end
 }
@@ -17,14 +14,14 @@ local Super = InterfaceSuper
 ---@class Interface.Faction : Interface.Super
 ---@field __new fun():Interface.Faction
 ---@field __get fun():FACTION_SCRIPT_INTERFACE
-local FactionInterface = InterfaceSuper:extend("Interface.Faction", defaults)
+local FactionInterface = Super:extend("Interface.Faction", defaults)
 
 function FactionInterface:new(key)
     
 end
 
 function FactionInterface:init()
-    -- TODO once we're ready to, confirm that this faction actually exists!    
+    -- TODO once we're ready to, confirm that this faction actually exists!
 end
 
 --[[
@@ -35,15 +32,19 @@ end
 ---@return number
 function FactionInterface:get_money()
     local go = self:__get()
-    go:treasury_value()
+    return go:treasury()
 end
 
 function FactionInterface:set_money(n)
+    local go = self:__get()
+    local i = self:get_money()
 
+    cm:treasury_mod(self:get_key(), i + n)
 end
 
-function FactionInterface:modify_money()
-
+function FactionInterface:modify_money(n)
+    local go = self:__get()
+    cm:treasury_mod(self:get_key(), n)
 end
 
 --- TODO PR stuff
