@@ -285,6 +285,125 @@ function Registry:finalize_mod(mod_obj)
     self:clear_changed_settings_for_mod(mod_obj:get_key())
 end
 
+---@return thread
+function Registry:get_save_co()
+    if not type(self.__save_co) == "thread" then
+        self.__save_co = coroutine.create(
+            function(all_mods)
+                local old = io.open(self:get_file_path(self.__main_file), "r+")
+                ---@cast old file*
+                local str = old:read("*a")
+                local t = loadstring(str)()
+            
+                old:close()
+            
+                if not is_table(t) then
+                    t = {
+                        ["global"] = {
+                            ["saved_mods"] = {},
+                        },
+                        ["campaigns"] = {},
+                        ["last_used_campaign_index"] = self.__last_used_campaign_index,
+                    }
+                end
+            
+                t.last_used_campaign_index = self.__last_used_campaign_index
+            
+                if not t.global then
+                    t.global = {saved_mods = {},}
+                end
+            
+                --- TODO make sure we're taking into account things not held in active memory (ie. reading the .campaign field from the registry file so that stays true (should the .campaign field be a foreign file? (yes!)))
+                
+                --- Loop through all mod objects, add a field in .saved_mods.
+                if not t.campaigns then
+                    t.campaigns = {}
+                end
+                if not t.campaigns[self.__this_campaign] and self.__this_campaign > 0 then
+                    t.campaigns[self.__this_campaign] = {saved_mods = {}}
+                end
+            
+                logf("Saving the MCT.Registry!")
+            
+                local all_mods = mct:get_mods()
+                for mod_key,mod_obj in pairs(all_mods) do
+                    if not t.global.saved_mods[mod_key] then
+                        t.global.saved_mods[mod_key] = {
+                            options = {},
+                            data = {},
+                        }
+                    end
+            
+                    logf("\tIn mod [%s]", mod_key)
+            
+                    local this = t.global.saved_mods[mod_key]
+                    local this_campaign
+            
+                    if mct:context() == "campaign" then
+                        if not t.campaigns[self.__this_campaign].saved_mods[mod_key] then
+                            t.campaigns[self.__this_campaign].saved_mods[mod_key] = {
+                                options = {},
+                            }
+                        end
+            
+                        this_campaign = t.campaigns[self.__this_campaign].saved_mods[mod_key]
+                    end
+            
+                    for option_key, option_obj in pairs(mod_obj:get_options()) do
+                        logf("\t\tIn option [%s]", option_key)
+            
+                        --- Save all the shared data we need to keep in the global reg
+                        this.options[option_key] = {
+                            name = option_obj:get_text(),
+                            description = option_obj:get_tooltip_text(),
+                            default_value = option_obj:get_default_value(),
+                        }
+            
+            
+                        -- if this option is global, or it's campaign-specific but we're outside a campaign, save its changes in the global registry
+                        if option_obj:is_global() or not option_obj:is_global() and mct:context() ~= "campaign" then
+                            logf("\t\t\tSaving this option as global!")
+                            this.options[option_key].setting = option_obj:get_finalized_setting()
+            
+                            logf("\t\t\tFinalized setting is %s", tostring(option_obj:get_finalized_setting()))
+            
+                            if option_obj:is_locked() then
+                                this.options[option_key].is_locked = true
+                                this.options[option_key].lock_reason = option_obj:get_lock_reason()
+                            end
+                        else
+                            -- otherwise, this option is campaign-specific and we're in a campaign
+                            -- this.options[option_key].setting = 
+                            if mct:context() == "campaign" and not option_obj:is_global() then
+                                this_campaign.options[option_key] = {
+                                    setting = option_obj:get_finalized_setting(),
+                                }
+            
+                                if option_obj:is_locked() then
+                                    this_campaign.options[option_key].is_locked = true
+                                    this_campaign.options[option_key].lock_reason = option_obj:get_lock_reason()
+                                end
+                            end
+                        end
+                    end
+            
+                    this.data.name = mod_obj:get_title()
+                    this.data.description = mod_obj:get_description()
+                    this.data.userdata = mod_obj:get_userdata()
+                end
+            
+                local t_str = table_printer:print(t)
+            
+                local file = io.open(self:get_file_path(self.__main_file), "w+")
+                ---@cast file file*
+                file:write("return " .. t_str)
+                file:close()
+            end
+        )
+    end
+    return self.__save_co 
+end
+
 function Registry:save()
     local mods = mct:get_mods()
 
@@ -294,8 +413,9 @@ function Registry:save()
     end
 
     local ok, errmsg = pcall(function()
-    self:save_registry_file()
-    self:save_profiles_file()
+
+        self:save_registry_file()
+        self:save_profiles_file()
     end) if not ok then err(errmsg) end
 
     -- Automatically save the game whenever the settings are edited.
@@ -473,7 +593,7 @@ function Registry:load()
     if cm then
         local is_mp = cm.game_interface:model():is_multiplayer()
         if is_mp then
-            mct.sync:init_campaign()
+            mct:get_sync():init_campaign()
         end
 
         --- read the saved settings for current options!

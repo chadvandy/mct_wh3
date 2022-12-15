@@ -258,7 +258,7 @@ function UI_Profiles:create_main_view()
     self:populate_profiles_holder()
 
     --- create the bottom half of the page, use the cutesy background block thing with a frame and add buttons and all loads of shit mayn
-    local bottom = core:get_or_create_component("details_holder", "ui/vandy_lib/image", main_view)
+    local bottom = core:get_or_create_component("details_holder", "ui/groovy/image", main_view)
     bottom:SetDockingPoint(8)
     bottom:SetDockOffset(0, -15)
     bottom:Resize(main_view:Width() * 0.90, main_view:Height() - profiles_holder:Height() - title:Height() - 200)
@@ -271,7 +271,7 @@ function UI_Profiles:create_main_view()
     profile_name:SetDockOffset(0, 15)
     profile_name:SetStateText("Selected Profile")
 
-    local hdiv = core:get_or_create_component("divider", "ui/vandy_lib/image", bottom)
+    local hdiv = core:get_or_create_component("divider", "ui/groovy/image", bottom)
     hdiv:SetDockingPoint(2+9)
     hdiv:SetDockOffset(0, 10)
     hdiv:Resize(main_view:Width() * 0.98, 13)

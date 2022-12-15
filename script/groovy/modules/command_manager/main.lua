@@ -1,8 +1,7 @@
 --- TODO command systems
 ---@alias command_table table<string, {text:string, tooltip:string, callback:fun()}>
 
---- (...) convert the full path of this file (ie. script/folder/folders/this_file.lua) to just the path leading to specifically this file (ie. script/folder/folders/), to grab subfolders easily while still allowing me to restructure this entire mod four times a year!
-local this_path = string.gsub( (...) , "[^/]+$", "")
+local this_path = GLib.ThisPath(...)
 
 ---@class CommandManager : Class
 local defaults = {

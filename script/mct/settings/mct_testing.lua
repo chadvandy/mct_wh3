@@ -2,6 +2,17 @@
 local mct = get_mct()
 
 local mct_mod = mct:register_mod("mct_demo")
+
+mct:register_mod("Testing"):set_title("Testing")
+mct:register_mod("more"):set_title("Testing!!")
+mct:register_mod("another"):set_title("Testing!!")
+mct:register_mod("bleep"):set_title("Testing!!")
+mct:register_mod("blop"):set_title("Testing!!")
+mct:register_mod("blep"):set_title("Testing!!")
+mct:register_mod("bleaep"):set_title("Testing!!")
+mct:register_mod("bleeawefp"):set_title("Testing!!")
+mct:register_mod("bleeawawefefp"):set_title("Testing!!")
+mct:register_mod("bawefleeawefp"):set_title("Testing!!")
 -- local page = mct_mod:create_rowbased_settings_page("Row-based Page")
 
 local b = mct_mod:add_new_section("section_b", "Section B (index first)")
@@ -223,10 +234,10 @@ c:set_collapsed(true)
 -- mct_mod:add_new_option("Testing Faction Context", "dropdown_game_object")
 
 local test_canvas = mct_mod:create_canvas_page(
-    "My New Canvas",
+    "Build Your Map: Chaos Realms",
     ---@param panel UIC
     function (panel)
-        local icon = core:get_or_create_component("my_icon", "ui/vandy_lib/image", panel)
+        local icon = core:get_or_create_component("my_icon", "ui/groovy/image", panel)
         icon:SetImagePath("ui/skins/default/advisor_beastmen_2d.png")
         icon:SetDockingPoint(3)
         icon:SetDockOffset(-20, 60)

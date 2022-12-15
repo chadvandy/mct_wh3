@@ -234,56 +234,6 @@ function SettingsPage:populate(panel)
 
         end
     end
-
-
-    -- --- TODO wish there were a better way to do this
-    -- core:get_tm():real_callback(function()
-    --     local max_h = settings_canvas:Height()
-    --     for i = 1, self.num_columns do
-    --         local column = find_uicomponent(settings_canvas, "settings_column_" .. i)
-    --         -- column:Resize(column:Width(), column_h[i], false)
-
-    --         local column_height = column:Height()
-
-    --         -- for j = 0, column:ChildCount() -1 do
-    --         --     local section_uic = UIComponent(column:Find(j))
-    --         --     local header = find_uicomponent(section_uic, "section_header")
-    --         --     local options = find_uicomponent(section_uic, "options_holder")
-
-    --         --     column_height = column_height + options:Height() + header:Height()
-    --         -- end
-    --         if column_height > max_h then max_h = column_height end
-
-    --         column:SetCanResizeHeight(false)
-
-    --         -- column:Layout()
-    --     end
-        -- local _,max_h = settings_canvas:Bounds()
-    --     settings_canvas:Resize(settings_canvas:Width(), max_h, false)
-
-        --- TODO do this at the end
-        -- local num_dividers = self.num_columns - 1
-        -- if num_dividers > 0 then
-        --     for i = 1, num_dividers do
-        --         local divider = core:get_or_create_component("divider_"..i, "ui/vandy_lib/image", settings_canvas)
-        --         divider:SetImagePath("ui/skins/default/parchment_divider_height.png")
-        --         -- divider:SetImageRotation(0, math.rad(90))
-        --         divider:SetCurrentStateImageTiled(0, true)
-        --         divider:SetCurrentStateImageMargins(0, 0, 2, 0, 2)
-    
-        --         local pre_column = find_uicomponent(settings_canvas, "settings_column_"..i)
-        
-        --         local cx, cy = pre_column:Position()
-        --         divider:MoveTo(cx + pre_column:Width(), cy)
-    
-        --         divider:SetCanResizeWidth(true)
-        --         divider:SetCanResizeHeight(true)
-        --         divider:Resize(13, max_h, false)
-        --     end
-        -- end
-    -- end, 10)
-
-    -- settings_canvas:Resize(panel:Width() * 0.95, panel:Height() * 2)
 end
 
 return SettingsPage

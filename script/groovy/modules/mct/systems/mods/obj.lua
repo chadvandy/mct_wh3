@@ -140,7 +140,7 @@ function mct_mod:use_infobox(b)
     if not is_boolean(b) then return end
 
     if b == true then
-        local page_class = mct:get_page_type("Infobox")
+        local page_class = mct:get_page_type("infobox")
         ---@cast page_class MCT.Page.Infobox
         local page = page_class:new("Details", self)
         
@@ -154,7 +154,7 @@ function mct_mod:use_infobox(b)
 end
 
 -- function mct_mod:create_rowbased_settings_page(title)
---     local page_class = mct:get_page_type("Settings")
+--     local page_class = mct:get_page_type("settings")
 --     ---@cast page_class MCT.Page.Settings
 --     local page = page_class:new(title, self, 1, true)
     
@@ -166,7 +166,7 @@ end
 
 ---@return MCT.Page.Settings
 function mct_mod:create_settings_page(title, num_columns)
-    local page_class = mct:get_page_type("Settings")
+    local page_class = mct:get_page_type("settings")
     ---@cast page_class MCT.Page.Settings
     local page = page_class:new(title, self, num_columns)
     
@@ -181,7 +181,7 @@ end
 ---@param creation_callback fun(UIC) The creation function run when the Canvas is populated.
 ---@return MCT.Page.Canvas
 function mct_mod:create_canvas_page(key, creation_callback)
-    local page_class = mct:get_page_type("Canvas")
+    local page_class = mct:get_page_type("canvas")
     ---@cast page_class MCT.Page.Canvas
     local page = page_class:new(key, self, creation_callback)
 

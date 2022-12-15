@@ -4,7 +4,9 @@
 -- TODO cleanup crew.
 --- TODO move into /core/ 
 
----@class MCT.UI
+local this_path = GLib.ThisPath(...)
+
+---@class MCT.UI : MCT.System
 local UI_Main = {
     -- UICs --
 
@@ -18,12 +20,17 @@ local UI_Main = {
     ---@type UIC
     panel = nil,
 
+    title = nil,
+
     -- left side UICs
     mod_row_list_view = nil,
     mod_row_list_box = nil,
 
     -- right bottom UICs
-    right_side_panel = nil,
+    right_panel = nil,
+    right_panel_title = nil,
+
+    top_bar = nil,
 
     -- currently selected mod UIC
     selected_mod_row = nil,
@@ -59,6 +66,20 @@ local mct = get_mct()
 local Registry = mct:get_registry()
 
 local log,logf,logerr,logerrf = get_vlog("[mct_ui]")
+
+function UI_Main:init()
+    local name = nil
+    if __game_mode == __lib_type_battle then
+        name = "battle"
+    elseif __game_mode == __lib_type_campaign then
+        name = "campaign"
+    elseif __game_mode == __lib_type_frontend then
+        name = "frontend"
+    end
+
+    local m = GLib.LoadModule(name, this_path .. "contexts/")
+    m:init()
+end
 
 function UI_Main:get_mct_button()
     return self.mct_button
@@ -338,7 +359,7 @@ function UI_Main:set_selected_mod(mod_obj, page)
     end
 
     local former_uic = self.selected_mod_row
-    if is_uicomponent(former_uic) then
+    if former_uic and is_uicomponent(former_uic) then
         former_uic:SetState("active")
     end
 
@@ -359,7 +380,7 @@ function UI_Main:set_selected_mod(mod_obj, page)
         -- end
 
         ---@type UIC
-        local uic = self.right_side_panel
+        local uic = self.right_panel
         uic:DestroyChildren()
         -- local list = find_uicomponent(uic, "list_view")
         -- local box = find_uicomponent(list, "list_clip", "list_box")
@@ -375,38 +396,6 @@ function UI_Main:set_selected_mod(mod_obj, page)
         core:trigger_custom_event("MctPanelPopulated", {["mct"] = mct, ["ui_obj"] = self, ["mod"] = mod_obj, ["page"] = page})
         
     end end) if not ok then GLib.Error(err) end
-end
-
-function UI_Main:create_notifications_button()
-    local panel = self.panel
-    local notifications_button = core:get_or_create_component("button_mct_notifications", "ui/groovy/notifications_button", panel)
-    notifications_button:SetDockingPoint(3)
-    notifications_button:SetDockOffset(-10, 10)
-    -- local profiles_button = core:get_or_create_component("button_mct_notifications", "ui/templates/round_medium_button", panel)
-
-    -- profiles_button:SetCanResizeHeight(true)
-    -- profiles_button:SetCanResizeWidth(true)
-    -- profiles_button:Resize(profiles_button:Width() * 0.8, profiles_button:Height() * 0.8)
-    -- profiles_button:SetCanResizeHeight(false)
-    -- profiles_button:SetCanResizeWidth(false)
-
-    -- profiles_button:SetImagePath("ui/skins/default/icon_end_turn_notification_generic.png")
-    -- profiles_button:SetTooltipText("Notifications||Review any notifications", true)
-
-    --- TODO dynamic tooltip w/ different state text
-    --- TODO label showing number of unread notifications
-    --- TODO pulse (or something) if there's urgent notifs
-end
-
-
-function UI_Main:create_profiles_button()
-    local panel = self.panel
-    local profiles_button = core:get_or_create_component("button_mct_profiles", "ui/templates/square_medium_text_button", panel)
-    profiles_button:SetDockingPoint(3)
-    profiles_button:Resize(profiles_button:Width() * 0.7, profiles_button:Height())
-    profiles_button:SetDockOffset(-10, profiles_button:Height() * 0.6)
-
-    find_uicomponent(profiles_button, "button_txt"):SetStateText("Profiles")
 end
 
 function UI_Main:open_frame(provided_panel, is_pre_campaign)
@@ -534,12 +523,14 @@ function UI_Main:close_frame(already_dead)
     --- TODO use a self.uics[key]=uic table instead of this
     -- clear saved vars
     self.panel = nil
+    self.title = nil
     self.mod_row_list_view = nil
     self.mod_row_list_box = nil
-    -- self.mod_details_panel = nil
-    self.right_side_panel = nil
+
+    self.left_panel = nil
+    self.right_panel = nil
+    self.top_bar = nil
     self.selected_mod_row = nil
-    self.actions_panel = nil
 
     self.opened = false
 
@@ -556,6 +547,9 @@ end
 function UI_Main:create_panel(provided_panel)
     -- create the new window and set it visible
     if self.panel then return end
+
+    logf("Creating the new panel!")
+    out("Creating the new panel!")
 
     local sw, sh = core:get_screen_resolution()
     local panel
@@ -577,82 +571,18 @@ function UI_Main:create_panel(provided_panel)
     -- resize the panel
     panel:SetCanResizeWidth(true) panel:SetCanResizeHeight(true)
     panel:Resize(pw, ph)
+    panel:SetCanResizeCurrentStateImageHeight(0, true)
+    panel:SetCanResizeCurrentStateImageWidth(0, true)
+    
+    panel:SetCanResizeCurrentStateImageHeight(1, true)
+    panel:SetCanResizeCurrentStateImageWidth(1, true)
+    
     panel:ResizeCurrentStateImage(0, pw, ph)
     panel:ResizeCurrentStateImage(1, pw, ph)
     panel:SetCanResizeWidth(false) panel:SetCanResizeHeight(false)
 
     self.panel = panel
 
-    self:create_left_panel()
-    self:create_right_panel()
-    self:create_notifications_button()
-    -- self:create_profiles_button()
-
-    core:get_ui_root():Layout()
-end
-
-function UI_Main:create_left_panel()
-    local panel = self.panel
-
-    local img_path = GLib.SkinImage("parchment_texture.png")
-
-    -- create image background
-    local left_panel_bg = core:get_or_create_component("left_panel_bg", "ui/vandy_lib/image", panel)
-    left_panel_bg:SetImagePath(img_path)
-    left_panel_bg:SetCurrentStateImageMargins(0, 50, 50, 50, 50)
-    left_panel_bg:SetDockingPoint(1)
-    left_panel_bg:SetDockOffset(20, 10)
-    left_panel_bg:SetCanResizeWidth(true) left_panel_bg:SetCanResizeHeight(true)
-    left_panel_bg:Resize(panel:Width() * 0.22, panel:Height() * 0.95)
-    -- left_panel_bg:SetVisible(true)
-
-    local w,h = left_panel_bg:Dimensions()
-
-    -- make the stationary title (on left_panel_bg, doesn't scroll)
-    local left_panel_title = core:get_or_create_component("left_panel_title", "ui/templates/parchment_divider_title", left_panel_bg)
-    left_panel_title:SetStateText(common.get_localised_string("mct_ui_mods_header"))
-    left_panel_title:Resize(w, left_panel_title:Height())
-    left_panel_title:SetDockingPoint(2)
-    left_panel_title:SetDockOffset(0,0)
-
-    -- create listview
-    local left_panel_listview = core:get_or_create_component("left_panel_listview", "ui/templates/listview", left_panel_bg)
-    left_panel_listview:SetCanResizeWidth(true) left_panel_listview:SetCanResizeHeight(true)
-    left_panel_listview:Resize(w, h-left_panel_title:Height()-5) 
-    left_panel_listview:SetDockingPoint(2)
-    left_panel_listview:SetDockOffset(0, left_panel_title:Height()+5)
-
-    local w,h = left_panel_listview:Dimensions()
-
-    local lclip = find_uicomponent(left_panel_listview, "list_clip")
-    lclip:SetCanResizeWidth(true) lclip:SetCanResizeHeight(true)
-    lclip:SetDockingPoint(2)
-    lclip:Resize(w,h)
-
-    local lbox = find_uicomponent(lclip, "list_box")
-    lbox:SetCanResizeWidth(true) lbox:SetCanResizeHeight(true)
-    lbox:SetDockingPoint(2)
-    lbox:Resize(w,h)
-    
-    -- save the listview and list box into the obj
-    self.mod_row_list_view = left_panel_listview
-    self.mod_row_list_box = lbox
-    self.left_panel = left_panel_bg
-end
-
-function UI_Main:create_right_panel()
-    local panel = self.panel
-    local img_path = GLib.SkinImage("parchment_texture.png")
-    local left_panel = self.left_panel
-
-    -- right side
-    local right_side_panel = core:get_or_create_component("right_side_panel", "ui/vandy_lib/image", panel)
-    right_side_panel:SetImagePath(img_path)
-    right_side_panel:SetCurrentStateImageMargins(0, 50, 50, 50, 50) -- 50/50/50/50 margins
-    right_side_panel:SetDockingPoint(6)
-    right_side_panel:SetDockOffset(-20, 10)
-    right_side_panel:SetCanResizeWidth(true) right_side_panel:SetCanResizeHeight(true)
-    
     -- edit the name
     local title = core:get_or_create_component("title", "ui/templates/panel_title", panel)
     title:Resize(title:Width() * 1.35, title:Height())
@@ -663,10 +593,11 @@ function UI_Main:create_right_panel()
     local title_text = core:get_or_create_component("title_text", "ui/vandy_lib/text/paragraph_header", title)
     title_text:Resize(title:Width() * 0.8, title:Height() * 0.7)
     title_text:SetDockingPoint(5)
-    
-    right_side_panel:Resize(panel:Width() - (left_panel:Width() + 60), panel:Height() * 0.95 - title:Height(), false)
-    
-    right_side_panel:SetCanResizeWidth(false) right_side_panel:SetCanResizeHeight(false)
+
+    --- TODO any tooltip?
+    title_text:SetStateText("Mod Configuration Tool")
+
+    self.title = title_text
 
     --- Create the close button
     local close_button_uic = core:get_or_create_component("button_mct_close", "ui/templates/round_small_button", panel)
@@ -675,36 +606,207 @@ function UI_Main:create_right_panel()
     close_button_uic:SetDockingPoint(3+9)
     close_button_uic:SetDockOffset(-close_button_uic:Width() / 2, close_button_uic:Height() / 2)
 
-    local w,h = right_side_panel:Dimensions()
+    local ih = ph * 0.85
+    local lw = pw * 0.22
+    local rw = pw * 0.75
 
-    -- local mod_settings_listview = core:get_or_create_component("list_view", "ui/mct/listview", right_side_panel)
-    -- mod_settings_listview:SetDockingPoint(1)
-    -- mod_settings_listview:SetDockOffset(0, 0)
-    -- mod_settings_listview:SetCanResizeWidth(true) mod_settings_listview:SetCanResizeHeight(true)
-    -- mod_settings_listview:Resize(w,h)
+    local xo, yo = 20, 20
 
-    -- local list_clip = find_uicomponent(mod_settings_listview, "list_clip")
-    -- list_clip:SetCanResizeWidth(true) list_clip:SetCanResizeHeight(true)
-    -- list_clip:SetDockingPoint(1)
-    -- list_clip:SetDockOffset(0, 0)
-    -- list_clip:Resize(w,h)
+    self:create_left_panel(lw, ih, xo, yo)
+    self:create_right_panel(rw, ih, xo, yo)
 
-    -- local list_box = find_uicomponent(list_clip, "list_box")
-    -- list_box:SetCanResizeWidth(true) list_box:SetCanResizeHeight(true)
-    -- list_box:SetDockingPoint(1)
-    -- list_box:SetDockOffset(0, 0)
-    -- list_box:Resize(w,h)
+    self:create_top_bar(panel:Width() * 0.98, panel:Height() - ih - 15 - yo, 0, 20)
 
-    -- list_box:Layout()
+    core:get_ui_root():Layout()
+end
 
-    -- local l_handle = find_uicomponent(mod_settings_listview, "vslider")
-    -- l_handle:SetDockingPoint(6)
-    -- l_handle:SetDockOffset(-20, 0)
+--- Create the top bar which holds some information and global buttons.
+function UI_Main:create_top_bar(w, h, xo, yo)
+    local panel = self.panel
 
-    -- mod_settings_listview:SetVisible(true)
+    local top_bar = core:get_or_create_component("top_bar", "ui/campaign ui/script_dummy", panel)
+    top_bar:Resize(w, h)
+    top_bar:SetDockingPoint(2)
+    top_bar:SetDockOffset(xo, yo)
 
-    self.mod_title = title_text
-    self.right_side_panel = right_side_panel
+    --- an autosizer list to hold buttons (help page, notifications, whatever else is needed)
+    local buttons_holder = core:get_or_create_component("buttons_holder", "ui/groovy/layouts/hlist", top_bar)
+    buttons_holder:SetDockingPoint(6)
+    buttons_holder:SetDockOffset(-15, 0)
+
+    --- TODO the holder on the top left for current state info (ie. )
+    local info_holder = core:get_or_create_component("info_holder", "ui/groovy/holders/intense_holder", top_bar)
+    info_holder:SetDockingPoint(7)
+    info_holder:SetDockOffset(10, -10)
+    info_holder:Resize(top_bar:Width() * 0.2, top_bar:Height() * 0.85)
+
+    -- TODO state the currently loaded settings, the state, and add a settings button w/ popup to change it.
+    local currently_loaded_txt = core:get_or_create_component("currently_loaded", "ui/vandy_lib/text/dev_ui", info_holder)
+    currently_loaded_txt:SetStateText(mct:get_state_text())
+    currently_loaded_txt:Resize(info_holder:Width() * 0.8, info_holder:Height() * 0.9)
+    -- currently_loaded_txt:SetDockingPoint(1)
+    -- currently_loaded_txt:SetDockOffset(0, 0)
+    currently_loaded_txt:SetTextHAlign("left")
+    currently_loaded_txt:SetTextVAlign("centre")
+    currently_loaded_txt:SetTextXOffset(5, 5)
+    currently_loaded_txt:SetTextYOffset(0, 0)
+
+    local button_edit_state = core:get_or_create_component("button_edit_state", "ui/templates/round_extra_small_button", info_holder)
+    button_edit_state:SetTooltipText("Edit State||Change the view settings!", true)
+    button_edit_state:SetImagePath("ui/skins/default/icon_custom_options.png")
+
+    self.top_bar = top_bar
+    
+    --- TODO "save" button?
+    self:create_profiles_button(buttons_holder)
+    self:create_notifications_button(buttons_holder)
+    self:create_help_button(buttons_holder)
+end
+
+function UI_Main:create_profiles_button(parent)
+    local profiles_button = core:get_or_create_component("button_mct_profiles", "ui/templates/square_medium_text_button", parent)
+    profiles_button:SetDockingPoint(4)
+    profiles_button:Resize(profiles_button:Width() * 0.7, profiles_button:Height())
+    profiles_button:SetDockOffset(10, 0)
+
+    find_uicomponent(profiles_button, "button_txt"):SetStateText("Profiles")
+end
+
+
+function UI_Main:create_notifications_button(parent)
+    -- local notifications_button = core:get_or_create_component("button_mct_notifications", "ui/groovy/notifications_button", panel)
+    local notifications_button = core:get_or_create_component("button_mct_notifications", "ui/templates/round_medium_button", parent)
+
+    -- notifications_button:SetDockingPoint(6)
+    -- notifications_button:SetDockOffset(-30, 0)
+    
+    notifications_button:SetCanResizeHeight(true)
+    notifications_button:SetCanResizeWidth(true)
+    notifications_button:Resize(notifications_button:Width() * 0.8, notifications_button:Height() * 0.8)
+    notifications_button:SetCanResizeHeight(false)
+    notifications_button:SetCanResizeWidth(false)
+
+    notifications_button:SetImagePath("ui/skins/default/icon_end_turn_notification_generic.png")
+    notifications_button:SetTooltipText("Notifications||Review any notifications", true)
+
+    local label_num = core:get_or_create_component("label_num", "ui/groovy/label_num", notifications_button)
+    label_num:SetTooltipText("", true)
+    label_num:SetStateText("5")
+
+    label_num:SetDockOffset(15, -20)
+
+    --- TODO dynamic tooltip w/ different state text
+    --- TODO label showing number of unread notifications
+    --- TODO pulse (or something) if there's urgent notifs
+end
+
+function UI_Main:create_help_button(parent)
+    local help_button = core:get_or_create_component("button_mct_help", "ui/templates/round_medium_button", parent)
+
+    -- help_button:SetDockingPoint(6)
+    -- help_button:SetDockOffset(-30, 0)
+    
+    help_button:SetCanResizeHeight(true)
+    help_button:SetCanResizeWidth(true)
+    help_button:Resize(help_button:Width() * 0.8, help_button:Height() * 0.8)
+    help_button:SetCanResizeHeight(false)
+    help_button:SetCanResizeWidth(false)
+
+    help_button:SetState("inactive")
+
+    help_button:SetImagePath("ui/skins/default/icon_question_mark.png")
+    help_button:SetTooltipText("Help||This will be enabled soon!", true)
+end
+
+--- TODO hide/show the left panel w/ quick animation, not urgent by any means.
+function UI_Main:swap_left_panel(is_open)
+
+
+end
+
+--- TODO the button to hide/show the left panel
+function UI_Main:create_left_panel(ew, eh, xo, yo)
+    local panel = self.panel
+
+    local img_path = GLib.SkinImage("parchment_texture.png")
+
+    -- create image background
+    local left_panel = core:get_or_create_component("left_panel", "ui/groovy/image", panel)
+    left_panel:SetImagePath(img_path)
+    left_panel:SetCurrentStateImageMargins(0, 50, 50, 50, 50)
+    left_panel:SetDockingPoint(7)
+    left_panel:SetDockOffset(xo, -yo)
+    left_panel:SetCanResizeWidth(true) left_panel:SetCanResizeHeight(true)
+    left_panel:Resize(ew, eh)
+    -- left_panel_bg:SetVisible(true)
+
+    local w,h = left_panel:Dimensions()
+
+    -- make the stationary title (on left_panel_bg, doesn't scroll)
+    local left_panel_title = core:get_or_create_component("left_panel_title", "ui/templates/parchment_divider_title", left_panel)
+    left_panel_title:SetStateText(common.get_localised_string("mct_ui_mods_header"))
+    left_panel_title:Resize(w, left_panel_title:Height())
+    left_panel_title:SetDockingPoint(2)
+    left_panel_title:SetDockOffset(0,0)
+
+    -- create listview
+    local left_panel_listview = core:get_or_create_component("left_panel_listview", "ui/templates/listview", left_panel)
+    left_panel_listview:SetCanResizeWidth(true) left_panel_listview:SetCanResizeHeight(true)
+    left_panel_listview:Resize(w, h-left_panel_title:Height()-5) 
+    left_panel_listview:SetDockingPoint(2)
+    left_panel_listview:SetDockOffset(0, left_panel_title:Height()+5)
+
+    local w,h = left_panel_listview:Dimensions()
+
+    local lclip = find_uicomponent(left_panel_listview, "list_clip")
+    lclip:SetCanResizeWidth(true) lclip:SetCanResizeHeight(true)
+    lclip:SetDockingPoint(1)
+    lclip:Resize(w,h)
+
+    local lbox = find_uicomponent(lclip, "list_box")
+    lbox:SetCanResizeWidth(true) lbox:SetCanResizeHeight(true)
+    lbox:SetDockingPoint(1)
+    lbox:Resize(w,h)
+
+    local vslider = find_uicomponent(left_panel_listview, "vslider")
+    local x,y = vslider:GetDockOffset()
+    vslider:SetDockOffset(0, y)
+    
+    -- save the listview and list box into the obj
+    self.mod_row_list_view = left_panel_listview
+    self.mod_row_list_box = lbox
+    self.left_panel = left_panel
+end
+
+function UI_Main:create_right_panel(ew, eh, xo, yo)
+    local panel = self.panel
+    local img_path = GLib.SkinImage("parchment_texture.png")
+
+    -- right side
+    local right_panel = core:get_or_create_component("right_panel", "ui/groovy/image", panel)
+    right_panel:SetImagePath(img_path)
+    right_panel:SetCurrentStateImageMargins(0, 50, 50, 50, 50) -- 50/50/50/50 margins
+
+    right_panel:SetDockingPoint(9)
+    right_panel:SetDockOffset(-xo, -yo)
+
+    right_panel:SetCanResizeWidth(true) right_panel:SetCanResizeHeight(true)
+    right_panel:Resize(ew, eh)
+    right_panel:SetCanResizeWidth(false) right_panel:SetCanResizeHeight(false)
+
+    -- make the stationary title (on left_panel_bg, doesn't scroll)
+    local right_panel_title = core:get_or_create_component("right_panel_title", "ui/templates/parchment_divider_title", right_panel)
+    right_panel_title:SetStateText("Test Text")
+    right_panel_title:Resize(ew * 0.8, right_panel_title:Height())
+    right_panel_title:SetDockingPoint(2)
+    right_panel_title:SetDockOffset(0,0)
+
+    local right_panel_holder = core:get_or_create_component("right_panel_holder", "ui/campaign ui/script_dummy", right_panel)
+    right_panel_holder:Resize(right_panel:Width(), right_panel:Height() - right_panel_title:Height() - 5)
+    right_panel_holder:SetDockingPoint(8)
+
+    self.mod_title = right_panel_title
+    self.right_panel = right_panel_holder
 end
 
 function UI_Main:set_title(mod_obj)
@@ -843,6 +945,7 @@ end
 --- TODO add MCT button to the Esc menu(?)
 function UI_Main:create_mct_button(parent)
     local mct_button = core:get_or_create_component("button_mct", "ui/templates/round_small_button", parent)
+    logf("Calling create_mct_button!")
 
     mct_button:SetImagePath(GLib.SkinImage("icon_options"))
     mct_button:SetTooltipText(common.get_localised_string("mct_mct_mod_title"), true)
@@ -1078,5 +1181,7 @@ core:add_listener(
     end,
     true
 )
+
+UI_Main:init()
 
 return UI_Main

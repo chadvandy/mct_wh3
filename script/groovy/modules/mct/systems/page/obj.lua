@@ -82,10 +82,13 @@ function Page:create_row_uic()
     local txt = find_uicomponent(page_row, "dy_title")
 
     txt:Resize(page_row:Width() * 0.9, page_row:Height() * 0.9)
-    txt:SetDockingPoint(2)
-    txt:SetDockOffset(10,0)
+    txt:SetDockingPoint(4)
+    txt:SetDockOffset(0,0)
 
     txt:SetStateText(page_key)
+    txt:SetTextXOffset(5, 5)
+    txt:SetTextVAlign("centre")
+    txt:SetTextHAlign("centre")
 
     -- local tt = mod_obj:get_tooltip_text()
 

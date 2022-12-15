@@ -31,7 +31,7 @@ local mct_option_defaults = {
     _text = "No text assigned.",
 
     ---@type string The tooltip for this option.
-    _tooltip_text = "No tooltip assigned.",
+    _tooltip_text = "",
 
 
     ---@type table Used for Sliders / Dropdowns, internal values to choose betwixt.
@@ -685,7 +685,7 @@ function mct_option:ui_create_option_base(parent, w, h)
     dummy_option:SetProperty("mct_mod", self:get_mod_key())
 
     --- Create the border if necessary
-    local dummy_border = core:get_or_create_component("border", "ui/vandy_lib/image", dummy_option)
+    local dummy_border = core:get_or_create_component("border", "ui/groovy/image", dummy_option)
     dummy_border:Resize(w, h)
 
     dummy_border:SetDockingPoint(5)
@@ -714,10 +714,6 @@ function mct_option:ui_create_option_base(parent, w, h)
     -- set the tooltip on the "dummy", and remove anything from the option text
     dummy_option:SetInteractive(true)
     option_text:SetInteractive(false)
-
-    if self:get_tooltip_text() ~= "No tooltip assigned" then
-        dummy_option:SetTooltipText(self:get_tooltip_text(), true)
-    end
 
     -- create the interactive option
     local new_option = self:ui_create_option(dummy_option)
@@ -765,25 +761,67 @@ function mct_option:ui_create_option_base(parent, w, h)
         end
     end
 
+    -- if self:get_tooltip_text() ~= "" then
+    --     dummy_option:SetTooltipText(self:get_tooltip_text(), true)
+    -- end
+
+    --- a horizontal list engine to hold icons
+    local icon_holder = core:get_or_create_component("icons_holder", "ui/groovy/layouts/hlist_reverse", dummy_option)
+    icon_holder:SetDockingPoint(6)
+    icon_holder:SetDockOffset(-new_option:Width() - 5, 0)
+
+    local function create_icon_button(key, image, tt, uses_click)
+        local template = "ui/groovy/buttons/icon_button"
+        if not uses_click then
+            template = template .. "_no_click"
+        end
+        local icon_button = core:get_or_create_component(key, template, icon_holder)
+
+        icon_button:SetProperty("mct_option", self:get_key())
+        icon_button:SetProperty("mct_mod", self:get_mod_key())
+
+        icon_button:SetImagePath(image, 0)
+        icon_button:SetTooltipText(tt, true)
+
+        return icon_button
+    end
+    
     --- TODO if we have an info button to show, show it!
+    local tt = self:get_tooltip_text()
+    local has_info_popup = false
+
+    if is_string(tt) and tt ~= "" then
+        -- If we need a full info popup, then set the micro tt on the tt button
+        if has_info_popup then
+
+        else -- Otherwise, we just need a tooltip icon
+            -- Create the tooltip icon
+            self:set_uic_with_key(
+                "button_tooltip",
+                create_icon_button(
+                    "button_tooltip", 
+                    "ui/skins/default/icon_question_mark.png",
+                    tt
+                ),
+                true
+            )
+        end
+
+    end
+
 
     --- if we have a default value set, create the revert-to-defaults button!
     if not is_nil(self:get_default_value(true)) then
-        local revert_to_defaults = core:get_or_create_component("mct_revert_to_defaults", "ui/vandy_lib/image_button", dummy_option)
-
-        revert_to_defaults:SetProperty("mct_option", self:get_key())
-        revert_to_defaults:SetProperty("mct_mod", self:get_mod_key())
-        revert_to_defaults:SetImagePath("ui/skins/default/icon_reset.png", 0)
-        
-        revert_to_defaults:SetCanResizeHeight(true)
-        revert_to_defaults:SetCanResizeWidth(true)
-        revert_to_defaults:Resize(20, 20)
-        revert_to_defaults:SetDockingPoint(6)
-        revert_to_defaults:SetDockOffset(-new_option:Width() - 5, 0)
-        
-        revert_to_defaults:SetTooltipText("Revert this option to its default value.||Default value: " .. tostring(self:get_default_value(true)), true)
-
-        self:set_uic_with_key("revert_to_defaults", revert_to_defaults, true)
+        self:set_uic_with_key(
+            "revert_to_defaults", 
+            create_icon_button(
+                "mct_revert_to_defaults", 
+                "ui/skins/default/icon_reset.png", 
+                "Revert this option to its default value.||Default value: " .. tostring(self:get_default_value(true)),
+                true
+            ),
+            true
+        )
     end
 
     self:ui_refresh()

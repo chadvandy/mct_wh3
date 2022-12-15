@@ -40,7 +40,7 @@ function Infobox:populate(box)
     -- infobox_holder:Resize(box:Width(), box:Height())
 
     --- TODO listview without scrollbar, center of screen
-    local uic = core:get_or_create_component("infobox", "ui/vandy_lib/image", box)
+    local uic = core:get_or_create_component("infobox", "ui/groovy/image", box)
     uic:SetDockingPoint(2)
     uic:SetDockOffset(0, 10)
     uic:Resize(box:Width() * 0.4, box:Height() * 0.94)
@@ -53,7 +53,7 @@ function Infobox:populate(box)
     local p,w, h = mod:get_main_image()
     --- TODO border around image
     if p then
-        local img = core:get_or_create_component("image", "ui/vandy_lib/image", uic)
+        local img = core:get_or_create_component("image", "ui/groovy/image", uic)
         img:SetImagePath(p)
 
         img:Resize(w, h)

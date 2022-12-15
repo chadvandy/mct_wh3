@@ -5,7 +5,7 @@
 	precache_condition="">
 	<hierarchy>
 		<root this="7B8D8DA6-D5A4-4548-99AD5CA17B1AE6D1">
-			<image_button this="82F58892-7F49-4844-B36443AED497BFFE"/>
+			<icon_button this="82F58892-7F49-4844-B36443AED497BFFE"/>
 		</root>
 	</hierarchy>
 	<components>
@@ -41,9 +41,9 @@
 				</newstate>
 			</states>
 		</root>
-		<image_button
+		<icon_button
 			this="82F58892-7F49-4844-B36443AED497BFFE"
-			id="image_button"
+			id="icon_button"
 			offset="711.00,381.00"
 			allowhorizontalresize="false"
 			allowverticalresize="false"
@@ -77,8 +77,8 @@
 				<active
 					this="4EEC7D09-BD06-4F3B-80E1CF7792CDAE9A"
 					name="active"
-					width="38"
-					height="38"
+					width="20"
+					height="20"
 					font_m_size="12"
 					font_m_colour="#FFFFE0FF"
 					font_m_leading="3"
@@ -91,28 +91,10 @@
 							this="064C3E3B-AA04-4CCF-969C4630B37A1115"
 							uniqueguid="064C3E3B-AA04-4CCF-969C4630B37A1115"
 							componentimage="4D0F6E68-DCE4-43C6-A8B365903AFBCF0C"
-							width="38"
-							height="38"
+							width="20"
+							height="20"
 							dockpoint="Center"
 							shader_name="normal_t0"/>
-						<!-- <image
-							this="3FBB38BE-14FD-4B65-8481415BCED5FE50"
-							uniqueguid="3FBB38BE-14FD-4B65-8481415BCED5FE50"
-							componentimage="4D0F6E68-DCE4-43C6-A8B365903AFBCF0C"
-							width="38"
-							height="38"
-							dockpoint="Center"
-							shader_name="brighten_t0"/> -->
-						<!-- <image
-							this="EEF03696-4A08-4339-BBD2CE9A1E62F59A"
-							uniqueguid="EEF03696-4A08-4339-BBD2CE9A1E62F59A"
-							componentimage="4D0F6E68-DCE4-43C6-A8B365903AFBCF0C"
-							width="38"
-							height="38"
-							colour="#FFFFFF00"
-							dockpoint="Center"
-							shadertechnique_vars="0.50,0.00,0.00,0.00"
-							shader_name="brighten_t0"/> -->
 					</imagemetrics>
 					<transitionmap>
 						<transition
@@ -124,8 +106,8 @@
 				<down
 					this="8B6761D8-0BED-4F4F-B11B8D7E77432C95"
 					name="down"
-					width="38"
-					height="38"
+					width="20"
+					height="20"
 					font_m_size="12"
 					font_m_colour="#FFFFE0FF"
 					font_m_leading="3"
@@ -140,8 +122,8 @@
 							uniqueguid="9043D4CE-BBCB-4D18-97015A187C102B2F"
 							componentimage="4D0F6E68-DCE4-43C6-A8B365903AFBCF0C"
 							offset="0.00,3.00"
-							width="38"
-							height="38"
+							width="20"
+							height="20"
 							colour="#6E6E6EFF"
 							dockpoint="Center"
 							dock_offset="0.00,3.00"/>
@@ -158,8 +140,8 @@
 				<down_off
 					this="8CDD3CB9-19A5-4314-B3C08023EF5CC721"
 					name="down_off"
-					width="38"
-					height="38"
+					width="20"
+					height="20"
 					font_m_size="12"
 					font_m_colour="#FFFFE0FF"
 					font_m_leading="3"
@@ -172,8 +154,8 @@
 							this="31384807-4E1D-42CF-929DB6BE4F777B2D"
 							uniqueguid="31384807-4E1D-42CF-929DB6BE4F777B2D"
 							componentimage="4D0F6E68-DCE4-43C6-A8B365903AFBCF0C"
-							width="38"
-							height="38"
+							width="20"
+							height="20"
 							dockpoint="Center"/>
 					</imagemetrics>
 					<transitionmap>
@@ -186,8 +168,8 @@
 				<hover
 					this="3F3C8EA2-D5A2-4513-A213FACB2E8AAAB4"
 					name="hover"
-					width="38"
-					height="38"
+					width="20"
+					height="20"
 					font_m_size="12"
 					font_m_colour="#FFFFE0FF"
 					font_m_leading="3"
@@ -197,29 +179,12 @@
 					uniqueguid="3F3C8EA2-D5A2-4513-A213FACB2E8AAAB4"
 					stateeditordisplaypos="137.00,126.00">
 					<imagemetrics>
-						<!-- <image
-							this="E867F66B-BBAB-451F-94723E7C923E2934"
-							uniqueguid="E867F66B-BBAB-451F-94723E7C923E2934"
-							componentimage="4D0F6E68-DCE4-43C6-A8B365903AFBCF0C"
-							width="38"
-							height="38"
-							dockpoint="Center"
-							shader_name="brighten_t0"/>
-						<image
-							this="8A95A3D5-59BA-48DA-AFD103C935AB8153"
-							uniqueguid="8A95A3D5-59BA-48DA-AFD103C935AB8153"
-							componentimage="4D0F6E68-DCE4-43C6-A8B365903AFBCF0C"
-							width="38"
-							height="38"
-							colour="#FFFFFF00"
-							dockpoint="Center"
-							shader_name="brighten_t0"/> -->
 						<image
 							this="5C395076-A858-4F14-8FF445AD8E5F0B00"
 							uniqueguid="5C395076-A858-4F14-8FF445AD8E5F0B00"
 							componentimage="4D0F6E68-DCE4-43C6-A8B365903AFBCF0C"
-							width="38"
-							height="38"
+							width="20"
+							height="20"
 							dockpoint="Center"
 							shadertechnique_vars="5.00,0.00,0.00,0.00"
 							shader_name="brighten_t0"/>
@@ -238,8 +203,8 @@
 				<inactive
 					this="B6236A80-CA41-46D1-8C7AD4006A1537EE"
 					name="inactive"
-					width="38"
-					height="38"
+					width="20"
+					height="20"
 					font_m_size="12"
 					font_m_colour="#FFFFE0FF"
 					font_m_leading="3"
@@ -252,8 +217,8 @@
 							this="9C504FE8-0869-41EA-9C380C735BAAF6FD"
 							uniqueguid="9C504FE8-0869-41EA-9C380C735BAAF6FD"
 							componentimage="4D0F6E68-DCE4-43C6-A8B365903AFBCF0C"
-							width="38"
-							height="38"
+							width="20"
+							height="20"
 							colour="#FFFFFF46"
 							dockpoint="Center"/>
 					</imagemetrics>
@@ -265,8 +230,8 @@
 						<frame
 							interpolationtime="300"
 							interpolationpropertymask="1064"
-							targetmetrics_m_height="95"
-							targetmetrics_m_width="95"
+							targetmetrics_m_height="60"
+							targetmetrics_m_width="60"
 							targetmetrics_m_shadervars="0.70,0.00,0.00,0.00"
 							targetmetrics_m_imageindex1="6"
 							targetmetrics_m_imageindex2="6"
@@ -278,14 +243,14 @@
 						<frame
 							interpolationtime="300"
 							interpolationpropertymask="1064"
-							targetmetrics_m_height="95"
-							targetmetrics_m_width="95"
+							targetmetrics_m_height="60"
+							targetmetrics_m_width="60"
 							targetmetrics_m_imageindex1="6"
 							targetmetrics_m_imageindex2="6"
 							material_param_id="heat_percent"/>
 					</frames>
 				</mouseoff>
 			</animations>
-		</image_button>
+		</icon_button>
 	</components>
 </layout>

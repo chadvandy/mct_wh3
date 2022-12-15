@@ -296,6 +296,12 @@ function GLib.LoadModules(path, search_override, func_for_each)
     end
 end
 
+---@return string #Full path for this file!
+function GLib.ThisPath(...)
+    --- (...) convert the full path of this file (ie. script/folder/folders/this_file.lua) to just the path leading to specifically this file (ie. script/folder/folders/), to grab subfolders easily while still allowing me to restructure this entire mod four times a year!
+    return string.gsub( (...) , "[^/]+$", "")
+end
+
 function get_vlog(prefix)
     if not is_string(prefix) then prefix = "[lib]" end
 

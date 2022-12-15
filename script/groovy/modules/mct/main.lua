@@ -1,4 +1,5 @@
 ---@alias MCT.OptionType 'slider'|'dropdown'|'checkbox'|'text_input'
+---@alias MCT.System {_Types : {}, _Object : {}, _UI : {}, }
 
 --- (...) convert the full path of this file (ie. script/folder/folders/this_file.lua) to just the path leading to specifically this file (ie. script/folder/folders/), to grab subfolders easily while still allowing me to restructure this entire mod four times a year!
 local this_path = string.gsub( (...) , "[^/]+$", "")
@@ -115,11 +116,13 @@ function mct:get_system_types(system_name)
 end
 
 function mct:get_system_ui(system_name)
+    local ok, err = pcall(function()
     local s = self:get_system(system_name)
 
     if s._UI then
         return s._UI
     end
+end) if not ok then GLib.Log("Error!\n%s", err) end
 end
 
 function mct:get_object(system_name)
@@ -198,14 +201,8 @@ function mct:load_modules()
     self:load_system("sync")
     self:load_system("ui")
 
-    -- if __game_mode == __lib_type_battle then
-    --     load_module("battle", m("ui"))
-    -- elseif __game_mode == __lib_type_campaign then
-    --     load_module("campaign",  m("ui"))
-    -- elseif __game_mode == __lib_type_frontend then
-    --     load_module("frontend",  m("ui"))
-    -- end
-
+    self:load_system("profiles")
+    self:load_system("notifications")
     
     self:load_system("options")
     self:load_system("mods")
@@ -213,47 +210,7 @@ function mct:load_modules()
     self:load_system("page")
     self:load_system("sections")
 
-    -- ---@type table<string, MCT.Option>
-    -- self._MCT_TYPES = { }
 
-    -- Load all Options types
-    -- load_modules(
-    --     m("options/types"),
-    --     "*.lua",
-    --     function(filename, module)
-    --         if is_table(module) and is_string(filename) then
-    --             self._MCT_TYPES[filename] = module
-    --         end
-    --     end
-    -- )
-    
-    -- ---@type MCT.Option.Dummy
-    -- self._MCT_TYPES.dummy = load_module("dummy", options_path)
-
-    -- ---@type MCT.Option.Slider
-    -- self._MCT_TYPES.slider = load_module("slider", options_path)
-
-    -- ---@type MCT.Option.Dropdown
-    -- self._MCT_TYPES.dropdown = load_module("dropdown", options_path)
-    
-    -- ---@type MCT.Option.SpecialDropdown
-    -- self._MCT_TYPES.dropdown_game_object = load_module("dropdown_game_object", options_path)
-
-    -- ---@type MCT.Option.Checkbox
-    -- self._MCT_TYPES.checkbox = load_module("checkbox", options_path)
-
-    -- ---@type MCT.Option.TextInput
-    -- self._MCT_TYPES.text_input = load_module("text_input", options_path)
-
-    -- ---@type MCT.Mod
-    -- self:get_mct_mod() = load_module("obj", m("mods"))
-
-    -- ---@type MCT.Section
-    -- self:get_mct_section() = load_module("obj", m("sections"))
-
-    --- TODO load each of the above more automatically
-
-    --- TODO load any "ui" file in each module folder
 end
 
 ---comment
@@ -291,7 +248,9 @@ function mct:load_mods()
 end
 
 function mct:open_panel()
+    local ok, err = pcall(function()
     self:get_ui():open_frame()
+    end) if not ok then GLib.Log("Panel brkoe!\n%s", err) end
 end
 
 ---comment
@@ -433,6 +392,31 @@ function mct:context(test_context)
     return "frontend"
 end
 
+--- Get the current state of MCT - if we're in view or edit mode, which registry is open, and what parts of that registry are available.
+function mct:get_state()
+    return {
+        primary = "edit",
+        views = {
+            global = true,
+            campaign = true,
+        },
+        is_client = false,
+    }
+end
+
+function mct:get_state_text()
+    local state = self:get_state()
+
+    local primary = state.primary
+    local views = state.views
+    local is_client = state.is_client
+
+    local u = primary:sub(1, 1)
+    primary = u:upper() .. primary:sub(2)
+
+    return string.format("%sing: %s", primary, "Global")
+end
+
 --- Type-checker for @{mct_mod}s
 --- @param obj any Tested value.
 --- @return boolean Whether it passes.
@@ -492,7 +476,9 @@ function get_mct()
     return mct
 end
 
+local ok, err = pcall(function()
 mct:init()
+end) if not ok then GLib.Log("Error loading MCT!\n%s", err) end
 
 core:add_ui_created_callback(function()
     mct:get_ui():ui_created()
