@@ -8,7 +8,7 @@ local mct = get_mct()
 -- local vlib = get_vandy_lib()
 local log,logf,err,errf = get_vlog("[mct]")
 
-local sort_functions = GLib.LoadModule("options", mct:get_path("sorted_objects").."sort_functions/")
+local sort_functions = GLib.LoadModule("options", mct:get_path("helpers", "sort_functions"))
 
 
 ---@class MCT.Section
@@ -67,7 +67,9 @@ local mct_section = GLib.NewClass("MCT.Section", mct_section_defaults)
 ---@param mod MCT.Mod The mct_mod this section is a member of.
 function mct_section.new(key, mod)
     local o = mct_section:__new()
-    o._key = key
+    
+    assert(mct:verify_key(o, key))
+
     o._mod = mod
 
     return o
@@ -341,6 +343,7 @@ function mct_section:populate(this_column, expected_width)
     section_holder:SetCanResizeHeight(true)
     section_holder:SetCanResizeWidth(true)
     section_holder:Resize(expected_width, 34, false)
+    -- section_holder:SetCanResizeWidth(false)
 
     section_holder:SetDockingPoint(5)
     section_holder:SetDockOffset(0, 0)
@@ -362,7 +365,7 @@ function mct_section:populate(this_column, expected_width)
     -- set text & width and shit
     section_header:SetCanResizeWidth(true)
     section_header:SetCanResizeHeight(true)
-    section_header:Resize(expected_width * 0.95, 34, false)
+    section_header:Resize(expected_width, 34, false)
     section_header:SetCanResizeWidth(false)
     section_header:SetCanResizeHeight(false)
 
@@ -433,9 +436,9 @@ function mct_section:populate(this_column, expected_width)
     self:ui_set_collapsed(true)
     self:ui_set_visibility()
 
-    local _,oh = section_holder:Bounds()
+    -- local _,oh = section_holder:Bounds()
 
-    return section_holder:Width(), h + oh
+    -- return section_holder:Width(), h + oh
 end
 
 --- Set the visibility for the mct_section.

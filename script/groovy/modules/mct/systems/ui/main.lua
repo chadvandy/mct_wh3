@@ -63,7 +63,7 @@ local mct = get_mct()
 -- ---@type MCT.UI.Notifications
 -- local UI_Notifications = GLib.LoadModule("notifications", ui_path)
 
-local Registry = mct:get_registry()
+-- local Registry = mct:get_registry()
 
 local log,logf,logerr,logerrf = get_vlog("[mct_ui]")
 
@@ -410,7 +410,7 @@ function UI_Main:open_frame(provided_panel, is_pre_campaign)
     end
 
     self.opened = true
-    Registry:clear_changed_settings()
+    mct:get_registry():clear_changed_settings()
 
     -- make a new one!
     if provided_panel or not is_uicomponent(test) then
@@ -534,7 +534,7 @@ function UI_Main:close_frame(already_dead)
 
     self.opened = false
 
-    Registry:clear_changed_settings()
+    mct:get_registry():clear_changed_settings()
 
     -- clear uic's attached to mct_options
     local mods = mct:get_mods()
@@ -978,7 +978,7 @@ core:add_listener(
     end,
     function(context)
         -- check if MCT was finalized or no changes were done during the latest UI operation       
-        if Registry:has_pending_changes() then
+        if mct:get_registry():has_pending_changes() then
             -- if Settings.__settings_changed then
                 mct:finalize()
             -- end

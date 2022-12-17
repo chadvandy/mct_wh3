@@ -2,7 +2,7 @@ local Super = get_mct():get_mct_page()
 
 --- TODO do this better prolly
 ---@type {key:fun(), index:fun(), localised_text: fun()}
-local sort_functions = GLib.LoadModule("sections", get_mct():get_path("sorted_objects").."sort_functions/")
+local sort_functions = GLib.LoadModule("sections", get_mct():get_path("helpers", "sort_functions"))
 
 ---@class MCT.Page.Settings
 local defaults = {
@@ -109,6 +109,7 @@ end
 
 --- Call the internal ._section_sort_order_function, determined by @{mct_mod:set_section_sort_function}
 -- @local
+---@return MCT.Section[]
 function SettingsPage:sort_sections()
     -- perform the wrapped sort order function
 
@@ -128,13 +129,13 @@ function SettingsPage:populate(panel)
     if #sections == 0 then
         local sorted = self:sort_sections()
         for _,key in ipairs(sorted) do
-            sections[#sections+1] = self.mod_obj:get_section_by_key(key)
+            sections[#sections+1] = self._mod_obj:get_section_by_key(key)
         end
     end
 
-    GLib.Log("Populating a Settings page for mod %s, num sections is %d", self.mod_obj:get_key(), #sections)
+    GLib.Log("Populating a Settings page for mod %s, num sections is %d", self._mod_obj:get_key(), #sections)
 
-    local mod = self.mod_obj
+    local mod = self._mod_obj
 
     -- set the positions for all options in the mod
     mod:set_positions_for_options()
@@ -187,24 +188,58 @@ function SettingsPage:populate(panel)
     --- number of sections per column
     local per_column = math.ceil(#sections / self.num_columns)
 
-    ---@type table<number, number>
-    local column_h = {}
+    -- ---@type table<number, number>
+    -- local column_h = {}
 
-    for i = 1, self.num_columns do column_h[i] = 0 end
+    -- for i = 1, self.num_columns do column_h[i] = 0 end
+
+    local div_num = 0
 
     for i, section_obj in ipairs(sections) do
         local section_key = section_obj:get_key()
 
         local column_num = 1
+        local is_last_in_column = false
 
         if self.num_columns == 3 then
-            column_num = ((i <= per_column) and 1) or
-            ((i > per_column and i <= per_column *2) and 2) or
-            3
+            if i <= per_column then
+                column_num = 1
+
+                if i == per_column then
+                    is_last_in_column = true
+                end
+            elseif i > per_column and i <= (per_column * 2) then
+                column_num = 2
+
+                if i == per_column * 2 then
+                    is_last_in_column = true
+                end
+            else
+                column_num = 3
+                if i == #sections then
+                    is_last_in_column = true
+                end
+            end
         elseif self.num_columns == 2 then
-            column_num = i > per_column and 2 or 1
+            if i <= per_column then
+                column_num = 1
+
+                if i == per_column then
+                    is_last_in_column = true
+                end
+            else
+                column_num = 2
+
+                if i == #sections then
+                    is_last_in_column = true
+                end
+            end
         elseif self.num_columns == 1 then
             column_num = 1
+
+            if i == #sections then
+                is_last_in_column = true
+            end
         end
 
         GLib.Log("Assigning section %s to column %d", section_key, column_num)
@@ -215,8 +250,23 @@ function SettingsPage:populate(panel)
         if not section_obj or section_obj._options == nil or next(section_obj._options) == nil then
             -- skip
         else
-            local w,h = section_obj:populate(box, panel:Width() / self.num_columns)
-            column_h[column_num] = column_h[column_num] + h
+            section_obj:populate(box, column:Width())
+
+            if not is_last_in_column then
+                -- create a horizontal divider!
+                div_num = div_num + 1
+                local div_holder = core:get_or_create_component("divider_holder_"..div_num, "ui/campaign ui/script_dummy", box)
+                div_holder:Resize(box:Width(), 13)
+
+                
+                local div = core:get_or_create_component("divider", "ui/groovy/image", div_holder)
+                div:SetDockingPoint(5)
+                div:Resize(div_holder:Width() - 10, 13)
+                div:SetImagePath("ui/skins/default/parchment_divider_length.png", 0)
+                div:SetCurrentStateImageTiled(0, true)
+                div:SetCurrentStateImageMargins(0, 2, 0, 2, 0)
+            end
+            -- column_h[column_num] = column_h[column_num] + h
         end
     end
 

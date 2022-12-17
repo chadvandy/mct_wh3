@@ -18,6 +18,10 @@ local mct_defaults = {
     _version = 0.9,
 
     _Systems = {},
+
+    _Objects = {},
+
+    _Interfaces = {},
 }
 
 local load_module = GLib.LoadModule
@@ -68,6 +72,8 @@ end
 
 ---@return MCT.Registry
 function mct:get_registry() return self:get_system("registry") end
+---@return MCT.NotificationSystem
+function mct:get_notifications() return self:get_system("notifications") end
 ---@return MCT.UI
 function mct:get_ui() return self:get_system("ui") end
 ---@return MCT.Sync
@@ -77,17 +83,14 @@ function mct:get_mct_mod() return self:get_object("mods") end
 ---@return MCT.Option
 function mct:get_mct_option() return self:get_object("options") end
 ---@return MCT.Option
-function mct:get_mct_option_type(t) return self:get_system_type("options", t) end
+function mct:get_mct_option_type(t) return self:get_object_type("options", t) end
 ---@return MCT.Section
 function mct:get_mct_section() return self:get_object("sections") end
 ---@return MCT.Page
 function mct:get_mct_page() return self:get_object("page") end
-
 ---@param key string
 ---@return MCT.Page
-function mct:get_page_type(key)
-    return self:get_system("page")._Types[key]
-end
+function mct:get_mct_page_type(key) return self:get_object_type("page", key) end
 
 function mct:get_system(system_name, internal)
     local s = self._Systems[system_name]
@@ -96,23 +99,6 @@ function mct:get_system(system_name, internal)
     end
 
     return s
-end
-
-function mct:get_system_type(system_name, type_name)
-    local s = self:get_system(system_name)
-
-    if not s._Types then
-        -- errmsg
-        return false
-    end
-
-    return s._Types[type_name]
-end
-
-function mct:get_system_types(system_name)
-    local s = self:get_system(system_name)
-
-    return s._Types
 end
 
 function mct:get_system_ui(system_name)
@@ -125,32 +111,41 @@ function mct:get_system_ui(system_name)
 end) if not ok then GLib.Log("Error!\n%s", err) end
 end
 
-function mct:get_object(system_name)
-    local s = self:get_system(system_name)
-
-    if not s then vlogf("Trying to get object for system %s, but no system was found!", system_name) end
-
-    if s._Object then
-        return s._Object
-    end
+function mct:get_object(object_name)
+    return self._Objects[object_name]
 end
 
-function mct:get_path(for_system)
-    if is_string(for_system) then
-        return this_path .. "systems/" .. for_system .. "/"
+function mct:get_object_type(object_name, type_name)
+    local o = self:get_object(object_name)
+
+    if not o._Types then
+        -- errmsg
+        return false
     end
 
-    return this_path
+    return o._Types[type_name]
+end
+
+function mct:get_object_types(object_name)
+    local o = self:get_object(object_name)
+
+    return o._Types
+end
+
+function mct:get_path(...)
+    local s = this_path
+    
+    for _, path_name in ipairs{...} do
+        s = s .. path_name .. "/"
+    end
+
+    return s
 end
 
 --- Autoloader for each internal system, dealing with internal types, ui, main, and obj stuff
-function mct:load_system(system_name, internal_type_loader)
-    local path = self:get_path(system_name)
-
-    -- -- If a system isn't provided, then assume this is a normal GLib module
-    -- if not system_name then
-    --     return load_module(module_name, path)
-    -- end
+function mct:load_system(system_name)
+    local path = self:get_path("systems", system_name)
+    local sys_filename = "main"
 
     local function ex(file) return common.vfs_exists(path .. file .. ".lua") end
 
@@ -159,58 +154,69 @@ function mct:load_system(system_name, internal_type_loader)
     end
 
     -- Check for main first
-    if ex("main") then
-        self._Systems[system_name] = load_module("main", path)
+    if ex(sys_filename) then
+        self._Systems[system_name] = load_module(sys_filename, path)
     else
+        --- TODO error?
         --- TODO does it want any specific fields maybe?
         self._Systems[system_name] = {}
     end
+end
 
-    local sys = self._Systems[system_name]
+function mct:load_object(object_name, internal_type_loader)
+    local obj_path = self:get_path("objects", object_name)
+    local obj_filename = "obj"
+    local function ex(file) return common.vfs_exists(obj_path .. file .. ".lua") end
 
-    -- Check for obj next
-    if ex("obj") then
-        sys._Object = load_module("obj", path)
+    if self._Objects[object_name] then
+        -- errmsg, already loaded!
+        return self._Objects[object_name]
     end
 
-    -- UI...
-    if ex("ui") then
-        sys._UI = load_module("ui", path)
+    if ex(obj_filename) then
+        self._Objects[object_name] = load_module(obj_filename, obj_path)
     end
 
-    sys._Types = {}
+    local o = self._Objects[object_name]
+    o._Types = {}
 
     if not is_function(internal_type_loader) then
         internal_type_loader = function(filename, module)
-            sys._Types[filename] = module
+            o._Types[filename] = module
         end
     end
 
-    -- TODO then autoload all internal "types" (handled internally atm)
+    -- then autoload all internal "types"
     load_modules(
-        path.."types/",
+        obj_path.."types/",
         "*.lua",
         internal_type_loader
     )
 end
-
 --- Load up all the included modules for MCT - UI, Options, Settings, etc.
 function mct:load_modules()
 
+    self:load_system("ui")
+
     self:load_system("registry")
     self:load_system("sync")
-    self:load_system("ui")
 
     self:load_system("profiles")
     self:load_system("notifications")
+
+    local ok, err = pcall(function()
     
-    self:load_system("options")
-    self:load_system("mods")
+    self:load_object("options")
+    self:load_object("mods")
 
-    self:load_system("page")
-    self:load_system("sections")
+    self:load_object("page")
+    self:load_object("sections")
+
+    self:load_object("profiles")
+    self:load_object("notifications")
 
 
+    end) if not ok then GLib.Log("Error: " .. err) end
 end
 
 ---comment
@@ -226,7 +232,7 @@ function mct:get_option_type(key)
         --- errmsg
     end
 
-    return self:get_system_type("options", key)
+    return self:get_object_type("options", key)
 end
 
 --- TODO clean this the fuck up
@@ -417,6 +423,26 @@ function mct:get_state_text()
     return string.format("%sing: %s", primary, "Global")
 end
 
+--- Unified system for verifying object keys. 
+---@param obj table
+---@param key string
+---@return boolean #False if invalid, true if fine.
+---@return string? #Error message!
+function mct:verify_key(obj, key)
+    -- Search for spaces.
+    if key:match("%s") then
+        return false, "You can't have any spaces in MCT keys!"
+    end
+
+    -- Search for anything BUT (^) alphanumeric characters (%w) and underscores (_)
+    if key:match("[^%w_]") then
+        return false, "Only alphanumerical characters and underscores are allowed in MCT keys!"
+    end
+
+    obj._key = key
+    return true
+end
+
 --- Type-checker for @{mct_mod}s
 --- @param obj any Tested value.
 --- @return boolean Whether it passes.
@@ -445,12 +471,12 @@ end
 --- @param val any Tested value.
 --- @return boolean Whether it passes.
 function mct:is_valid_option_type(val)
-    return self:get_system_type("options", val)  ~= nil
+    return self:get_object_type("options", val)  ~= nil
 end
 
 function mct:get_valid_option_types()
     local retval = {}
-    for k,_ in pairs(self:get_system_types("options")) do
+    for k,_ in pairs(self:get_object_types("options")) do
         if k ~= "template" then
             retval[#retval+1] = k
         end

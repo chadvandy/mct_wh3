@@ -5,13 +5,13 @@
 ---@class MCT.Page : Class
 local defaults = {
     ---@type string #The Key identifier for this page.
-    key = "",
+    _key = "",
 
     ---@type UIComponent #The row header for this Page.
-    row_uic = nil,
+    _row_uic = nil,
 
     ---@type MCT.Mod #The MCT.Mod this page belongs to.
-    mod_obj = nil,
+    _mod_obj = nil,
 }
 
 ---@class MCT.Page : Class
@@ -30,23 +30,23 @@ end
 
 
 function Page:init(key, mod)
-    self.key = key
-    self.mod_obj = mod
+    assert(get_mct():verify_key(self, key))
+    self._mod_obj = mod
 end
 
 ---@param uic UIC
 function Page:set_row_uic(uic)
     if is_uicomponent(uic) then
-        self.row_uic = uic
+        self._row_uic = uic
     end
 end
 
 function Page:get_row_uic()
-    return self.row_uic
+    return self._row_uic
 end
 
 function Page:get_key()
-    return self.key
+    return self._key
 end
 
 --- TODO Create the UI panel for this layout.
@@ -58,8 +58,10 @@ end
 function Page:create_row_uic()
     local left_panel = get_mct():get_ui().mod_row_list_box
     local list_view = get_mct():get_ui().mod_row_list_view
-    local mod_obj = self.mod_obj
-    local page_key = self.key
+    local mod_obj = self._mod_obj
+    local page_key = self._key
+
+    if not list_view then return end
 
     local page_row = core:get_or_create_component(mod_obj:get_key().."_"..page_key, "ui/vandy_lib/row_header", left_panel)
     page_row:SetVisible(true)

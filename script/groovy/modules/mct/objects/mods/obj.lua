@@ -77,15 +77,15 @@ local mct_mod = GLib.NewClass("MCT_Mod", mct_mod_defaults)
 ---@see mct:register_mod
 function mct_mod:new(key)
     local o = mct_mod:__new()
-    o._key = key
+    assert(mct:verify_key(o, key))
 
-    local ok, err = pcall(function()
-    -- -- o:create_new_page("main", mct)
-    -- local settings = o:create_settings_page("settings", 2)
-    -- logf("Created settings page: " .. tostring(settings))
-    -- o:set_main_page(settings)
+    -- local ok, err = pcall(function()
+    -- -- -- o:create_new_page("main", mct)
+    -- -- local settings = o:create_settings_page("settings", 2)
+    -- -- logf("Created settings page: " .. tostring(settings))
+    -- -- o:set_main_page(settings)
 
-    end) if not ok then GLib.Error(err) end
+    -- end) if not ok then GLib.Error(err) end
 
     return o
 end
@@ -140,7 +140,7 @@ function mct_mod:use_infobox(b)
     if not is_boolean(b) then return end
 
     if b == true then
-        local page_class = mct:get_page_type("infobox")
+        local page_class = mct:get_mct_page_type("infobox")
         ---@cast page_class MCT.Page.Infobox
         local page = page_class:new("Details", self)
         
@@ -166,7 +166,7 @@ end
 
 ---@return MCT.Page.Settings
 function mct_mod:create_settings_page(title, num_columns)
-    local page_class = mct:get_page_type("settings")
+    local page_class = mct:get_mct_page_type("settings")
     ---@cast page_class MCT.Page.Settings
     local page = page_class:new(title, self, num_columns)
     
@@ -181,7 +181,7 @@ end
 ---@param creation_callback fun(UIC) The creation function run when the Canvas is populated.
 ---@return MCT.Page.Canvas
 function mct_mod:create_canvas_page(key, creation_callback)
-    local page_class = mct:get_page_type("canvas")
+    local page_class = mct:get_mct_page_type("canvas")
     ---@cast page_class MCT.Page.Canvas
     local page = page_class:new(key, self, creation_callback)
 

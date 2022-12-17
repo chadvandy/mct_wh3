@@ -46,7 +46,7 @@ function Infobox:populate(box)
     uic:Resize(box:Width() * 0.4, box:Height() * 0.94)
     uic:SetImagePath("ui/skins/default/avatar_frame_custom_battle.png")
 
-    local mod = self.mod_obj
+    local mod = self._mod_obj
 
     local xo,yo = 0,0
 

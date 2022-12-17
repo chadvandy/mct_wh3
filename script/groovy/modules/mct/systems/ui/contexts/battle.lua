@@ -13,13 +13,13 @@ function UI_Battle:init()
         if is_uicomponent(p) then
             core:get_tm():remove_real_callback("mct_button_test")
     
-            self:ui_created()
+            self:ui_created(p)
         end
     end, 100, "mct_button_test")
 end
 
-function UI_Battle:ui_created()
-    local mct_button = get_mct():get_ui():create_mct_button(p)
+function UI_Battle:ui_created(parent)
+    local mct_button = get_mct():get_ui():create_mct_button(parent)
     get_mct():get_ui():ui_created()
 end
 

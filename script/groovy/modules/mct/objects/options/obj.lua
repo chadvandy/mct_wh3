@@ -88,8 +88,9 @@ function mct_option:new(...) end
 ---@param option_key string
 function mct_option:init(mod_obj, option_key)
     logf("MCT.Option init on %s", option_key)
+    assert(mct:verify_key(self, option_key))
+    
     self._mod = mod_obj
-    self._key = option_key
     self._text = option_key
 
     -- assigned section, used for UI, defaults to the last created section unless one is specified
