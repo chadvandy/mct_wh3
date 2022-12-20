@@ -3,16 +3,6 @@ local mct = get_mct()
 
 local mct_mod = mct:register_mod("mct_demo")
 
-mct:register_mod("Testing"):set_title("Testing")
-mct:register_mod("more"):set_title("Testing!!")
-mct:register_mod("another"):set_title("Testing!!")
-mct:register_mod("bleep"):set_title("Testing!!")
-mct:register_mod("blop"):set_title("Testing!!")
-mct:register_mod("blep"):set_title("Testing!!")
-mct:register_mod("bleaep"):set_title("Testing!!")
-mct:register_mod("bleeawefp"):set_title("Testing!!")
-mct:register_mod("bleeawawefefp"):set_title("Testing!!")
-mct:register_mod("bawefleeawefp"):set_title("Testing!!")
 -- local page = mct_mod:create_rowbased_settings_page("Row-based Page")
 
 local b = mct_mod:add_new_section("section_b", "Section B (index first)")

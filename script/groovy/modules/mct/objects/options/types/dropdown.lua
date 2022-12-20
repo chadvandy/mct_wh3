@@ -82,7 +82,7 @@ function Dropdown:ui_select_value(val)
     local popup_list = find_uicomponent(popup_menu, "listview", "list_clip", "list_box")
 
     local new_selected_uic = nil
-    local currently_selected_uic = nil
+    -- local currently_selected_uic = nil
 
     local new_selected_node = nil
 
@@ -100,25 +100,15 @@ function Dropdown:ui_select_value(val)
             if key == val then
                 new_selected_node = table_node
                 new_selected_uic = child
+
+                child:SetState("selected")
             end
         end
-
-        if child:CurrentState() == "selected" then
-            currently_selected_uic = child
-        end
-    end
-
-    -- unselected the currently-selected dropdown option
-    if is_uicomponent(currently_selected_uic) then
-        currently_selected_uic:SetState("unselected")
-    else
-        err("ui_select_value() triggered for mct_option with key ["..self:get_key().."], but no currently_selected_uic with key was found internally. Investigate!")
-        --return false
     end
 
     -- set the new option as "selected", so it's highlighted in the list; also lock it as the selected setting in the option_obj
     new_selected_uic:SetState("selected")
-    --self:set_selected_setting(val)
+    -- self:set_selected_setting(val)
 
     -- set the state text of the dropdown box to be the state text of the row
     local t = new_selected_node:Call("ValueForKey('text')")
@@ -129,13 +119,9 @@ function Dropdown:ui_select_value(val)
     current_display:SetStateText(t)
     dropdown_box_uic:SetTooltipText(tt, true)
 
-    -- set the menu invisible and unclick the box
     if dropdown_box_uic:CurrentState() == "selected" then
         dropdown_box_uic:SetState("active")
     end
-
-    -- popup_menu:SetVisible(false)
-    -- popup_menu:RemoveTopMost()
 
     Super.ui_select_value(self, val)
 end

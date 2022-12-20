@@ -250,7 +250,7 @@ function SettingsPage:populate(panel)
         if not section_obj or section_obj._options == nil or next(section_obj._options) == nil then
             -- skip
         else
-            section_obj:populate(box, column:Width())
+            section_obj:populate(box, column:Width() * 0.95, column:Height() * 0.12)
 
             if not is_last_in_column then
                 -- create a horizontal divider!

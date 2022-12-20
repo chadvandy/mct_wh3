@@ -257,7 +257,8 @@ end
 ---@param path string The path you're checking. Local to data, so if you're checking for any file within the script folder, use "script/" as the path.
 ---@param search_override string The file you're checking for. I believe it requires a wildcard somewhere, "*", but I haven't messed with it enough. Use "*" for any file, or "*.lua" for any lua file, or "*/main.lua" for any file within a subsequent folder with the name main.lua.
 ---@param func_for_each fun(filename:string, module:table)? Code to run for each module loaded.
-function GLib.LoadModules(path, search_override, func_for_each)
+---@param fail_func fun(filename:string, module:table)? Code to run if a module fails.
+function GLib.LoadModules(path, search_override, func_for_each, fail_func)
     if not search_override then search_override = "*.lua" end
     -- vlogf("Checking %s for all main.lua files!", path)
 
@@ -265,7 +266,6 @@ function GLib.LoadModules(path, search_override, func_for_each)
     local file_str = common.filesystem_lookup(path, search_override)
     -- vlogf("Checking all module folders for main.lua, found: %s", file_str)
     
-    --- TODO make this safe if one module breaks
     for filename in string.gmatch(file_str, '([^,]+)') do
         local filename_for_out = filename
 
@@ -289,14 +289,39 @@ function GLib.LoadModules(path, search_override, func_for_each)
             filename = string.sub(filename, 1, string.len(filename) -4)
         end
 
-        local module = GLib.LoadModule(filename, string.gsub(filename_for_out, filename..".lua", ""))
-        if func_for_each and is_function(func_for_each) then
-            func_for_each(filename, module)
+        if not fail_func then
+            fail_func = function(f, err) 
+                verr("Failed to load module: " .. f)
+                verr(err)
+            end
+        end
+
+        GLib.CurrentlyLoadingFile = {
+            name = filename,
+            path = filename_for_out,
+        }
+
+        local module
+        local ok, err = pcall(function()
+
+            module = GLib.LoadModule(filename, string.gsub(filename_for_out, filename..".lua", ""))
+            if func_for_each and is_function(func_for_each) then
+                func_for_each(filename, module)
+            end
+            
+        end) 
+        
+        if not ok then 
+            verr(err) 
+            fail_func(filename, err)        
         end
     end
+
+    GLib.CurrentlyLoadingFile = {}
 end
 
 ---@return string #Full path for this file!
+---@return any
 function GLib.ThisPath(...)
     --- (...) convert the full path of this file (ie. script/folder/folders/this_file.lua) to just the path leading to specifically this file (ie. script/folder/folders/), to grab subfolders easily while still allowing me to restructure this entire mod four times a year!
     return string.gsub( (...) , "[^/]+$", "")

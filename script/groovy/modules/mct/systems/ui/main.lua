@@ -13,6 +13,9 @@ local UI_Main = {
     ---@type UIC the MCT button
     mct_button = nil,
 
+    ---@type UIC the notifications banner.
+    _notification_banner = nil,
+
     -- script dummy
     dummy = nil,
 
@@ -127,19 +130,28 @@ function UI_Main:set_mct_button(uic)
 
     self.mct_button = uic
 
-    --- TODO reinstate
-    -- -- after getting the button, create the label counter, and then set it invisible
-    -- local label = core:get_or_create_component("label_notify", "ui/vandy_lib/number_label", uic)
+    -- after getting the button, create the label counter, and then set it invisible
+    local label = core:get_or_create_component("label_notify", "ui/groovy/label_num", uic)
 
-    -- label:SetStateText("0")
-    -- label:SetTooltipText("Notifications", true)
-    -- label:SetDockingPoint(3)
-    -- label:SetDockOffset(5, -5)
-    -- label:SetCanResizeWidth(true) label:SetCanResizeHeight(true)
-    -- label:Resize(label:Width() /2, label:Height() /2)
-    -- label:SetCanResizeWidth(false) label:SetCanResizeHeight(false)
+    label:SetStateText("0")
+    label:SetTooltipText("Notifications", true)
+    label:SetDockingPoint(3)
+    label:SetDockOffset(5, -5)
+    label:SetCanResizeWidth(true) label:SetCanResizeHeight(true)
+    label:Resize(label:Width() /2, label:Height() /2)
+    label:SetCanResizeWidth(false) label:SetCanResizeHeight(false)
 
-    -- label:SetVisible(false)
+    label:SetVisible(false)
+
+    --- TODO this should probably be a list engine.
+    --- TODO create the banner-holder component for notifications dropping from the MCT button.
+    local banner_holder = core:get_or_create_component("banner_holder", "ui/campaign ui/script_dummy", uic)
+    banner_holder:SetDockingPoint(9+9) -- bottom right, external
+    banner_holder:SetDockOffset(-35, 5)
+
+    banner_holder:Resize(300, 800)
+
+    self._notification_banner = banner_holder
 end
 
 function UI_Main:ui_created()
@@ -213,6 +225,7 @@ function UI_Main:clear_notifs()
 
     self.notify_num = 0
 end
+
 
 -- stash a popup for when MCT is opened
 function UI_Main:stash_popup(key, text, two_buttons, button_one_callback, button_two_callback)

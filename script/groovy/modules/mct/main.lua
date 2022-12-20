@@ -73,7 +73,9 @@ end
 ---@return MCT.Registry
 function mct:get_registry() return self:get_system("registry") end
 ---@return MCT.NotificationSystem
-function mct:get_notifications() return self:get_system("notifications") end
+function mct:get_notification_system() return self:get_system("notifications") end
+---@return MCT.Notification
+function mct:get_notification() return self:get_object("notifications") end
 ---@return MCT.UI
 function mct:get_ui() return self:get_system("ui") end
 ---@return MCT.Sync
@@ -235,20 +237,49 @@ function mct:get_option_type(key)
     return self:get_object_type("options", key)
 end
 
---- TODO clean this the fuck up
 function mct:load_and_start()
     self._initialized = true
-    self:get_system("registry"):load()
+    self:get_registry():load()
 end
 
 function mct:load_mods()
     vlog("[mct] Loading Mod Settings!")
+
     local mods_path = self._mods_path
+
     load_modules(
         mods_path, 
         "*.lua", 
         function(filepath, module)
             vlogf("Loading mod %s!", filepath)
+        end,
+        function (filename, err)
+            vlogf("Failed to load mod file %s! Error is %s", filename, err)
+
+            local mods = self:get_mods_from_file(filename)
+            ---@type string|string[]
+            local mod_str = {}
+
+            for mod_key, mod_obj in pairs(mods) do
+                mod_str[#mod_str+1] = mod_key
+
+                --- TODO put the MCT.Mod in timeout
+                -- mod_obj:
+            end
+
+            mod_str = table.concat(mod_str, ", ")
+
+            --- TODO trigger a notification with the error message + the mod in question.
+            get_mct():get_ui():add_ui_created_callback(function()
+                local n = self:get_notification_system():create_notification()
+    
+                n:set_title("Error Loading Mod!")
+                n:set_short_text("Error while loading the mod " .. mod_str .. "!")
+                n:set_persistent(true)
+    
+                n:popup()
+            end)
+
         end
     )
 end
@@ -333,11 +364,12 @@ function mct:get_mods()
     return self._registered_mods
 end
 
+---@return table<string, MCT.Mod>
 function mct:get_mods_from_file(filepath)
     local mod_list = self._registered_mods
     local retval = {}
     for key, mod in pairs(mod_list) do
-        local compare_path = mod._FILEPATH
+        local compare_path = mod._FILENAME
 
         if compare_path == filepath then
             retval[key] = mod
@@ -357,8 +389,8 @@ function mct:register_mod(mod_name)
 
 
     -- get info about where this function was called from, to save that Lua file as a part of the mod obj
-    local info = debug.getinfo(2, "S")
-    local filepath = info.source
+    local filename = GLib.CurrentlyLoadingFile.name
+
     if self:has_mod_with_name_been_registered(mod_name) then
         verr("Loading mod with name ["..mod_name.."], but it's already been registered. Only use `mct:register_mod()` once. Returning the previous version.")
         return self:get_mod_by_key(mod_name)
@@ -372,7 +404,7 @@ function mct:register_mod(mod_name)
 
 
     local new_mod = self:get_mct_mod():new(mod_name)
-    new_mod._FILEPATH = filepath
+    new_mod._FILENAME = filename
     self._registered_mods[mod_name] = new_mod
 
 

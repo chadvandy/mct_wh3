@@ -327,7 +327,7 @@ end
 
 --- create this section in the UI.
 ---@param this_column UIC The column UIC to pour this section into.
-function mct_section:populate(this_column, expected_width)
+function mct_section:populate(this_column, expected_width, expected_height)
     local can_collapse = self._is_collapsible
     local key = self:get_key()
     local mod = self:get_mod()
@@ -400,7 +400,7 @@ function mct_section:populate(this_column, expected_width)
         dy_desc:SetTextHAlign("centre")
         dy_desc:SetTextVAlign("top")
 
-        dy_desc:Resize(expected_width * 0.85, dy_desc:Height())
+        dy_desc:Resize(expected_width * 0.9, dy_desc:Height())
         dy_desc:SetCanResizeWidth(false)
         
         local tw,th = dy_desc:TextDimensionsForText(desc)
@@ -424,11 +424,9 @@ function mct_section:populate(this_column, expected_width)
     -- options_holder:Resize(expected_width * 0.95, options_holder:Height())
     -- options_holder:SetDockingPoint(8)
 
-    local this_width = expected_width * 0.95
-    local this_height = this_column:Height() * 0.12
     for i,option_key in ipairs(self._true_ordered_options) do
         local option_obj = mod:get_option_by_key(option_key)
-        get_mct():get_ui():new_option_row_at_pos(option_obj, section_holder, this_width, this_height)
+        get_mct():get_ui():new_option_row_at_pos(option_obj, section_holder, expected_width, expected_height)
     end
 
 

@@ -1,7 +1,3 @@
---- TODO a visual layout within MCT, so you can do stuff like "3 equal columns" or "a double-wide column on the left and an image on the right" or whatever, inserting spots for options or text or wiki or whatever you want
---- TODO this should be an object which holds sections or different data in it, ie. a "description" layout might have description text, optional patch note / author / workshop link details, optional image, etc.
---- TODO every Layout is a Page - the main landing page, specific settings in different pages, wiki, patch notes, etc. Aside from the Main layout, each will have their own subheader displayed under the mod header when clicked.
-
 ---@class MCT.Page : Class
 local defaults = {
     ---@type string #The Key identifier for this page.
@@ -30,7 +26,8 @@ end
 
 
 function Page:init(key, mod)
-    assert(get_mct():verify_key(self, key))
+    -- assert(get_mct():verify_key(self, key))
+    self._key = key
     self._mod_obj = mod
 end
 
@@ -49,7 +46,7 @@ function Page:get_key()
     return self._key
 end
 
---- TODO Create the UI panel for this layout.
+--- Create the UI panel for this layout. (Overridden by subclasses)
 function Page:populate(panel)
 
 end
@@ -100,8 +97,6 @@ function Page:create_row_uic()
     -- page_row:SetVisible(false)
 
     self:set_row_uic(page_row)
-
-    --- TODO do this? Or just hold it in the Page?
     mod_obj:set_page_uic(page_row)
 end
 
