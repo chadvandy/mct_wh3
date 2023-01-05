@@ -645,7 +645,7 @@ function Registry:save_file_with_defaults()
             this.options[option_key] = {
                 name = option_obj:get_text(),
                 description = option_obj:get_tooltip_text(),
-                setting = option_obj:get_default_value(),
+                setting = option_obj:get_value_for_save(true),
             }
 
             if option_obj:is_locked() then
@@ -735,16 +735,16 @@ function Registry:save_registry_file()
             this.options[option_key] = {
                 name = option_obj:get_text(),
                 description = option_obj:get_tooltip_text(),
-                default_value = option_obj:get_default_value(),
+                default_value = option_obj:get_value_for_save(true),
             }
 
 
             -- if this option is global, or it's campaign-specific but we're outside a campaign, save its changes in the global registry
             if option_obj:is_global() or not option_obj:is_global() and mct:context() ~= "campaign" then
                 logf("\t\t\tSaving this option as global!")
-                this.options[option_key].setting = option_obj:get_finalized_setting()
+                this.options[option_key].setting = option_obj:get_value_for_save()
 
-                logf("\t\t\tFinalized setting is %s", tostring(option_obj:get_finalized_setting()))
+                logf("\t\t\tFinalized setting is %s", option_obj:get_value_for_save())
 
                 if option_obj:is_locked() then
                     this.options[option_key].is_locked = true
@@ -755,7 +755,7 @@ function Registry:save_registry_file()
                 -- this.options[option_key].setting = 
                 if mct:context() == "campaign" and not option_obj:is_global() then
                     this_campaign.options[option_key] = {
-                        setting = option_obj:get_finalized_setting(),
+                        setting = option_obj:get_value_for_save(),
                     }
 
                     if option_obj:is_locked() then
@@ -840,9 +840,9 @@ function Registry:save_game(context)
         for option_key, option_obj in pairs(mod_obj:get_options()) do
             if not option_obj:is_global() then
                 this[option_key] =  {
-                    setting = option_obj:get_finalized_setting()
+                    setting = option_obj:get_value_for_save()
                 }
-                logf("Saving %s.%s in Campaign Registry as %s", mod_key, option_key, tostring(option_obj:get_finalized_setting()))
+                logf("Saving %s.%s in Campaign Registry as %s", mod_key, option_key, tostring(option_obj:get_value_for_save()))
 
                 if option_obj:is_locked() then
                     this[option_key].is_locked = true

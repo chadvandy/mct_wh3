@@ -20,8 +20,6 @@ local mct_defaults = {
     _Systems = {},
 
     _Objects = {},
-
-    _Interfaces = {},
 }
 
 local load_module = GLib.LoadModule
@@ -103,16 +101,6 @@ function mct:get_system(system_name, internal)
     return s
 end
 
-function mct:get_system_ui(system_name)
-    local ok, err = pcall(function()
-    local s = self:get_system(system_name)
-
-    if s._UI then
-        return s._UI
-    end
-end) if not ok then GLib.Log("Error!\n%s", err) end
-end
-
 function mct:get_object(object_name)
     return self._Objects[object_name]
 end
@@ -158,6 +146,10 @@ function mct:load_system(system_name)
     -- Check for main first
     if ex(sys_filename) then
         self._Systems[system_name] = load_module(sys_filename, path)
+
+        if is_function(self._Systems[system_name].init) then
+            self._Systems[system_name]:init()
+        end
     else
         --- TODO error?
         --- TODO does it want any specific fields maybe?
@@ -275,13 +267,36 @@ function mct:load_mods()
     
                 n:set_title("Error Loading Mod!")
                 n:set_short_text("Error while loading the mod " .. mod_str .. "!")
+                n:set_long_text("Error while loading the mod " .. mod_str .. "!\nError is: " .. err)
                 n:set_persistent(true)
     
-                n:popup()
+                n:trigger_banner_popup()
             end)
 
         end
     )
+end
+
+--- the main holder with collapsible sections and all action buttons
+---@param parent UIC The CA topbar that we're attaching underneath.
+function mct:create_main_holder(parent)
+    --- TODO add any title? tooltip?
+    --- TODO add an open/close button for collapsing
+
+    
+    local holder = core:get_or_create_component("groovy_holder", "ui/groovy/holders/intense_holder", parent)
+    holder:SetVisible(true)
+    holder:Resize(parent:Width() * 0.7, 50)
+    holder:SetDockingPoint(1)
+    holder:SetDockOffset(5, parent:Height() * 0.7)
+
+    local list = core:get_or_create_component("listview", "ui/groovy/layouts/hlistview", holder)
+    list:Resize(holder:Width(), holder:Height())
+
+    local box = find_uicomponent(list, "list_clip", "list_box")
+
+    self:get_ui():create_mct_button(box)
+    self:get_notification_system()._UI:create_button(box)
 end
 
 function mct:open_panel()

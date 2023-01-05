@@ -152,7 +152,7 @@ function SettingsPage:populate(panel)
     -- end
 
     --- TODO horizontal view support for row-based bullshit as before
-    local layout = "ui/mct/listview"
+    local layout = "ui/groovy/layouts/listview"
 
     for i = 1, self.num_columns do
         local column = core:get_or_create_component("settings_column_"..i, layout, panel)

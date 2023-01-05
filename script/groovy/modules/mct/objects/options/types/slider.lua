@@ -37,10 +37,10 @@ end
 --- Checks the validity of the value passed.
 ---@param value any Tested value.
 --- @return boolean valid Returns true if the value passed is valid, false otherwise.
---- @return boolean valid_return If the value passed isn't valid, a second return is sent, for a valid value to replace the tested one with.
+--- @return number valid_return If the value passed isn't valid, a second return is sent, for a valid value to replace the tested one with.
 function Slider:check_validity(value)
     if not is_number(value) then
-        return false, false
+        return false, self:get_default_value()
     end
 
     local values = self:get_values()
@@ -58,7 +58,7 @@ function Slider:check_validity(value)
     local test = self:slider_get_precise_value(value, false)
     
     if test ~= value then
-        ---@cast test boolean
+        ---@cast test number
         -- not precise!
         return false, test
     end
@@ -89,6 +89,12 @@ function Slider:ui_select_value(val)
     if not is_uicomponent(text_input) then
         err("ui_select_value() triggered for mct_option with key ["..self:get_key().."], but no option_uic was found internally. Aborting!")
         return false
+    end
+
+    local ok, new_val = self:check_validity(val)
+    if not ok then
+        err("ui_select_value() triggered for mct_option with key ["..self:get_key().."], but the value passed ["..tostring(val).."] was invalid. Using new val!")
+        val = new_val
     end
 
     local right_button = self:get_uic_with_key("right_button")
@@ -308,6 +314,8 @@ function Slider:slider_set_step_size(step_size, step_size_precision)
 
     self._values.step_size = step_size
     self._values.step_size_precision = step_size_precision
+
+    return self
 end
 
 ---- Setter for the precision on the slider's displayed value. Necessary when working with decimal numbers.
@@ -325,6 +333,8 @@ function Slider:slider_set_precision(precision)
     end
 
     self._values.precision = precision
+
+    return self
 end
 
 ---- Setter for the minimum and maximum values for the slider. If the UI already exists, this method will do a quick check to make sure the current value is between the new min/max, and it will change the lock states of the left/right buttons if necessary.
@@ -367,6 +377,8 @@ function Slider:slider_set_min_max(min, max)
             self:set_selected_setting(current_val)
         end
     end
+
+    return self
 end
 
 

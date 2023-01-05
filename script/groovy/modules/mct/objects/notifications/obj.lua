@@ -50,16 +50,17 @@ end
 
 --- TODO an overriden populate function that allows us to do custom UI bits for a notification.
 --- TODO populate the notif within the Notification panel
-function Notification:populate()
+function Notification:populate(panel)
 
 end
 
 --- TODO trigger a free-standing popup
-function Notification:popup()
-    local banner_holder = get_mct():get_ui()._notification_banner
+function Notification:trigger_banner_popup()
+    local banner_holder = get_mct():get_notification_system():get_ui():get_banner_holder_box()
     local banner = core:get_or_create_component("mct_notification_banner", "ui/groovy/notifications/banner", banner_holder)
-    banner:Resize(300, 200)
-
+    
+    --- TODO resize based on the size of the text!
+    banner:Resize(banner_holder:Width(), 150)
     --- Set the short text!
     local dy_txt = find_uicomponent(banner, "dy_txt")
     dy_txt:SetStateText(self:get_short_text())
@@ -67,29 +68,37 @@ function Notification:popup()
     banner:SetVisible(true)
     banner:TriggerAnimation("show")
 
-    --- TODO listen for the close button being clicked, and mark the notification as read.
-    local button_close = find_uicomponent(banner, "button_close")
+    --- TODO set up details / mark as read
+    
+    local button_view_details = find_uicomponent(banner, "button_view_details")
+    local button_mark_read = find_uicomponent(banner, "button_mark_read")
 
-    local callback = function()
-        self:mark_as_read(true)
-        -- banner:SetVisible(false)
-        banner:Destroy()
-    end
+    -- -- view details callback and listener
+    -- local callback_view_details = function()
+    --     local panel = get_mct():get_ui()
+    --     local panel_holder = find_uicomponent(panel, "panel_holder")
+    --     local panel_content = find_uicomponent(panel_holder, "panel_content")
 
-    core:add_listener(
-        "mct_notification_banner_close",
-        "ComponentLClickUp",
-        function(context)
-            return context.string == button_close:Id()
-        end,
-        function(context)
-            callback()
-        end,
-        true
-    )
+    --     -- populate the panel with the notification details
+    --     self:populate(panel)
+
+    --     -- hide the banner
+    --     banner:SetVisible(false)
+    --     banner:Destroy()
+
+    --     -- show the panel
+    --     panel:SetVisible(true)
+    --     panel:TriggerAnimation("show")
+    -- end
 end
 
-function Notification:display()
+function Notification:trigger_full_popup()
+    --- Trigger the full popup for the Notification, using ui/mct/frame as the component path, with core:get_ui_root() as the parent, and applying the title and long text to the frame with a close button.
+    local frame = core:get_or_create_component("mct_notification_frame", "ui/mct/frame", core:get_ui_root())
+    frame:Resize(300, 200)
+
+
+    
 
 end
 

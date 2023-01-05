@@ -13,9 +13,6 @@ local UI_Main = {
     ---@type UIC the MCT button
     mct_button = nil,
 
-    ---@type UIC the notifications banner.
-    _notification_banner = nil,
-
     -- script dummy
     dummy = nil,
 
@@ -129,29 +126,6 @@ function UI_Main:set_mct_button(uic)
     end
 
     self.mct_button = uic
-
-    -- after getting the button, create the label counter, and then set it invisible
-    local label = core:get_or_create_component("label_notify", "ui/groovy/label_num", uic)
-
-    label:SetStateText("0")
-    label:SetTooltipText("Notifications", true)
-    label:SetDockingPoint(3)
-    label:SetDockOffset(5, -5)
-    label:SetCanResizeWidth(true) label:SetCanResizeHeight(true)
-    label:Resize(label:Width() /2, label:Height() /2)
-    label:SetCanResizeWidth(false) label:SetCanResizeHeight(false)
-
-    label:SetVisible(false)
-
-    --- TODO this should probably be a list engine.
-    --- TODO create the banner-holder component for notifications dropping from the MCT button.
-    local banner_holder = core:get_or_create_component("banner_holder", "ui/campaign ui/script_dummy", uic)
-    banner_holder:SetDockingPoint(9+9) -- bottom right, external
-    banner_holder:SetDockOffset(-35, 5)
-
-    banner_holder:Resize(300, 800)
-
-    self._notification_banner = banner_holder
 end
 
 function UI_Main:ui_created()
@@ -571,7 +545,7 @@ function UI_Main:create_panel(provided_panel)
         panel = provided_panel
         pw, ph = panel:Width(), panel:Height()
     else
-        panel = core:get_or_create_component("mct_options", "ui/mct/frame")
+        panel = core:get_or_create_component("mct_options", "ui/groovy/frames/basic")
         panel:PropagatePriority(200)
         panel:LockPriority()
         panel:SetMoveable(true)
@@ -596,21 +570,26 @@ function UI_Main:create_panel(provided_panel)
 
     self.panel = panel
 
+    local title = find_uicomponent(panel, "panel_title")
+    
+    title:SetStateText("Mod Configuration Tool")
+    self.title = title
+
     -- edit the name
-    local title = core:get_or_create_component("title", "ui/templates/panel_title", panel)
-    title:Resize(title:Width() * 1.35, title:Height())
+    -- local title = core:get_or_create_component("title", "ui/templates/panel_title", panel)
+    -- title:Resize(title:Width() * 1.35, title:Height())
     
-    title:SetDockingPoint(11)
-    title:SetDockOffset(0, title:Height() / 2)
+    -- title:SetDockingPoint(11)
+    -- title:SetDockOffset(0, title:Height() / 2)
     
-    local title_text = core:get_or_create_component("title_text", "ui/vandy_lib/text/paragraph_header", title)
-    title_text:Resize(title:Width() * 0.8, title:Height() * 0.7)
-    title_text:SetDockingPoint(5)
+    -- local title_text = core:get_or_create_component("title_text", "ui/vandy_lib/text/paragraph_header", title)
+    -- title_text:Resize(title:Width() * 0.8, title:Height() * 0.7)
+    -- title_text:SetDockingPoint(5)
 
-    --- TODO any tooltip?
-    title_text:SetStateText("Mod Configuration Tool")
+    -- --- TODO any tooltip?
+    -- title_text:SetStateText("Mod Configuration Tool")
 
-    self.title = title_text
+    -- self.title = title_text
 
     --- Create the close button
     local close_button_uic = core:get_or_create_component("button_mct_close", "ui/templates/round_small_button", panel)
@@ -672,7 +651,6 @@ function UI_Main:create_top_bar(w, h, xo, yo)
     
     --- TODO "save" button?
     self:create_profiles_button(buttons_holder)
-    self:create_notifications_button(buttons_holder)
     self:create_help_button(buttons_holder)
 end
 
@@ -683,34 +661,6 @@ function UI_Main:create_profiles_button(parent)
     profiles_button:SetDockOffset(10, 0)
 
     find_uicomponent(profiles_button, "button_txt"):SetStateText("Profiles")
-end
-
-
-function UI_Main:create_notifications_button(parent)
-    -- local notifications_button = core:get_or_create_component("button_mct_notifications", "ui/groovy/notifications_button", panel)
-    local notifications_button = core:get_or_create_component("button_mct_notifications", "ui/templates/round_medium_button", parent)
-
-    -- notifications_button:SetDockingPoint(6)
-    -- notifications_button:SetDockOffset(-30, 0)
-    
-    notifications_button:SetCanResizeHeight(true)
-    notifications_button:SetCanResizeWidth(true)
-    notifications_button:Resize(notifications_button:Width() * 0.8, notifications_button:Height() * 0.8)
-    notifications_button:SetCanResizeHeight(false)
-    notifications_button:SetCanResizeWidth(false)
-
-    notifications_button:SetImagePath("ui/skins/default/icon_end_turn_notification_generic.png")
-    notifications_button:SetTooltipText("Notifications||Review any notifications", true)
-
-    local label_num = core:get_or_create_component("label_num", "ui/groovy/label_num", notifications_button)
-    label_num:SetTooltipText("", true)
-    label_num:SetStateText("5")
-
-    label_num:SetDockOffset(15, -20)
-
-    --- TODO dynamic tooltip w/ different state text
-    --- TODO label showing number of unread notifications
-    --- TODO pulse (or something) if there's urgent notifs
 end
 
 function UI_Main:create_help_button(parent)
@@ -963,6 +913,8 @@ function UI_Main:create_mct_button(parent)
     mct_button:SetImagePath(GLib.SkinImage("icon_options"))
     mct_button:SetTooltipText(common.get_localised_string("mct_mct_mod_title"), true)
     mct_button:SetVisible(true)
+    mct_button:SetDockingPoint(0)
+    mct_button:SetDockOffset(0, 0)
 
     core:add_listener(
         "MctButton",
@@ -1053,36 +1005,6 @@ core:add_listener(
     true
 )
 
---- TODO move to GLib
-local function inv(obj, e)
-    ModLog("Investigate object from event " .. e)
-
-    -- for k,v in pairs(obj) do
-    --     ModLog("\tFound "..e.."."..k.."()")
-    -- end
-
-    local mt = getmetatable(obj)
-
-    if mt then
-        for k,v in pairs(mt) do
-            if is_function(v) then
-                ModLog("\tFound " .. e.."."..k.."()")
-            elseif k == "__index" then
-                ModLog("\tIn index!")
-                for ik,iv in pairs(v) do
-                    if is_function(iv) then
-                        ModLog("\t\tFound " .. e.."."..ik.."()")
-                    else
-                        ModLog("\t\tFound " .. e.."."..ik)
-                    end
-                end
-            else
-                ModLog("\tFound " .. e.."."..k)
-            end
-        end
-    end
-end
-
 --- TODO move this into Command Manager
 --- TODO hook this up more situationally
 core:add_listener(
@@ -1142,6 +1064,7 @@ core:add_listener(
     true
 )
 
+--- TODO hook up profiles!
 core:add_listener(
     "mct_profiles_button_pressed",
     "ComponentLClickUp",
@@ -1149,23 +1072,9 @@ core:add_listener(
         return context.string == "button_mct_profiles"
     end,
     function(context)
-        ---@type MCT.UI.Profiles
-        local UI_Profiles = mct:get_system_ui("profiles")
-        UI_Profiles:open()
-    end,
-    true
-)
-
-core:add_listener(
-    "mct_notifications_button_pressed",
-    "ComponentLClickUp",
-    function(context)
-        return context.string == "button_mct_notifications"
-    end,
-    function(context)
-        ---@type MCT.UI.Notifications
-        local UI_Notifications = mct:get_system_ui("notifications")
-        UI_Notifications:open()
+        -- ---@type MCT.UI.Profiles
+        -- local UI_Profiles = mct:get_system_ui("profiles")
+        -- UI_Profiles:open()
     end,
     true
 )
@@ -1194,7 +1103,5 @@ core:add_listener(
     end,
     true
 )
-
-UI_Main:init()
 
 return UI_Main

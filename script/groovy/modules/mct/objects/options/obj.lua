@@ -861,6 +861,38 @@ function mct_option:get_finalized_setting()
 end
 
 
+--- Get the finalized setting for this mct_option, but in a format that can be saved to the mct_settings.lua file. This is used internally by MCT, and should not be used by modders.
+--- @return string 
+function mct_option:get_value_for_save(use_default)
+    local t = self:get_type()
+    local f = function(txt, ...) return string.format(txt, ...) end
+
+    local ret = ""
+    local val = self:get_finalized_setting()
+    if use_default then val = self:get_default_value() end
+
+    logf("Getting %s value for option [%s] of type [%s] and value [%s]", use_default == true and "default" or "finalized", self:get_key(), t, tostring(val))
+
+    -- if we're a dropdown or text_input, we need to wrap the value in quotes
+    if t == "MCT.Option.Dropdown" or t == "MCT.Option.TextInput" then
+        ---@cast self MCT.Option.Dropdown | MCT.Option.TextInput
+        ret = f("%q", val)
+    -- if we're a checkbox, we need to set the value to "true" or "false"
+    elseif t == "MCT.Option.Checkbox" then
+        ---@cast self MCT.Option.Checkbox
+        ret = tostring(val)
+    -- if we're a slider, we need to use %f or %d and set the precision based on the slider's precision
+    elseif t == "MCT.Option.Slider" then
+        ---@cast self MCT.Option.Slider
+        ret = self:slider_get_precise_value(val, true)
+    end
+
+    logf("Returned value is [%s]", ret)
+
+    return ret
+end
+
+
 ---- Internal use only. Sets the finalized setting and triggers the event "MctOptionSettingFinalized".
 ---@param val any Set the finalized setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
 ---@param is_first_load boolean? This is set to "true" for the first-load version of this function, when the mct_settings.lua file is loaded.
@@ -890,6 +922,8 @@ function mct_option:set_default_value(val)
     if self:is_val_valid_for_type(val) then
         self._default_setting = val
     end
+
+    return self
 end
 
 ---- Getter for the default setting for this mct_option.

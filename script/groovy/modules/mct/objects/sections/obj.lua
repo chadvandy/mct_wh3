@@ -332,12 +332,6 @@ function mct_section:populate(this_column, expected_width, expected_height)
     local key = self:get_key()
     local mod = self:get_mod()
 
-    -- local section_view = core:get_or_create_component("mct_section_"..key, "ui/mct/listview", this_column)
-    -- section_view:SetCanResizeHeight(true)
-    -- section_view:Resize(expected_width, 34, false)
-    -- section_view:SetCanResizeWidth(false)
-
-    -- local section_holder = find_uicomponent(section_view, "list_clip", "list_box")
 
     local section_holder = core:get_or_create_component("mct_section_"..key, "ui/mct/layouts/resize_column", this_column)
     section_holder:SetCanResizeHeight(true)

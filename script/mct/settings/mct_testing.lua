@@ -56,6 +56,8 @@ test:add_dropdown_values({
     },
 })
 
+local s = mct_mod:add_new_option("testing_slider", "slider"):slider_set_precision(2):set_default_value(50):slider_set_min_max(0, 100):set_text("Testing Slider")
+
 mct_mod:add_new_option("test_b", 'checkbox'):set_text("Testing Checkbox")
 
 local a = mct_mod:add_new_section("section_a", "Section A (key first)")

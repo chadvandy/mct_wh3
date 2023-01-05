@@ -577,7 +577,7 @@
 				<component_image
 					this="FB65A645-3496-4EC6-B43ECF027FD3D825"
 					uniqueguid="FB65A645-3496-4EC6-B43ECF027FD3D825"
-					imagepath="ui/skins/default/parchment_divider.png"/>
+					imagepath="ui/skins/default/parchment_divider_flush.png"/>
 			</componentimages>
 			<states>
 				<newstate
@@ -601,7 +601,7 @@
 							height="500"
 							tile="true"
 							dockpoint="Center"
-							margin="50.00,50.00,50.00,50.00"
+							margin="10.00,10.00,10.00,10.00"
 							/>
 					</imagemetrics>
 				</newstate>

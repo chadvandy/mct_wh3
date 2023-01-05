@@ -18,8 +18,9 @@ function UI_Battle:init()
     end, 100, "mct_button_test")
 end
 
-function UI_Battle:ui_created(parent)
-    local mct_button = get_mct():get_ui():create_mct_button(parent)
+function UI_Battle:ui_created(p)
+    -- local mct_button = get_mct():get_ui():create_mct_button(p)
+    get_mct():create_main_holder(p)
     get_mct():get_ui():ui_created()
 end
 

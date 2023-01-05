@@ -321,10 +321,40 @@ function GLib.LoadModules(path, search_override, func_for_each, fail_func)
 end
 
 ---@return string #Full path for this file!
----@return any
 function GLib.ThisPath(...)
     --- (...) convert the full path of this file (ie. script/folder/folders/this_file.lua) to just the path leading to specifically this file (ie. script/folder/folders/), to grab subfolders easily while still allowing me to restructure this entire mod four times a year!
-    return string.gsub( (...) , "[^/]+$", "")
+    return (string.gsub( (...) , "[^/]+$", ""))
+end
+
+--- Investigate an object and its metatable, and log all functions found.
+---@param obj userdata
+function GLib.Investigate(obj, name)
+    if not name then name = "Unknown Object" end
+
+    local l = GLib.Log
+
+    l("Investigating object: %s", name)
+
+    local mt = getmetatable(obj)
+
+    if mt then
+        for k,v in pairs(mt) do
+            if is_function(v) then
+                l("\tFound " .. name.."."..k.."()")
+            elseif k == "__index" then
+                l("\tIn index!")
+                for ik,iv in pairs(v) do
+                    if is_function(iv) then
+                        l("\t\tFound " .. name.."."..ik.."()")
+                    else
+                        l("\t\tFound " .. name.."."..ik)
+                    end
+                end
+            else
+                l("\tFound " .. name.."."..k)
+            end
+        end
+    end
 end
 
 function get_vlog(prefix)

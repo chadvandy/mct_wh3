@@ -6,40 +6,41 @@
 	comment=""
 	precache_condition="">
 	<hierarchy>
-		<root this="19CEC4C5-F299-409E-9483CF14F5E68FFF">
-            <background this="345A7C15-9AF4-46A2-A317E69DCAE9E2CE">
-                <dy_txt this="96F50C57-9BA0-4129-90249036FF53E244"/>
-		        <button_close this="7637DFE0-18C3-4295-81D050740211D191"/>
+		<root this="5BF57D79-1754-95B6-CB1F0B5D2F7319FC">
+            <background this="A28207C4-5443-12A7-10F56C2CEA424994">
+                <dy_txt this="A9012B5A-1093-6888-FA985D03BFEA43A3"/>
+		        <button_mark_read this="62AF1577-BFF2-1F41-609B15FB232C5248"/>
+		        <button_view_details this="9C6939C1-4423-0734-DD990347A8ACDB2D"/>
             </background>
 		</root>
 	</hierarchy>
 	<components>
 		<root
-			this="19CEC4C5-F299-409E-9483CF14F5E68FFF"
+			this="5BF57D79-1754-95B6-CB1F0B5D2F7319FC"
 			id="root"
 			tooltipslocalised="true"
-			uniqueguid="19CEC4C5-F299-409E-9483CF14F5E68FFF"
-			currentstate="0565E253-6194-48AD-B67168E20BCEEE8D"
-			defaultstate="0565E253-6194-48AD-B67168E20BCEEE8D">
+			uniqueguid="5BF57D79-1754-95B6-CB1F0B5D2F7319FC"
+			currentstate="149910A9-671B-E9B0-3C7A1074A5A72006"
+			defaultstate="149910A9-671B-E9B0-3C7A1074A5A72006">
 			<componentimages>
 				<component_image
-					this="2A597118-2C0C-4D48-B1C18F30B46CB51A"
-					uniqueguid="2A597118-2C0C-4D48-B1C18F30B46CB51A"/>
+					this="0832D623-46F2-1044-0DB3807FD5EB84F2"
+					uniqueguid="0832D623-46F2-1044-0DB3807FD5EB84F2"/>
 			</componentimages>
 			<states>
 				<newstate
-					this="0565E253-6194-48AD-B67168E20BCEEE8D"
+					this="149910A9-671B-E9B0-3C7A1074A5A72006"
 					name="NewState"
 					width="1600"
 					height="900"
 					texthbehaviour="Never split"
 					interactive="true"
-					uniqueguid="0565E253-6194-48AD-B67168E20BCEEE8D">
+					uniqueguid="149910A9-671B-E9B0-3C7A1074A5A72006">
 					<imagemetrics>
 						<image
-							this="94645C86-22A2-4F36-BDF83386E7725F30"
-							uniqueguid="94645C86-22A2-4F36-BDF83386E7725F30"
-							componentimage="2A597118-2C0C-4D48-B1C18F30B46CB51A"
+							this="C3E5D8D0-518D-C1F8-0EFB87F0409F2E0E"
+							uniqueguid="C3E5D8D0-518D-C1F8-0EFB87F0409F2E0E"
+							componentimage="0832D623-46F2-1044-0DB3807FD5EB84F2"
 							width="1600"
 							height="900"
 							colour="#F0F0F0FF"/>
@@ -48,7 +49,7 @@
 			</states>
 		</root>
 		<background
-			this="345A7C15-9AF4-46A2-A317E69DCAE9E2CE"
+			this="A28207C4-5443-12A7-10F56C2CEA424994"
 			id="background"
 			offset="0.00,0.00"
 			allowhorizontalresize="true"
@@ -56,45 +57,45 @@
 			priority="42"
 			tooltipslocalised="true"
             visible="false"
-			uniqueguid="345A7C15-9AF4-46A2-A317E69DCAE9E2CE"
-			currentstate="82190DAB-1375-4F75-B160B37EEF67313D"
-			defaultstate="82190DAB-1375-4F75-B160B37EEF67313D">
+			uniqueguid="A28207C4-5443-12A7-10F56C2CEA424994"
+			currentstate="F2881ADA-FED4-A9EF-9A4697503E285470"
+			defaultstate="F2881ADA-FED4-A9EF-9A4697503E285470">
 			<componentimages>
 				<component_image
-					this="62A87062-A7DF-4A31-85ECA9B508D23F6E"
-					uniqueguid="62A87062-A7DF-4A31-85ECA9B508D23F6E"
+					this="FB460995-610C-CFD1-370CABA7AC735092"
+					uniqueguid="FB460995-610C-CFD1-370CABA7AC735092"
 					imagepath="ui/skins/default/panel_back_tile.png"/>
 				<component_image
-					this="C463E27C-1CBD-40A4-956F00DA4CE3421F"
-					uniqueguid="C463E27C-1CBD-40A4-956F00DA4CE3421F"
+					this="F6BED0A0-4543-2FC8-9A594AD55B68AD32"
+					uniqueguid="F6BED0A0-4543-2FC8-9A594AD55B68AD32"
 					imagepath="ui/skins/default/panel_back_border.png"/>
 			</componentimages>
 			<states>
 				<newstate
-					this="42EF97F5-0F5F-4685-8D309882974F99BF"
+					this="E3C56408-CD36-EF8B-34C71CBD2F4910FC"
 					name="NewState"
 					width="200"
-					height="200"
+					height="150"
 					textvalign="Center"
 					texthalign="Center"
 					interactive="true"
-					uniqueguid="42EF97F5-0F5F-4685-8D309882974F99BF">
+					uniqueguid="E3C56408-CD36-EF8B-34C71CBD2F4910FC">
 					<imagemetrics>
 						<image
-							this="29B85E1D-89DF-49CC-856E0970343B1544"
-							uniqueguid="29B85E1D-89DF-49CC-856E0970343B1544"
-							componentimage="62A87062-A7DF-4A31-85ECA9B508D23F6E"
+							this="4CD93154-C22D-DF68-5254115573E0FCA0"
+							uniqueguid="4CD93154-C22D-DF68-5254115573E0FCA0"
+							componentimage="FB460995-610C-CFD1-370CABA7AC735092"
 							width="200"
-							height="200"
+							height="150"
 							tile="true"
 							dockpoint="Center"
 							margin="5.00,5.00,5.00,5.00"/>
 						<image
-							this="60873A63-C610-4412-ADF25D0CD6440414"
-							uniqueguid="60873A63-C610-4412-ADF25D0CD6440414"
-							componentimage="C463E27C-1CBD-40A4-956F00DA4CE3421F"
+							this="79FE2C02-49D9-E12A-BC2ED7BE05BD0B4A"
+							uniqueguid="79FE2C02-49D9-E12A-BC2ED7BE05BD0B4A"
+							componentimage="F6BED0A0-4543-2FC8-9A594AD55B68AD32"
 							width="200"
-							height="200"
+							height="150"
 							tile="true"
 							margin="30.00,30.00,30.00,30.00"/>
 					</imagemetrics>
@@ -107,13 +108,13 @@
 					<frames>
 						<frame
 							interpolationtime="150"
-							targetmetrics_m_height="200"
+							targetmetrics_m_height="150"
 							targetmetrics_m_width="200"
 							targetmetrics_m_offset="0.00,0.00"/>
 						<frame
 							interpolationtime="150"
 							interpolationpropertymask="64"
-							targetmetrics_m_height="200"
+							targetmetrics_m_height="150"
 							targetmetrics_m_width="200"
 							targetmetrics_m_offset="0.00,0.00"/>
 					</frames>
@@ -126,12 +127,12 @@
 							interpolationtime="200"
 							interpolationpropertymask="64"
 							targetmetrics_m_colour="#FFFFFF00"
-							targetmetrics_m_height="200"
+							targetmetrics_m_height="150"
 							targetmetrics_m_width="200"
 							targetmetrics_m_offset="0.00,0.00">
 							<triggers>
 								<trigger
-									trigger_component="345A7C15-9AF4-46A2-A317E69DCAE9E2CE"
+									trigger_component="A28207C4-5443-12A7-10F56C2CEA424994"
 									trigger_property="Visibility false"/>
 							</triggers>
 						</frame>
@@ -140,82 +141,82 @@
 			</animations>
 		</background>
 		<dy_txt
-			this="96F50C57-9BA0-4129-90249036FF53E244"
+			this="A9012B5A-1093-6888-FA985D03BFEA43A3"
 			id="dy_txt"
 			offset="0.00,0.00"
-			docking="Top Left"
-			dock_offset="0.00,0.00"
+			docking="Center Left"
+			dock_offset="10.00,0.00"
 			component_anchor_point="0.50,0.50"
 			tooltipslocalised="true"
-			uniqueguid="96F50C57-9BA0-4129-90249036FF53E244"
+			uniqueguid="A9012B5A-1093-6888-FA985D03BFEA43A3"
 			isrelativeresize="true"
-			currentstate="DC50F538-D935-48DC-95D59BC328948FA4"
-			defaultstate="DC50F538-D935-48DC-95D59BC328948FA4">
+			currentstate="A530DB09-DD0B-EB66-7DC4FB274FDAB9FF"
+			defaultstate="A530DB09-DD0B-EB66-7DC4FB274FDAB9FF">
 			<states>
 				<newstate
-					this="DC50F538-D935-48DC-95D59BC328948FA4"
+					this="A530DB09-DD0B-EB66-7DC4FB274FDAB9FF"
 					name="NewState"
-					width="200"
-					height="200"
+					width="120"
+					height="100"
 					text="Notification"
 					textvalign="Center"
 					texthalign="Left"
-					textxoffset="10.00,30.00"
+					textxoffset="0.00,0.00"
 					textyoffset="10.00,10.00"
 					texthbehaviour="Slip by character"
 					font_m_size="12"
 					font_m_colour="#FFFFE0FF"
 					font_m_leading="3"
 					fontcat_name="ingame_text_warhammer3"
-					uniqueguid="DC50F538-D935-48DC-95D59BC328948FA4"/>
+					uniqueguid="A530DB09-DD0B-EB66-7DC4FB274FDAB9FF"/>
 			</states>
 		</dy_txt>
-		<button_close
-			this="7637DFE0-18C3-4295-81D050740211D191"
-			id="button_close"
+		<button_mark_read
+			this="62AF1577-BFF2-1F41-609B15FB232C5248"
+			id="button_mark_read"
 			template_id="round_extra_small_button"
 			part_of_template="true"
-			uniqueguid="7637DFE0-18C3-4295-81D050740211D191"
+			uniqueguid="62AF1577-BFF2-1F41-609B15FB232C5248"
 			dimensions="30.00,30.00"
-			dock_point="Top Right"
-			offset="-7.00,7.00"
+			dock_point="Center Right"
+			offset="-7.00,0.00"
 			sound_category="UI_GBL_TMP_Round_Small_Button">
 			<state_uniqueguids>
 				<state_uniqueguid
 					name="active"
-					uniqueguid="0F14B35E-2848-4F18-904B326E1F8BFA54"/>
+					uniqueguid="803FB389-F89E-CE68-D38A09B8D52B048B"/>
 				<state_uniqueguid
 					name="down"
-					uniqueguid="99EA09C2-06EA-4CB5-8B5F45E9D35BC4B8"/>
+					uniqueguid="FF28509D-B893-F4CA-84508EBDC9413C42"/>
 				<state_uniqueguid
 					name="down_off"
-					uniqueguid="9AB0B6B8-F294-4370-A993B6F2572009E1"/>
+					uniqueguid="45C18084-2656-CD8E-F463A24732D9E742"/>
 				<state_uniqueguid
 					name="hover"
-					uniqueguid="F4BAE56F-6CC5-434A-80BA603C2F81E080"/>
+					uniqueguid="898CCC57-79ED-6E29-1F512800C6BC9B48"/>
 				<state_uniqueguid
 					name="inactive"
-					uniqueguid="6DCFA3F1-7FBE-4F2D-B43F3C7C890454A5"/>
+					uniqueguid="5FA3E32F-9A03-D2C0-540BDDEEDDB81A8F"/>
 			</state_uniqueguids>
 			<component_image_uniqueguids>
 				<component_image_uniqueguid
-					name="ui\skins\default\icon_cross_small.png"
-					uniqueguid="FA7988E1-881E-4151-8214F3CE4EBD0CB5"/>
+					name="ui\skins\default\icon_check.png"
+					uniqueguid="EC31CDCE-2088-7DA4-B0F8A5312F9E3C8F"/>
 				<component_image_uniqueguid
 					name="ui/skins/default/button_round_small_pressed.png"
-					uniqueguid="26067246-5C6D-44B9-BBAA521041521B67"/>
+					uniqueguid="49577C34-540F-DCB2-21C4CCD966D42259"/>
 				<component_image_uniqueguid
 					name="ui/skins/default/button_round_small_hover.png"
-					uniqueguid="4E48CABB-AC55-4B7A-B93241A6127B7679"/>
+					uniqueguid="1A0B490F-1E22-8613-08BE79EFB916F56E"/>
 				<component_image_uniqueguid
 					name="ui/skins/default/button_round_small_active.png"
-					uniqueguid="83527DD2-72CD-4A06-B03C90C9291B7724"/>
+					uniqueguid="891775F6-F95E-488F-734A3B1C14C31A8C"/>
 				<component_image_uniqueguid
 					name="ui/skins/default/button_round_small_inactive.png"
-					uniqueguid="A5BACF92-EA38-4355-8E7EDCDF8160B422"/>
+					uniqueguid="8B5AAC81-2DF4-18E7-2293A744FF2F19F9"/>
 				<component_image_uniqueguid
 					name="ui/skins/default/button_round_small_underlay.png"
-					uniqueguid="BE4692F7-D970-4AF2-A4BE3F7486DD4EB6"/>
+					uniqueguid="AB767030-766A-16BB-77D38C059791965D"/>
 			</component_image_uniqueguids>
 			<callbacks_with_context>
 				<callback_with_context callback_id="Button"/>
@@ -241,7 +242,7 @@
 			</user_properties>
 			<localised_texts>
 				<localised_text
-					tooltip_text="Close"/>
+					tooltip_text="Mark as Read"/>
 				<localised_text
 					state="active"
 					is_text_localised="false"/>
@@ -259,7 +260,7 @@
 					is_text_localised="false"/>
 			</localised_texts>
 			<override_images>
-				<element value="ui\skins\default\icon_cross_small.png"/>
+				<element value="ui\skins\default\icon_check.png"/>
 				<element value="ui/skins/default/button_round_small_pressed.png"/>
 				<element value="ui/skins/default/button_round_small_hover.png"/>
 				<element value="ui/skins/default/button_round_small_active.png"/>
@@ -267,6 +268,104 @@
 				<element value="ui/skins/default/button_round_small_underlay.png"/>
 				<element value=""/>
 			</override_images>
-		</button_close>
+		</button_mark_read>
+		<button_view_details
+			this="9C6939C1-4423-0734-DD990347A8ACDB2D"
+			id="button_view_details"
+			template_id="round_extra_small_button"
+			part_of_template="true"
+			uniqueguid="9C6939C1-4423-0734-DD990347A8ACDB2D"
+			dimensions="30.00,30.00"
+			dock_point="Center Right"
+			offset="-40.00,0.00"
+			sound_category="UI_GBL_TMP_Round_Small_Button">
+			<state_uniqueguids>
+				<state_uniqueguid
+					name="active"
+					uniqueguid="803FB399-F89E-CE68-D38A09B8D52B048B"/>
+				<state_uniqueguid
+					name="down"
+					uniqueguid="FF28509E-B893-F4CA-84508EBDC9413C42"/>
+				<state_uniqueguid
+					name="down_off"
+					uniqueguid="45C1808%-2656-CD8E-F463A24732D9E742"/>
+				<state_uniqueguid
+					name="hover"
+					uniqueguid="898CCC58-79ED-6E29-1F512800C6BC9B48"/>
+				<state_uniqueguid
+					name="inactive"
+					uniqueguid="5FA3E32A-9A03-D2C0-540BDDEEDDB81A8F"/>
+			</state_uniqueguids>
+			<component_image_uniqueguids>
+				<component_image_uniqueguid
+					name="ui\skins\default\icon_details.png"
+					uniqueguid="EC31CDCF-2088-7DA4-B0F8A5312F9E3C8F"/>
+				<component_image_uniqueguid
+					name="ui/skins/default/button_round_small_pressed.png"
+					uniqueguid="49577C35-540F-DCB2-21C4CCD966D42259"/>
+				<component_image_uniqueguid
+					name="ui/skins/default/button_round_small_hover.png"
+					uniqueguid="1A0B490A-1E22-8613-08BE79EFB916F56E"/>
+				<component_image_uniqueguid
+					name="ui/skins/default/button_round_small_active.png"
+					uniqueguid="891775F7-F95E-488F-734A3B1C14C31A8C"/>
+				<component_image_uniqueguid
+					name="ui/skins/default/button_round_small_inactive.png"
+					uniqueguid="8B5AAC82-2DF4-18E7-2293A744FF2F19F9"/>
+				<component_image_uniqueguid
+					name="ui/skins/default/button_round_small_underlay.png"
+					uniqueguid="AB767031-766A-16BB-77D38C059791965D"/>
+			</component_image_uniqueguids>
+			<callbacks_with_context>
+				<callback_with_context callback_id="Button"/>
+				<callback_with_context callback_id="StatePropagatorCallback">
+					<child_m_user_properties>
+						<property
+							name="use_transitions"
+							value=""/>
+					</child_m_user_properties>
+				</callback_with_context>
+				<callback_with_context callback_id="CallbackAnimTrigger"/>
+			</callbacks_with_context>
+			<user_properties>
+				<property
+					name="disable_override"
+					value="resizable"/>
+				<property
+					name="disable_override0"
+					value="CallbackAnimTrigger"/>
+				<property
+					name="dynamic_image"
+					value="0"/>
+			</user_properties>
+			<localised_texts>
+				<localised_text
+					tooltip_text="View Details"/>
+				<localised_text
+					state="active"
+					is_text_localised="false"/>
+				<localised_text
+					state="down"
+					is_text_localised="false"/>
+				<localised_text
+					state="down_off"
+					is_text_localised="false"/>
+				<localised_text
+					state="hover"
+					is_text_localised="false"/>
+				<localised_text
+					state="inactive"
+					is_text_localised="false"/>
+			</localised_texts>
+			<override_images>
+				<element value="ui\skins\default\icon_details.png"/>
+				<element value="ui/skins/default/button_round_small_pressed.png"/>
+				<element value="ui/skins/default/button_round_small_hover.png"/>
+				<element value="ui/skins/default/button_round_small_active.png"/>
+				<element value="ui/skins/default/button_round_small_inactive.png"/>
+				<element value="ui/skins/default/button_round_small_underlay.png"/>
+				<element value=""/>
+			</override_images>
+		</button_view_details>
 	</components>
 </layout>
