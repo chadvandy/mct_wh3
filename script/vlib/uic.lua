@@ -236,3 +236,5 @@ function _SetProperty(uic, k, v)
 
     uic:SetProperty(k, v)
 end
+
+--- EDIT SO I CAN FRICKIN UPDATE THE MOD TO 1.3
