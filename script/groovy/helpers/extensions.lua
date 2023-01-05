@@ -243,7 +243,12 @@ function table_printer:handle_value(value)
         self:concatf(" = ")
         self:handle_table(value)
     elseif is_number(value) then
-        self:concatf(" = %d,", value)
+        local int,dec = math.modf(value)
+        if dec == 0 then
+            self:concatf(" = %d,", value)
+        else
+            self:concatf(" = %f,", value)
+        end
     elseif is_string(value) then
         self:concatf(" = %q,", value)
     elseif is_boolean(value) then

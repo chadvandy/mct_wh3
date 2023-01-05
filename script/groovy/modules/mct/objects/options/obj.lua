@@ -867,29 +867,31 @@ function mct_option:get_value_for_save(use_default)
     local t = self:get_type()
     local f = function(txt, ...) return string.format(txt, ...) end
 
-    local ret = ""
+    -- local ret = ""
     local val = self:get_finalized_setting()
     if use_default then val = self:get_default_value() end
 
-    logf("Getting %s value for option [%s] of type [%s] and value [%s]", use_default == true and "default" or "finalized", self:get_key(), t, tostring(val))
+    return val
 
-    -- if we're a dropdown or text_input, we need to wrap the value in quotes
-    if t == "MCT.Option.Dropdown" or t == "MCT.Option.TextInput" then
-        ---@cast self MCT.Option.Dropdown | MCT.Option.TextInput
-        ret = f("%q", val)
-    -- if we're a checkbox, we need to set the value to "true" or "false"
-    elseif t == "MCT.Option.Checkbox" then
-        ---@cast self MCT.Option.Checkbox
-        ret = tostring(val)
-    -- if we're a slider, we need to use %f or %d and set the precision based on the slider's precision
-    elseif t == "MCT.Option.Slider" then
-        ---@cast self MCT.Option.Slider
-        ret = self:slider_get_precise_value(val, true)
-    end
+    -- logf("Getting %s value for option [%s] of type [%s] and value [%s]", use_default == true and "default" or "finalized", self:get_key(), t, tostring(val))
 
-    logf("Returned value is [%s]", ret)
+    -- -- if we're a dropdown or text_input, we need to wrap the value in quotes
+    -- if t == "MCT.Option.Dropdown" or t == "MCT.Option.TextInput" then
+    --     ---@cast self MCT.Option.Dropdown | MCT.Option.TextInput
+    --     ret = f("%q", val)
+    -- -- if we're a checkbox, we need to set the value to "true" or "false"
+    -- elseif t == "MCT.Option.Checkbox" then
+    --     ---@cast self MCT.Option.Checkbox
+    --     ret = tostring(val)
+    -- -- if we're a slider, we need to use %f or %d and set the precision based on the slider's precision
+    -- elseif t == "MCT.Option.Slider" then
+    --     ---@cast self MCT.Option.Slider
+    --     ret = self:slider_get_precise_value(val, true)
+    -- end
 
-    return ret
+    -- logf("Returned value is [%s]", ret)
+
+    -- return ret
 end
 
 
