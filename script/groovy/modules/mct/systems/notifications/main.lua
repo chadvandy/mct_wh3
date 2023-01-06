@@ -40,6 +40,15 @@ function NotificationSystem:create_notification()
     return o
 end
 
+--- TODO pass forward anything special?
+function NotificationSystem:create_title_and_text_notification()
+    local Notification = get_mct():get_notification_type("title_and_text")
+    ---@cast Notification MCT.Notification.TitleText
+
+    local o = Notification:new()
+    return o
+end
+
 
 function NotificationSystem:create_banner_notification()
 

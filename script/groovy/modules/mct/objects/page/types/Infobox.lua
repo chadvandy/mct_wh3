@@ -84,7 +84,7 @@ function Infobox:populate(box)
     local d = mod:get_description()
     if d then
         ---TODO set a border around it or something visually pleasing?
-        local t = core:get_or_create_component("description", "ui/vandy_lib/text/dev_ui", uic)
+        local t = core:get_or_create_component("description", "ui/vandy_lib/text/paragraph", uic)
         t:SetDockingPoint(2)
         t:SetDockOffset(0, yo + 15)
         t:Resize(uic:Width() * 0.95, 40)

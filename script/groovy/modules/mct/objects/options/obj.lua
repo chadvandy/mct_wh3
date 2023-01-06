@@ -707,7 +707,7 @@ function mct_option:ui_create_option_base(parent, w, h)
     self:set_uic_with_key("border", dummy_border, true)
 
     -- make some text to display deets about the option
-    local option_text = core:get_or_create_component("text", "ui/vandy_lib/text/dev_ui", dummy_option)
+    local option_text = core:get_or_create_component("text", "ui/vandy_lib/text/paragraph", dummy_option)
     option_text:SetVisible(true)
     option_text:SetDockingPoint(4)
     option_text:SetDockOffset(15, 0)

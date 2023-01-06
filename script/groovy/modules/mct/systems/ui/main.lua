@@ -633,7 +633,7 @@ function UI_Main:create_top_bar(w, h, xo, yo)
     info_holder:Resize(top_bar:Width() * 0.2, top_bar:Height() * 0.85)
 
     -- TODO state the currently loaded settings, the state, and add a settings button w/ popup to change it.
-    local currently_loaded_txt = core:get_or_create_component("currently_loaded", "ui/vandy_lib/text/dev_ui", info_holder)
+    local currently_loaded_txt = core:get_or_create_component("currently_loaded", "ui/vandy_lib/text/paragraph", info_holder)
     currently_loaded_txt:SetStateText(mct:get_state_text())
     currently_loaded_txt:Resize(info_holder:Width() * 0.8, info_holder:Height() * 0.9)
     -- currently_loaded_txt:SetDockingPoint(1)

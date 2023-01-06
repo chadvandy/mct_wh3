@@ -387,7 +387,7 @@ function mct_section:populate(this_column, expected_width, expected_height)
 
     local desc = self:get_description()
     if desc ~= "" then
-        local dy_desc = core:get_or_create_component("description", "ui/vandy_lib/text/dev_ui", section_holder)
+        local dy_desc = core:get_or_create_component("description", "ui/vandy_lib/text/paragraph", section_holder)
         dy_desc:SetCanResizeWidth(true)
         dy_desc:SetCanResizeHeight(true)
 

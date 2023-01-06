@@ -72,8 +72,6 @@ end
 function mct:get_registry() return self:get_system("registry") end
 ---@return MCT.NotificationSystem
 function mct:get_notification_system() return self:get_system("notifications") end
----@return MCT.Notification
-function mct:get_notification() return self:get_object("notifications") end
 ---@return MCT.UI
 function mct:get_ui() return self:get_system("ui") end
 ---@return MCT.Sync
@@ -86,6 +84,13 @@ function mct:get_mct_option() return self:get_object("options") end
 function mct:get_mct_option_type(t) return self:get_object_type("options", t) end
 ---@return MCT.Section
 function mct:get_mct_section() return self:get_object("sections") end
+
+---@return MCT.Notification
+function mct:get_notification() return self:get_object("notifications") end
+---@param type string
+---@return MCT.Notification
+function mct:get_notification_type(type) return self:get_object_type("notifications", type) end
+
 ---@return MCT.Page
 function mct:get_mct_page() return self:get_object("page") end
 ---@param key string
@@ -263,7 +268,7 @@ function mct:load_mods()
 
             --- TODO trigger a notification with the error message + the mod in question.
             get_mct():get_ui():add_ui_created_callback(function()
-                local n = self:get_notification_system():create_notification()
+                local n = self:get_notification_system():create_title_and_text_notification()
     
                 n:set_title("Error Loading Mod!")
                 n:set_short_text("Error while loading the mod " .. mod_str .. "!")

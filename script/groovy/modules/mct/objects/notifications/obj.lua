@@ -73,32 +73,39 @@ function Notification:trigger_banner_popup()
     local button_view_details = find_uicomponent(banner, "button_view_details")
     local button_mark_read = find_uicomponent(banner, "button_mark_read")
 
-    -- -- view details callback and listener
-    -- local callback_view_details = function()
-    --     local panel = get_mct():get_ui()
-    --     local panel_holder = find_uicomponent(panel, "panel_holder")
-    --     local panel_content = find_uicomponent(panel_holder, "panel_content")
-
-    --     -- populate the panel with the notification details
-    --     self:populate(panel)
-
-    --     -- hide the banner
-    --     banner:SetVisible(false)
-    --     banner:Destroy()
-
-    --     -- show the panel
-    --     panel:SetVisible(true)
-    --     panel:TriggerAnimation("show")
-    -- end
+    core:add_listener(
+        "mct_notification_banner_view_details",
+        "ComponentLClickUp",
+        function(context)
+            return context.component == button_view_details:Address()
+        end,
+        function(context)
+            self:trigger_full_popup()
+        end,
+        true
+    )
 end
 
 function Notification:trigger_full_popup()
-    --- Trigger the full popup for the Notification, using ui/mct/frame as the component path, with core:get_ui_root() as the parent, and applying the title and long text to the frame with a close button.
-    local frame = core:get_or_create_component("mct_notification_frame", "ui/mct/frame", core:get_ui_root())
-    frame:Resize(300, 200)
+    -- --- Trigger the full popup for the Notification, using ui/mct/frame as the component path, with core:get_ui_root() as the parent, and applying the title and long text to the frame with a close button.
+    -- local frame = core:get_or_create_component("mct_notification_frame", "ui/vandy_lib/popups/pretty_popup", core:get_ui_root())
+    -- frame:Resize(300, 200)
 
+    -- local button_close = find_uicomponent(frame, "button_close")
+    -- button_close:SetState("active")
+    -- button_close:SetInteractive(true)
 
-    
+    -- core:add_listener(
+    --     "mct_notification_frame_close",
+    --     "ComponentLClickUp",
+    --     function(context)
+    --         return context.component == button_close:Address()
+    --     end,
+    --     function(context)
+    --         frame:Destroy()
+    --     end,
+    --     true
+    -- )
 
 end
 
