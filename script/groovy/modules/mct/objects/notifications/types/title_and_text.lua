@@ -18,6 +18,8 @@ function This:trigger_full_popup()
     local panel = core:get_or_create_component("mct_notification_panel", "ui/vandy_lib/popups/pretty_popup", core:get_ui_root())
     panel:Resize(500, 600)
 
+    --- TODO resize based on internal content!
+
     -- get the close button
     local button_close = find_uicomponent(panel, "button_close")
     button_close:SetState("active")
@@ -45,7 +47,7 @@ function This:trigger_full_popup()
 
     -- create a text component and dock it to 8, and set it to the long text of this notification
     -- use ui/vandy_lib/text/paragraph
-    local text = core:get_or_create_component("mct_notification_text", "ui/vandy_lib/text/paragraph", panel)
+    local text = core:get_or_create_component("mct_notification_text", "ui/groovy/text/fe_default", panel)
     text:SetDockingPoint(8)
     text:SetDockOffset(0, -20)
     text:SetStateText(self:get_long_text())

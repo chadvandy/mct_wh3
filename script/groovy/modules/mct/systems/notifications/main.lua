@@ -49,6 +49,13 @@ function NotificationSystem:create_title_and_text_notification()
     return o
 end
 
+---@return MCT.Notification.Error
+function NotificationSystem:create_error_notification()
+    local Notification = get_mct():get_notification_type("error")
+    ---@cast Notification MCT.Notification.Error
+
+    return Notification:new()
+end
 
 function NotificationSystem:create_banner_notification()
 

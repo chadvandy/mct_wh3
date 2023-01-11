@@ -279,7 +279,7 @@ function UI_Profiles:create_main_view()
     hdiv:SetCurrentStateImageTiled(0, true)
     hdiv:SetCurrentStateImageMargins(0, 2, 0, 2, 0)
     
-    local profile_desc = core:get_or_create_component("profile_desc", "ui/vandy_lib/text/paragraph", bottom)
+    local profile_desc = core:get_or_create_component("profile_desc", "ui/groovy/text/fe_default", bottom)
     profile_desc:SetDockingPoint(2)
     profile_desc:SetDockOffset(0, 30 + profile_name:Height())
     profile_desc:SetStateText("")
@@ -395,7 +395,7 @@ function UI_Profiles:populate_profiles_holder()
 
     ModLog("Creating no profiles text")
     
-    local no_profiles = core:get_or_create_component("no_profiles_txt", "ui/vandy_lib/text/paragraph", profiles_holder)
+    local no_profiles = core:get_or_create_component("no_profiles_txt", "ui/groovy/text/fe_default", profiles_holder)
     no_profiles:SetVisible(none)
     no_profiles:Resize(300, 35)
     no_profiles:SetStateText("No profiles available!")

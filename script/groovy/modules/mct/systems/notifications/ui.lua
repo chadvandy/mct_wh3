@@ -49,6 +49,23 @@ function UI_Notifications:create_banner_holder(parent)
 
     title:Resize(title:Width(), 30)
 
+    -- use ui/groovy/layouts/vlist as filter_holder, dock it to 1, and add a filter checkbox for read notifications
+    local filter_holder = core:get_or_create_component("filter_holder", "ui/groovy/layouts/vlist", banner_holder)
+    filter_holder:SetDockingPoint(1)
+    filter_holder:SetDockOffset(0, title:Height() + 10)
+
+    -- use ui/templates/checkbox_toggle for the checkbox itself, and then add a label component through ui/groovy/text/fe_default
+    local filter_checkbox = core:get_or_create_component("filter_checkbox", "ui/templates/checkbox_toggle", filter_holder)
+    filter_checkbox:SetTooltipText("Hide read notifications||Hide any previously read notifications from the list.", true)
+
+    local filter_label = core:get_or_create_component("filter_label", "ui/groovy/text/fe_default", filter_checkbox)
+    filter_label:SetDockingPoint(1)
+    filter_label:SetDockOffset(filter_checkbox:Width() + 5, 0)
+    filter_label:SetStateText("Hide read notifications")
+    filter_label:Resize(filter_checkbox:Width() * 4, filter_checkbox:Height() * 1.2)
+    -- local w,h = filter_label:TextDimensionsForText(filter_label:GetStateText())
+    -- filter_label:ResizeTextResizingComponentToInitialSize(w, h)
+
     -- use ui/groovy/layouts/hlist as a button_holder, dock it to 3, and add a close button and mark all as read button using the round_small_button template 
     local button_holder = core:get_or_create_component("button_holder", "ui/groovy/layouts/hlist", banner_holder)
     button_holder:SetDockingPoint(3)
@@ -103,6 +120,8 @@ function UI_Notifications:create_banner_holder(parent)
     list_box:Resize(290, 700)
 
     self._notification_banner = banner_holder
+
+    self:resize_panel()
 end
 
 function UI_Notifications:get_banner_holder()
@@ -114,7 +133,7 @@ function UI_Notifications:get_banner_holder_box()
 end
 
 function UI_Notifications:create_button(parent)
-    local notifications_button = core:get_or_create_component("button_mct_notifications", "ui/templates/round_small_button", parent)
+    local notifications_button = core:get_or_create_component("button_mct_notifications", "ui/templates/round_small_button_toggle", parent)
 
     notifications_button:SetImagePath("ui/skins/default/icon_end_turn_notification_generic.png")
     notifications_button:SetTooltipText("Notifications||Review any notifications", true)
@@ -153,6 +172,34 @@ function UI_Notifications:refresh_button()
 
     local unread_count = mct:get_notification_system():get_unread_notifications_count()
     label_num:SetStateText(tostring(unread_count))
+end
+
+
+function UI_Notifications:resize_panel()
+    local banner_holder = self:get_banner_holder()
+
+    local list_clip = find_uicomponent(banner_holder, "list_clip")
+    local list_box = find_uicomponent(list_clip, "list_box")
+
+    local num_children = list_box:ChildCount()
+    local height = 0
+
+    for i = 0, num_children - 1 do
+        local child = UIComponent(list_box:Find(i))
+        height = height + child:Height()
+    end
+
+    local ydiff = 100
+
+    local mw, my = 290, 700
+
+    if height > my then
+        height = my
+    end
+
+    list_clip:Resize(mw, height, false)
+    list_box:Resize(mw, height, false)
+    banner_holder:Resize(mw, ydiff + height, false)
 end
 
 return UI_Notifications

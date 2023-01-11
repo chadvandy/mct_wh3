@@ -84,34 +84,19 @@ function Notification:trigger_banner_popup()
         end,
         true
     )
+
+    get_mct():get_notification_system():get_ui():resize_panel()
 end
 
 function Notification:trigger_full_popup()
-    -- --- Trigger the full popup for the Notification, using ui/mct/frame as the component path, with core:get_ui_root() as the parent, and applying the title and long text to the frame with a close button.
-    -- local frame = core:get_or_create_component("mct_notification_frame", "ui/vandy_lib/popups/pretty_popup", core:get_ui_root())
-    -- frame:Resize(300, 200)
-
-    -- local button_close = find_uicomponent(frame, "button_close")
-    -- button_close:SetState("active")
-    -- button_close:SetInteractive(true)
-
-    -- core:add_listener(
-    --     "mct_notification_frame_close",
-    --     "ComponentLClickUp",
-    --     function(context)
-    --         return context.component == button_close:Address()
-    --     end,
-    --     function(context)
-    --         frame:Destroy()
-    --     end,
-    --     true
-    -- )
 
 end
 
 -- set the title text for the notification
 function Notification:set_title(title)
     self._title = title
+
+    return self
 end
 
 -- get the title text for the notification
@@ -123,6 +108,8 @@ end
 function Notification:set_short_text(text)
     assert(is_string(text))
     self._short_text = text
+
+    return self
 end 
 
 -- get the short text for the notification
@@ -136,6 +123,8 @@ end
 function Notification:set_long_text(text)
     assert(is_string(text))
     self._long_text = text
+
+    return self
 end
 
 -- get the long text for the notification
@@ -160,6 +149,8 @@ end
 
 function Notification:set_persistent(b)
     self._persistence = b
+
+    return self
 end
 
 

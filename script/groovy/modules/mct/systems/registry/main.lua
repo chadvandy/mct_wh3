@@ -416,7 +416,7 @@ function Registry:save()
 
         self:save_registry_file()
         self:save_profiles_file()
-    end) if not ok then err(errmsg) end
+    end) if not ok then log(errmsg) end
 
     -- Automatically save the game whenever the settings are edited.
     if cm then

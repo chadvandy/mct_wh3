@@ -253,6 +253,8 @@ function mct:load_mods()
         function (filename, err)
             vlogf("Failed to load mod file %s! Error is %s", filename, err)
 
+            local long_err = debug.traceback("", 2)
+
             local mods = self:get_mods_from_file(filename)
             ---@type string|string[]
             local mod_str = {}
@@ -268,14 +270,15 @@ function mct:load_mods()
 
             --- TODO trigger a notification with the error message + the mod in question.
             get_mct():get_ui():add_ui_created_callback(function()
-                local n = self:get_notification_system():create_title_and_text_notification()
-    
-                n:set_title("Error Loading Mod!")
-                n:set_short_text("Error while loading the mod " .. mod_str .. "!")
-                n:set_long_text("Error while loading the mod " .. mod_str .. "!\nError is: " .. err)
-                n:set_persistent(true)
-    
-                n:trigger_banner_popup()
+                local n = self:get_notification_system():create_error_notification()
+                    
+                n
+                    :set_title("Error Loading MCT Mod!")
+                    :set_short_text(string.format("[[col:red]]Error while loading the mod %q.[[/col]]\nThis mod has been disabled until the next game start.", mod_str))
+                    :set_error_text(string.format("[[col:red]]%q has been disabled due to an error while loading it.[[/col]] Report this issue to the mod author.\nError: %s", mod_str, err))
+                    :set_long_text(long_err)
+                    :set_persistent(true)
+                    :trigger_banner_popup()
             end)
 
         end
@@ -342,7 +345,7 @@ end
 
 --- Internal use only. Triggers all the functionality for "Finalize Settings!"
 function mct:finalize()
-    if not self:get_registry():has_pending_changes() then return end
+    -- if not self:get_registry():has_pending_changes() then return end
 
     -- check if it's MP!
     if __game_mode == __lib_type_campaign and cm.game_interface:model():is_multiplayer() then

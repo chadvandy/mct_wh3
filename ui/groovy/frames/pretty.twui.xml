@@ -46,6 +46,7 @@
 			id="pretty_popup"
 			offset="375.00,33.00"
 			docking="Center"
+			moveable="Movable XP"
 			component_anchor_point="0.50,0.50"
 			priority="65"
 			tooltipslocalised="true"
