@@ -3,7 +3,7 @@
 --- MCT dummy type. Does nothing on its own; it's just for UI spacing, or text.
 
 local mct = get_mct()
-local Super = mct:get_mct_option()
+local Super = mct:get_mct_option_class()
 local log,logf,err,errf = get_vlog("[mct]")
 
 local defaults = {}

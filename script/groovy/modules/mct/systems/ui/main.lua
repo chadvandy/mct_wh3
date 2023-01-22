@@ -6,7 +6,7 @@
 
 local this_path = GLib.ThisPath(...)
 
----@class MCT.UI : MCT.System
+---@class MCT.UI : Class
 local UI_Main = {
     -- UICs --
 
@@ -156,50 +156,6 @@ function UI_Main:add_ui_created_callback(callback)
     end
 end
 
---- TODO create floating notifications that can be X'd out of. WH3, probably?
-function UI_Main:notify(str)
-    local mct_button = self:get_mct_button()
-    if not is_uicomponent(mct_button) then
-        logerr("ui:notify() triggered but the mct button doesn't exist yet?")
-        return false
-    end
-
-    if not is_string(str) then
-        -- errmsg
-        --return false
-    end
-
-    -- change the counter on the num label to be +1, set it visible if it's not
-    local label = UIComponent(mct_button:Find("label_notify"))
-
-    label:SetVisible(true)
-
-    self.notify_num = self.notify_num + 1
-    local num = self.notify_num
-
-    label:SetStateText(tostring(num))
-
-    -- highlight the MCT button because people are dolts
-    mct_button:StartPulseHighlight(5, "active")
-end
-
--- clear notifs
-function UI_Main:clear_notifs()
-    local mct_button = self:get_mct_button()
-    if not is_uicomponent(mct_button) then
-        -- errmsg
-        return false
-    end
-
-    local label = UIComponent(mct_button:Find("label_notify"))
-    label:SetStateText("")
-    label:SetVisible(false)
-
-    mct_button:StopPulseHighlight("active")
-
-    self.notify_num = 0
-end
-
 
 -- stash a popup for when MCT is opened
 function UI_Main:stash_popup(key, text, two_buttons, button_one_callback, button_two_callback)
@@ -326,8 +282,8 @@ function UI_Main:create_popup(key, text, two_buttons, button_one_callback, butto
             GLib.TriggerPopup(key, text, two_buttons, button_one_callback, button_two_callback, nil, self.panel)
         else
 
-            -- add the notify, and stash the popup for when the panel is opened.
-            self:notify()
+            -- -- add the notify, and stash the popup for when the panel is opened.
+            -- self:notify()
 
             self:stash_popup(key, text, two_buttons, button_one_callback, button_two_callback)
         end
@@ -342,7 +298,8 @@ function UI_Main:set_selected_mod(mod_obj, page)
     -- deselect the former one
     local former = mct:get_selected_mod()
     if former then
-        former:clear_uics(false)
+        -- former:clear_uics(false)
+        former:toggle_subrows(false)
     end
 
     local former_uic = self.selected_mod_row
@@ -353,6 +310,8 @@ function UI_Main:set_selected_mod(mod_obj, page)
     local mod_key = mod_obj:get_key()
     local page_key = page:get_key()
     local row_uic = page:get_row_uic()
+
+    mod_obj:toggle_subrows(true)
 
     if is_uicomponent(row_uic) then
         logf("Setting %s page %s as selcted!", mod_key, page_key)
@@ -418,7 +377,7 @@ function UI_Main:open_frame(provided_panel, is_pre_campaign)
         for i,mod_key in ipairs(ordered_mod_keys) do
             local mod_obj = mct:get_mod_by_key(mod_key)
             if mod_obj then
-                self:new_mod_row(mod_obj)
+                mod_obj:create_row(self.mod_row_list_box)
             else
                 logf("Trying to create a new mod row for MCT.Mod with key %s, but none exists with that key!", mod_key)
             end
@@ -453,8 +412,20 @@ function UI_Main:open_frame(provided_panel, is_pre_campaign)
                 local mod_obj = mct:get_mod_by_key(mod_key)
                 local layout_key = uic:GetProperty("mct_layout")
 
+                local new_layout = nil
+
+                if layout_key == "main" then
+                    new_layout = mod_obj:get_main_page()
+                else
+                    new_layout = mod_obj:get_settings_page_with_key(layout_key)
+                end
+
                 if not mod_obj then
                     --- errmsg
+                    return
+                end
+
+                if mod_obj:is_disabled() then
                     return
                 end
                 
@@ -465,16 +436,16 @@ function UI_Main:open_frame(provided_panel, is_pre_campaign)
 
                 -- we've selected a subheader of the currently selected mod - check if it's a different subheader than currently selected!
                 if mod_obj == selected_mod then
-                    --- TODO test if this layout is different than the currently selected layout
+                    --- test if this layout is different than the currently selected layout
                     uic:SetState("selected")
 
                     if selected_layout:get_key() ~= layout_key then
-                        self:set_selected_mod(mod_obj, mod_obj:get_page_with_key(layout_key))
+                        self:set_selected_mod(mod_obj, new_layout)
                     end
                 else
                     -- if selected_mod ~= mod_obj then
                         -- trigger stuff on the right
-                        self:set_selected_mod(mod_obj, mod_obj:get_page_with_key(layout_key))
+                        self:set_selected_mod(mod_obj, new_layout)
                     -- else
                     --     -- we aren't changing rows, keep this one selected.
                     --     uic:SetState("selected")
@@ -491,7 +462,6 @@ function UI_Main:open_frame(provided_panel, is_pre_campaign)
 
     -- clear notifications + trigger any stashed popups
     self:trigger_stashed_popups()
-    self:clear_notifs()
 
     core:trigger_custom_event("MctPanelOpened", {["mct"] = mct, ["ui_obj"] = self})
 
@@ -529,6 +499,8 @@ function UI_Main:close_frame(already_dead)
         --mod:clear_uics_for_all_options()
         mod:clear_uics(true)
     end
+
+    self:get_mct_button():SetState("active")
 end
 
 function UI_Main:create_panel(provided_panel)
@@ -634,7 +606,7 @@ function UI_Main:create_top_bar(w, h, xo, yo)
 
     -- TODO state the currently loaded settings, the state, and add a settings button w/ popup to change it.
     local currently_loaded_txt = core:get_or_create_component("currently_loaded", "ui/groovy/text/fe_default", info_holder)
-    currently_loaded_txt:SetStateText(mct:get_state_text())
+    currently_loaded_txt:SetStateText(mct:get_mode_text())
     currently_loaded_txt:Resize(info_holder:Width() * 0.8, info_holder:Height() * 0.9)
     -- currently_loaded_txt:SetDockingPoint(1)
     -- currently_loaded_txt:SetDockOffset(0, 0)
@@ -649,9 +621,17 @@ function UI_Main:create_top_bar(w, h, xo, yo)
 
     self.top_bar = top_bar
     
-    --- TODO "save" button?
     self:create_profiles_button(buttons_holder)
     self:create_help_button(buttons_holder)
+    self:create_save_button(buttons_holder)
+end
+
+-- edit currently_loaded text based on mct:get_mode_text
+function UI_Main:update_currently_loaded_text()
+    local currently_loaded_txt = find_uicomponent(self.top_bar, "info_holder", "currently_loaded")
+    if not is_uicomponent(currently_loaded_txt) then return end
+
+    currently_loaded_txt:SetStateText(mct:get_mode_text())
 end
 
 function UI_Main:create_profiles_button(parent)
@@ -659,6 +639,10 @@ function UI_Main:create_profiles_button(parent)
     profiles_button:SetDockingPoint(4)
     profiles_button:Resize(profiles_button:Width() * 0.7, profiles_button:Height())
     profiles_button:SetDockOffset(10, 0)
+
+    
+    profiles_button:SetTooltipText("Profiles||This will be enabled soon!", true)
+    profiles_button:SetState("inactive")
 
     find_uicomponent(profiles_button, "button_txt"):SetStateText("Profiles")
 end
@@ -681,6 +665,35 @@ function UI_Main:create_help_button(parent)
     help_button:SetTooltipText("Help||This will be enabled soon!", true)
 end
 
+-- Create save button
+function UI_Main:create_save_button(parent)
+    local save_button = core:get_or_create_component("button_mct_save", "ui/templates/round_medium_button", parent)
+    save_button:SetCanResizeHeight(true)
+    save_button:SetCanResizeWidth(true)
+    save_button:Resize(save_button:Width() * 0.8, save_button:Height() * 0.8)
+    save_button:SetCanResizeHeight(false)
+    save_button:SetCanResizeWidth(false)
+
+    save_button:SetState("active")
+
+    save_button:SetImagePath("ui/skins/default/icon_quick_save.png")
+    save_button:SetTooltipText("Save||Save the currently selected settings. This is done automatically on exiting the Panel.", true)
+
+    local addr = save_button:Address()
+
+    core:add_listener(
+        "mct_save_button",
+        "ComponentLClickUp",
+        function(context)
+            return context.string == addr
+        end,
+        function(context)
+            mct:finalize(true)
+        end,
+        true
+    )
+end
+
 --- TODO hide/show the left panel w/ quick animation, not urgent by any means.
 function UI_Main:swap_left_panel(is_open)
 
@@ -700,7 +713,7 @@ function UI_Main:create_left_panel(ew, eh, xo, yo)
     left_panel:SetDockingPoint(7)
     left_panel:SetDockOffset(xo, -yo)
     left_panel:SetCanResizeWidth(true) left_panel:SetCanResizeHeight(true)
-    left_panel:Resize(ew, eh)
+    left_panel:Resize(ew - xo* 0.5, eh)
     -- left_panel_bg:SetVisible(true)
 
     local w,h = left_panel:Dimensions()
@@ -713,27 +726,27 @@ function UI_Main:create_left_panel(ew, eh, xo, yo)
     left_panel_title:SetDockOffset(0,0)
 
     -- create listview
-    local left_panel_listview = core:get_or_create_component("left_panel_listview", "ui/templates/listview", left_panel)
+    local left_panel_listview = core:get_or_create_component("left_panel_listview", "ui/groovy/layouts/listview", left_panel)
     left_panel_listview:SetCanResizeWidth(true) left_panel_listview:SetCanResizeHeight(true)
     left_panel_listview:Resize(w, h-left_panel_title:Height()-5) 
     left_panel_listview:SetDockingPoint(2)
     left_panel_listview:SetDockOffset(0, left_panel_title:Height()+5)
 
-    local w,h = left_panel_listview:Dimensions()
+    -- local w,h = left_panel_listview:Dimensions()
 
     local lclip = find_uicomponent(left_panel_listview, "list_clip")
-    lclip:SetCanResizeWidth(true) lclip:SetCanResizeHeight(true)
-    lclip:SetDockingPoint(1)
-    lclip:Resize(w,h)
+    -- lclip:SetCanResizeWidth(true) lclip:SetCanResizeHeight(true)
+    -- lclip:SetDockingPoint(1)
+    -- lclip:Resize(w,h)
 
     local lbox = find_uicomponent(lclip, "list_box")
-    lbox:SetCanResizeWidth(true) lbox:SetCanResizeHeight(true)
-    lbox:SetDockingPoint(1)
-    lbox:Resize(w,h)
+    -- lbox:SetCanResizeWidth(true) lbox:SetCanResizeHeight(true)
+    -- lbox:SetDockingPoint(1)
+    -- lbox:Resize(w,h)
 
-    local vslider = find_uicomponent(left_panel_listview, "vslider")
-    local x,y = vslider:GetDockOffset()
-    vslider:SetDockOffset(0, y)
+    -- local vslider = find_uicomponent(left_panel_listview, "vslider")
+    -- local x,y = vslider:GetDockOffset()
+    -- vslider:SetDockOffset(0, y)
     
     -- save the listview and list box into the obj
     self.mod_row_list_view = left_panel_listview
@@ -754,7 +767,7 @@ function UI_Main:create_right_panel(ew, eh, xo, yo)
     right_panel:SetDockOffset(-xo, -yo)
 
     right_panel:SetCanResizeWidth(true) right_panel:SetCanResizeHeight(true)
-    right_panel:Resize(ew, eh)
+    right_panel:Resize(ew - (xo * 0.5), eh)
     right_panel:SetCanResizeWidth(false) right_panel:SetCanResizeHeight(false)
 
     -- make the stationary title (on left_panel_bg, doesn't scroll)
@@ -832,77 +845,6 @@ function UI_Main:OnComponentClick(comp, f, persistent, disable)
         end,
         persistent
     )
-end
-
---- TODO move row_header creation to a GLib method or summat
-
----@param mod_obj MCT.Mod
-function UI_Main:new_mod_row(mod_obj)
-    local row = core:get_or_create_component(mod_obj:get_key(), "ui/vandy_lib/row_header", self.mod_row_list_box)
-    row:SetVisible(true)
-    row:SetCanResizeHeight(true) row:SetCanResizeWidth(true)
-    row:Resize(self.mod_row_list_view:Width() * 0.95, 34 * 1.8)
-    row:SetDockingPoint(2)
-
-    --- This hides the +/- button from the row headers.
-    for i = 0, row:NumStates() -1 do
-        row:SetState(row:GetStateByIndex(i))
-        row:SetCurrentStateImageOpacity(1, 0)
-    end
-    
-    row:SetState("active")
-    row:SetProperty("mct_mod", mod_obj:get_key())
-    row:SetProperty("mct_layout", mod_obj:get_main_page():get_key())
-
-    local txt_uic = find_uicomponent(row, "dy_title")
-
-    txt_uic:Resize(row:Width() - 28, row:Height() * 0.9)
-    txt_uic:SetDockingPoint(4)
-    txt_uic:SetDockOffset(0,0)
-    txt_uic:SetTextVAlign("centre")
-    txt_uic:SetTextHAlign("left")
-    txt_uic:SetTextXOffset(5, 0)
-    txt_uic:SetTextYOffset(0, 0)
-
-
-    local title_txt = mod_obj:get_title()
-    local author_txt = mod_obj:get_author()
-
-    if not is_string(title_txt) then
-        title_txt = "No title assigned"
-    end
-
-    title_txt = title_txt .. "\n" .. author_txt
-
-    txt_uic:SetStateText(title_txt)
-
-    local tt = mod_obj:get_tooltip_text()
-
-    if is_string(tt) and tt ~= "" then
-        row:SetTooltipText(tt, true)
-    end
-
-    local button_more_options = core:get_or_create_component("button_more_options", "ui/mct/more_options_button", row)
-    button_more_options:SetProperty("mct_mod", mod_obj:get_key())
-
-    -- local commands = GLib.CommandManager.commands.mct_mod_commands
-
-    -- common.set_context_value("mct_mod_commands", commands)
-    button_more_options:SetContextObject(cco("CcoScriptObject", "mct_mod_commands"))
-    button_more_options:SetDockingPoint(6)
-    button_more_options:SetDockOffset(-8, 0)
-    button_more_options:SetTooltipText("More Options", true)
-
-    --- create the subpages for this mod row and then hide them to be reopened when this mod is selected.
-    for page_key,page_obj in pairs(mod_obj._pages) do
-        --- if page_obj is the  main_page then don't do anything (because that row header has already been made!)
-        if page_obj ~= mod_obj:get_main_page() then
-            page_obj:create_row_uic()
-        end
-    end
-
-    mod_obj:get_main_page():set_row_uic(row)
-    mod_obj:set_row_uic(row)
 end
 
 --- TODO add MCT button to the Esc menu(?)
@@ -1078,6 +1020,23 @@ core:add_listener(
     end,
     true
 )
+
+core:add_listener(
+    "mct_mod_toggle_subrows",
+    "ComponentLClickUp",
+    function(context)
+        return context.string == "button_open_close" and UIComponent(context.component):GetProperty("mct_mod") ~= ""
+    end,
+    function(context)
+        local uic = UIComponent(context.component)
+        local mod_key = uic:GetProperty("mct_mod")
+
+        local mod_obj = mct:get_mod_by_key(mod_key)
+        mod_obj:toggle_subrows()
+    end,
+    true
+)
+
 
 core:add_listener(
     "mct_revert_to_defaults_pressed",

@@ -8,6 +8,8 @@
     if we're in quick battle or frontend, we should be using the global settings
 ]]
 
+--- TODO view/edit, campaign/global, client/host
+
 local mct = get_mct()
 local log,logf,err,errf = get_vlog("[mct_registry]")
 
@@ -39,16 +41,17 @@ local defaults = {
     __profiles_file = "mct_profiles.lua",
 }
 
-local Profile = mct._MCT_PROFILE
-
 ---@class MCT.Registry : Class
 local Registry = GLib.NewClass("MCT.Registry", defaults)
+
 
 function Registry:get_file_path(append)
     return self.appdata_path .. append
 end
 
 function Registry:new_profile(name)
+    local Profile = mct:get_profile_class()
+
     local p = Profile:new(name)
 
     self.__saved_profiles[name] = p
@@ -217,18 +220,26 @@ end
 function Registry:get_selected_setting_for_option(option_obj)
     local value
 
+    -- logf("Getting selected setting for option %s.%s", option_obj:get_mod_key(), option_obj:get_key())
+
     local mod_key = option_obj:get_mod_key()
     local option_key = option_obj:get_key()
 
+    local pos = "Changed"
     ---@type any
     value = self:get_changed_settings(mod_key, option_key)
-    if not is_nil(value) then return value end
 
-    value = option_obj:get_finalized_setting()
+    if is_nil(value) then
+        pos = "Saved"
+        value = option_obj:get_finalized_setting(true)
 
-    if not is_nil(value) then return value end
+        if is_nil(value) then
+            pos = "Default"
+            value = option_obj:get_default_value()
+        end
+    end
 
-    value = option_obj:get_default_value()
+    logf("Selected setting for option %s.%s is %s. Retrieved from %s Settings.", option_obj:get_mod_key(), option_obj:get_key(), tostring(value), pos)
 
     return value
 end
@@ -401,7 +412,7 @@ function Registry:get_save_co()
             end
         )
     end
-    return self.__save_co 
+    return self.__save_co
 end
 
 function Registry:save()
@@ -442,25 +453,25 @@ function Registry:get_default_setting(option)
     return option:get_default_value()
 end
 
--- --- Save every option from every mod into this profile with a default (or cached) setting
--- function Registry:save_all_mods()
---     -- if not self.__data then self.__data = {} end
+--- Save every option from every mod into this profile with a default (or cached) setting
+function Registry:save_all_mods()
+    -- if not self.__data then self.__data = {} end
     
---     --- TODO don't do this here or at all tbh
---     --- TODO make sure EVERY option from EVERY mod is accounted for
---     for mod_key,mod in pairs(mct:get_mods()) do
---         -- if not self.__data[mod_key] then self.__data[mod_key] = {} end
---         for option_key,option in pairs(mod:get_options()) do
---             -- logf("checking option %s", option_key)
---             -- if not self.__data[mod_key][option_key] then
+    --- TODO don't do this here or at all tbh
+    --- TODO make sure EVERY option from EVERY mod is accounted for
+    for mod_key,mod in pairs(mct:get_mods()) do
+        -- if not self.__data[mod_key] then self.__data[mod_key] = {} end
+        for option_key,option in pairs(mod:get_options()) do
+            -- logf("checking option %s", option_key)
+            -- if not self.__data[mod_key][option_key] then
                 
---                 local value = Registry:get_default_setting(option)
---                 -- logf("saving [%s].__mods[%s][%s] = %s", self.__data, mod_key, option_key, tostring(value))
---                 -- self.__data[mod_key][option_key] = value
---             -- end
---         end
---     end
--- end
+                local value = Registry:get_default_setting(option)
+                -- logf("saving [%s].__mods[%s][%s] = %s", self.__data, mod_key, option_key, tostring(value))
+                -- self.__data[mod_key][option_key] = value
+            -- end
+        end
+    end
+end
 
 function Registry:read_profiles_file()
     local file = io.open(self:get_file_path(self.__profiles_file), "r+")
@@ -477,10 +488,12 @@ function Registry:read_profiles_file()
     self.__saved_profiles = {}
 
     if not is_table(t) then return end
+
+    local ProfileClass = mct:get_profile_class()
     
     --- instantiate all the profiles!
     for profile_key, profile_data in pairs(t) do
-        local new_profile = Profile:instantiate(profile_data)
+        local new_profile = ProfileClass:instantiate(profile_data)
         self.__saved_profiles[profile_key] = new_profile
     end
 end
@@ -522,6 +535,8 @@ function Registry:read_registry_file()
 
     local t = loadstring(str)()
 
+    file:close()
+
     if not t or not t.global then
         --- Don't read - set values to default and save immediately.
         self:save_file_with_defaults()
@@ -559,6 +574,24 @@ function Registry:read_registry_file()
                             option_obj._lock_reason = (is_string(test.lock_reason) and test.lock_reason) or ""
                         end
                     end
+                else
+                    -- we don't have anything saved in the global registry, so we need to set the finalized setting to the default value
+                    option_obj._finalized_setting = option_obj:get_default_value()
+                    option_obj._is_locked = false
+                    option_obj._lock_reason = ""
+
+                    local this_option = {
+                        name = option_obj:get_text(),
+                        description = option_obj:get_tooltip_text(),
+                        setting = option_obj:get_default_value(),
+                    }
+
+                    if option_obj:is_locked() then
+                        this_option.is_locked = true
+                        this_option.lock_reason = option_obj:get_lock_reason()
+                    end
+
+                    t.global.saved_mods[mod_key].options[option_key] = this_option
                 end
             end
             
@@ -576,12 +609,20 @@ function Registry:read_registry_file()
     --- Loaded in save_game()
     self.__this_campaign = 0
 
+    -- update the file with the new t table, in case we added any new options etc.
+    local t_str = table_printer:print(t)
+
+    file = io.open(self:get_file_path(self.__main_file), "w+")
+    file:write("return " .. t_str)
+
     file:close()
 end
 
 --- TODO load new Profiles file
 function Registry:load()
     logf("MCT Load is being called.")
+
+    local con = mct:context()
 
     -- self:save_all_mods()
     if not cm then
@@ -592,8 +633,12 @@ function Registry:load()
 
     if cm then
         local is_mp = cm.game_interface:model():is_multiplayer()
+
         if is_mp then
             mct:get_sync():init_campaign()
+            mct:set_mode("campaign", false) -- host has edit enabled in the init_campaign function.
+        else
+            mct:set_mode("campaign", true)
         end
 
         --- read the saved settings for current options!
@@ -613,11 +658,19 @@ function Registry:load()
     elseif mct:context() == "campaign" and not cm then
         --- We're in a campaign battle - pull the info from the campaign registry!
         self:load_campaign_battle()
+
+        mct:set_mode("campaign", false)
+
         core:trigger_custom_event("MctInitialized", {["mct"] = mct, ["is_multiplayer"] = false})
     else
+        if con == "frontend" then
+            mct:set_mode("global", true)
+        elseif con == "battle" then
+            mct:set_mode("global", false)
+        end
+
         core:trigger_custom_event("MctInitialized", {["mct"] = mct, ["is_multiplayer"] = false})
     end
-
 end
 
 function Registry:save_file_with_defaults()

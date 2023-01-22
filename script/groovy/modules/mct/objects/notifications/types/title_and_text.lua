@@ -1,5 +1,5 @@
 local mct = get_mct()
-local Super = mct:get_notification()
+local Super = mct:get_notification_class()
 
 ---@class MCT.Notification.TitleText
 local defaults = {

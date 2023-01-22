@@ -46,9 +46,9 @@ local mct_option_defaults = {
     _is_locked = false,
     _lock_reason = "",
 
-    --- TODO rework these.
-    _local_only = false,
-    _mp_disabled = false,
+    -- --- TODO rework these.
+    -- _local_only = false,
+    -- _mp_disabled = false,
 
     -- the UICs linked to this option (the option + the txt)
     _uics = {},
@@ -102,25 +102,25 @@ end
 
 
 ---- Read whether this mct_option is edited exclusively for the client, instead of passed between both PC's.
---- @return boolean local_only Whether this option is only edited on the local PC, instead of both.
+--- --@return boolean local_only Whether this option is only edited on the local PC, instead of both.
 function mct_option:get_local_only()
-    return self._local_only
+    -- return self._local_only
 end
 
 ---- Set whether this mct_option is edited for just the local PC, or sent to both PC's.
 --- For instance, this is useful for settings that don't edit the model, like enabling script logging.
 ---@param enabled boolean True for local-only, false for passed-in-MP-and-only-editable-by-the-host.
 function mct_option:set_local_only(enabled)
-    if is_nil(enabled) then
-        enabled = true
-    end
+    -- if is_nil(enabled) then
+    --     enabled = true
+    -- end
 
-    if not is_boolean(enabled) then
-        err("set_local_only() called for mct_mod ["..self:get_key().."], but the enabled argument passed is not a boolean or nil!")
-        return false
-    end
+    -- if not is_boolean(enabled) then
+    --     err("set_local_only() called for mct_mod ["..self:get_key().."], but the enabled argument passed is not a boolean or nil!")
+    --     return false
+    -- end
 
-    self._local_only = enabled
+    -- self._local_only = enabled
 end
 
 --- Set whether this Option is globally editable or on a campaign-basis.
@@ -831,8 +831,9 @@ end
 --- set the state, value, visibility, and actions (ie. revert to defaults)
 function mct_option:ui_refresh()
     if not self:get_uic_with_key("option") then return end
+    local setting = self:get_selected_setting()
     
-    self:ui_select_value(self:get_selected_setting())
+    self:ui_select_value(setting)
     self:ui_change_state()
     self:set_uic_visibility(self:get_uic_visibility())
 
@@ -841,7 +842,7 @@ function mct_option:ui_refresh()
         --- only set visible if the selected setting is different than default AND we're not locked
         local vis =  false
         if not self:is_locked() then
-            if self:get_selected_setting() ~= self:get_default_value(true) then
+            if setting ~= self:get_default_value(true) then
                 vis = true
             end
         end
@@ -852,7 +853,9 @@ end
 
 ---- Getter for the "finalized_setting" for this `mct_option`.
 --- @return any finalized_setting Finalized setting for this `mct_option` - either the default value set via @{mct_option:set_default_value}, or the latest saved value if in a campaign, or the latest mct_settings.lua - value if in a new campaign or in frontend.
-function mct_option:get_finalized_setting()
+function mct_option:get_finalized_setting(finalized_only)
+    if finalized_only then return self._finalized_setting end
+    
     if is_nil(self._finalized_setting) then
         self._finalized_setting = self:get_default_value()
     end

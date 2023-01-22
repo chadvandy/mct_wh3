@@ -1,10 +1,24 @@
 local mct = get_mct()
 
 local mct_mod = mct:register_mod("mct_mod")
-mct_mod:set_workshop_link("https://steamcommunity.com/sharedfiles/filedetails/?id=2815354316")
+mct_mod:set_workshop_id("2815354316")
 mct_mod:set_version(mct:get_version())
 mct_mod:set_main_image("ui/mct/van_mct.png", 300, 300)
 mct_mod:set_description("The Mod Configuration Tool, home of all things mod and configuration!")
+mct_mod:add_main_page_tab(
+    "Test Tab", 
+    "This is a fun new test tab",
+    function (panel)
+        local desc = core:get_or_create_component("mct_test_tab_desc", "ui/groovy/text/fe_faded", panel)
+
+        desc:SetStateText("This is a test tab!")
+        desc:SetDockingPoint(1)
+        desc:SetDockOffset(10, 10)
+        desc:SetCanResizeHeight(true)
+        desc:SetCanResizeWidth(true)
+        desc:Resize(panel:Width() - 20, panel:Height() - 20)
+    end
+)
 
 mct_mod:use_infobox(true)
 

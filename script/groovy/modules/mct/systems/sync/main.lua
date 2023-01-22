@@ -69,6 +69,7 @@ function Sync:init_campaign()
                 end
             )
             if core:svr_load_bool("mct_local_is_host") == true then
+                mct:set_mode("campaign", true)
                 GLib.Log("Local is host!")
                 local this_faction = cm:get_local_faction_name(true)
 

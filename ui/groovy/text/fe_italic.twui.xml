@@ -63,7 +63,7 @@
                     text=""
 					textxoffset="0.00,0.00"
 					textyoffset="0.00,0.00"
-					texthbehaviour="Resize"
+					texthbehaviour="Slip by character"
 					font_m_size="12"
 					font_m_colour="#FFF8D7FF"
 					font_m_leading="1"

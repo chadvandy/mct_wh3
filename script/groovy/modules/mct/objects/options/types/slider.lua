@@ -4,7 +4,7 @@
 --- MCT Slider type
 local mct = get_mct()
 local log,logf,err,errf = get_vlog("[mct]")
-local Super = mct:get_mct_option()
+local Super = mct:get_mct_option_class()
 
 ---@type MCT.Option.Slider
 local defaults = {

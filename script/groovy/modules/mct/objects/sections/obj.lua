@@ -99,6 +99,12 @@ function mct_section:assign_to_page(page)
     page:assign_section_to_page(self)
 end
 
+--- Get this section's page.
+---@return MCT.Page.Settings
+function mct_section:get_page()
+    return self._page
+end
+
 --- Set an option key at a specific index, for the @{mct_section:get_ordered_options} function.
 -- Don't call this directly - use @{mct_section:set_option_sort_function}
 ---@param option_key string The option key being placed at the index.

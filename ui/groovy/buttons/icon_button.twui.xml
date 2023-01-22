@@ -44,10 +44,9 @@
 		<icon_button
 			this="82F58892-7F49-4844-B36443AED497BFFE"
 			id="icon_button"
-			offset="711.00,381.00"
-			allowhorizontalresize="false"
-			allowverticalresize="false"
-			tooltipslocalised="true"
+			offset="0.00,0.00"
+			allowhorizontalresize="true"
+			allowverticalresize="true"
 			soundcategory="UI_GBL_TMP_Round_Small_Button"
 			uniqueguid="82F58892-7F49-4844-B36443AED497BFFE"
 			currentstate="4EEC7D09-BD06-4F3B-80E1CF7792CDAE9A"

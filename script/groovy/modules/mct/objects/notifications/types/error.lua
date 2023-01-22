@@ -1,7 +1,7 @@
 --- TODO a notification type that displays an error code, and a button to copy it to the clipboard, and a button to open the log file, and the option to view further details
 
 local mct = get_mct()
-local Super = mct:get_notification()
+local Super = mct:get_notification_class()
 
 ---@class MCT.Notification.Error
 local defaults = {
@@ -76,7 +76,7 @@ function This:trigger_full_popup()
     textview:SetDockOffset(0, title:Height() +  error_code:Height() + 15)
     textview:SetCanResizeWidth(true)
     textview:SetCanResizeHeight(true)
-    textview:Resize(panel:Width() * 0.9, panel:Height() * 0.75)
+    textview:Resize(panel:Width() * 0.9, panel:Height() * 0.5)
     textview:SetCanResizeHeight(false)
     textview:SetCanResizeWidth(false)
 
@@ -84,8 +84,8 @@ function This:trigger_full_popup()
     text:SetStateText(self:get_long_text())
     text:SetCanResizeWidth(true)
     text:SetCanResizeHeight(true)
-    text:Resize(panel:Width() * 0.9, panel:Height() * 0.75)
-    text:SetCanResizeHeight(false)
+    text:Resize(panel:Width() * 0.9, panel:Height())
+    -- text:SetCanResizeHeight(false)
     text:SetCanResizeWidth(false)
     text:SetTextHAlign("left")
 

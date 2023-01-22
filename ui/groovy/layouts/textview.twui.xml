@@ -97,7 +97,7 @@
 		<text
 			this="0676DEA7-CF29-3C65-8B5FC08F47E41E1D"
 			id="text"
-			offset="0.00,0.00"
+			offset="-5.00,-5.00"
 			priority="1"
 			allowhorizontalresize="true"
 			allowverticalresize="true"
@@ -116,7 +116,7 @@
 					width="315"
 					height="16"
 					text="dy_Text"
-					textxoffset="5.00,5.00"
+					textxoffset="10.00,10.00"
 					texthbehaviour="Resize"
 					font_m_size="12"
 					font_m_colour="#A99F89FF"

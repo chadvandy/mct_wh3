@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<layout
+	version="137"
+	comment=""
+	precache_condition="">
+	<hierarchy>
+		<root this="FD14196A-CA4D-BDDD-510C1D619D5C76C6">
+			<text this="F95A9E04-8A51-9480-9267C38A4E6A0792"/>
+		</root>
+	</hierarchy>
+	<components>
+		<root
+			this="FD14196A-CA4D-BDDD-510C1D619D5C76C6"
+			id="root"
+			tooltipslocalised="true"
+			uniqueguid="FD14196A-CA4D-BDDD-510C1D619D5C76C6"
+			currentstate="4B39B301-285B-68B5-0B08DCCA1E325E00"
+			defaultstate="4B39B301-285B-68B5-0B08DCCA1E325E00">
+			<componentimages>
+				<component_image
+					this="BA223355-F672-B163-6F7A05ABD602DB49"
+					uniqueguid="BA223355-F672-B163-6F7A05ABD602DB49"/>
+			</componentimages>
+			<states>
+				<newstate
+					this="4B39B301-285B-68B5-0B08DCCA1E325E00"
+					name="NewState"
+					width="1600"
+					height="900"
+					texthbehaviour="Never split"
+					interactive="true"
+					uniqueguid="4B39B301-285B-68B5-0B08DCCA1E325E00">
+					<imagemetrics>
+						<image
+							this="33BE1289-2C43-14AA-036723E67074A1ED"
+							uniqueguid="33BE1289-2C43-14AA-036723E67074A1ED"
+							componentimage="BA223355-F672-B163-6F7A05ABD602DB49"
+							width="1600"
+							height="900"
+							colour="#F0F0F0FF"/>
+					</imagemetrics>
+				</newstate>
+			</states>
+		</root>
+		<text
+			this="F95A9E04-8A51-9480-9267C38A4E6A0792"
+			id="text"
+			offset="0.00,0.00"
+			allowhorizontalresize="true"
+			allowverticalresize="true"
+			priority="42"
+			tooltipslocalised="true"
+			component_anchor_point="0.50,0.50"
+			uniqueguid="F95A9E04-8A51-9480-9267C38A4E6A0792"
+			currentstate="CD489DF0-2CC1-5E40-62DB1A11902888ED"
+			defaultstate="CD489DF0-2CC1-5E40-62DB1A11902888ED">
+			<states>
+				<active
+					this="CD489DF0-2CC1-5E40-62DB1A11902888ED"
+					name="active"
+					width="80"
+					height="16"
+                    text=""
+					textxoffset="0.00,0.00"
+					textyoffset="0.00,0.00"
+					texthbehaviour="Slip by character"
+					font_m_size="12"
+					font_m_colour="#FFF8D7FF"
+					font_m_leading="1"
+					fontcat_name="fe_tooltip_text"
+					uniqueguid="CD489DF0-2CC1-5E40-62DB1A11902888ED">
+				</active>
+			</states>
+		</text>
+	</components>
+</layout>

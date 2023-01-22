@@ -42,13 +42,19 @@ local mct_mod_defaults = {
     ---@type string The tooltip text for this mod, shown on the row header.
     _tooltip_text = "",
 
-    ---@type string The URL for this mod.
-    _workshop_link = "",
+    ---@type string The ID for this mod.
+    _workshop_id = "",
+
+    ---@type string The GitHub ID for this mod. Should be the username/repo format.
+    _github_id = "",
 
     ---@type table<string, MCT.Page> All of the Pages defined for this mod.
     _pages = {},
 
-    ---@type MCT.Page.Settings the Main page for this mod, the one that will open on pressing the mod header.
+    ---@type table<number, MCT.Page.Settings> All of the settings pages defined for this mod.
+    _settings_pages = {},
+
+    ---@type MCT.Page.Main the Main page for this mod, the one that will open on pressing the mod header.
     _main_page = nil,
 
     _page_uics = {},
@@ -59,12 +65,25 @@ local mct_mod_defaults = {
     ---@type table<string, any> Persistent userdata table that gets saved in Registry.
     _userdata = {},
 
-    ---@type number The current version number of this mod. Used for Notifications, Changelogs, etc.
-    _version = 0,
+    ---@type string The current version number of this mod. Used for Notifications, Changelogs, etc.
+    _version = "",
 
     ---@type {path:string, width:number, height:number} The info of a main image for this mod, to display where relevant. Optional w/h overrides (they may be clamped lower, but aspect ratio defined here will be kept!) 
     _main_image = {path = "", width = 100, height = 100,},
 
+    ---@type boolean Whether or not this mod is enabled. If false, the mod will not be loaded.
+    __bIsDisabled = false,
+
+    ---@type string The reason this mod is disabled.
+    __strDisabled = "",
+
+    ---@type boolean Whether or not the mod's subrows are open. If true, the mod's subrows are visible.
+    __bRowsOpen = false,
+
+    ---@type table<string, UIC> The UI components for this mod.
+    __uics = {},
+
+    _main_page_tabs = {},
 }
 
 ---@class MCT.Mod : Class
@@ -79,46 +98,98 @@ function mct_mod:new(key)
     local o = mct_mod:__new()
     assert(mct:verify_key(o, key))
 
-    -- local ok, err = pcall(function()
-    -- -- -- o:create_new_page("main", mct)
-    -- -- local settings = o:create_settings_page("settings", 2)
-    -- -- logf("Created settings page: " .. tostring(settings))
-    -- -- o:set_main_page(settings)
-
-    -- end) if not ok then GLib.Error(err) end
+    -- Create the default Settings page, that can be disabled by the Moddeur if desired.
+    local S = o:create_settings_page("Settings", 2)
 
     return o
 end
 
----@return MCT.Page.Settings
+---@return MCT.Page.Main
 function mct_mod:get_main_page()
     if not self._main_page then
-        self:set_main_page(self:create_settings_page("settings", 2))
+        -- self:set_main_page(self:create_settings_page("settings", 2))
+        self:create_main_page()
     end
 
     return self._main_page
 end
 
-function mct_mod:get_page_with_key(key)
-    return self._pages[key]
+--- TODO automatically create the main page built off of a "Main Page" layout.
+function mct_mod:create_main_page()
+    local Page = get_mct():get_mct_page_type("main")
+    ---@cast Page MCT.Page.Main
+    Page = Page:new(self)
+    
+    ---@cast Page MCT.Page.Main
+    -- Page:set_title("Main Page")
+    -- Page:set_description("This is the main page for this mod. It's automatically generated, and can be edited in the mod's layout file.")
+
+    self._main_page = Page
+end
+
+---@return MCT.Page.Settings
+function mct_mod:create_settings_page(title, num_columns)
+    local PageClass = mct:get_mct_page_type("settings")
+    ---@cast PageClass MCT.Page.Settings
+    local Page = PageClass:new(title, self, num_columns)
+
+    self._settings_pages[#self._settings_pages+1] = Page
+
+    return Page
+end
+
+function mct_mod:get_settings_pages()
+    return self._settings_pages
+end
+
+function mct_mod:get_first_settings_page()
+    return self._settings_pages[1]
+end
+
+function mct_mod:get_settings_page_with_key(key)
+    for i, page in pairs(self._settings_pages) do
+        if page:get_key() == key then
+            return page
+        end
+    end
+
+    -- if none found, return a default page?
+end
+
+function mct_mod:set_disabled(b, strReason)
+    if not is_boolean(b) then b = true end
+
+    if b == true and not is_string(strReason) then
+        strReason = "No reason given."
+    end
+
+    self.__bIsDisabled = b
+    self.__strDisabled = strReason
+end
+
+---@return boolean
+function mct_mod:is_disabled()
+    return self.__bIsDisabled
+end
+
+---@return string
+function mct_mod:get_disabled_reason()
+    return self.__strDisabled
 end
 
 ---@param page MCT.Page.Settings
 function mct_mod:set_main_page(page)
-    logf("Setting main page of %s to %s", self:get_key(), page:get_key())
-    self._main_page = page
+    -- logf("Setting main page of %s to %s", self:get_key(), page:get_key())
+    -- self._main_page = page
 end
 
-function mct_mod:save_new_page(title, page)
+function mct_mod:set_version(version_num)
+    assert(is_string(version_num), string.format("Version [%s] for mod %s is not a string!", tostring(version_num), self:get_key()))
 
+    self._version = version_num
 end
 
-function mct_mod:set_version(i)
-    if not is_number(i) then return false end
-
-    self._version = i
-end
-
+---@return string
 function mct_mod:get_version()
     return self._version
 end
@@ -136,21 +207,21 @@ function mct_mod:get_main_image()
 end
 
 function mct_mod:use_infobox(b)
-    if is_nil(b) then b = true end
-    if not is_boolean(b) then return end
+    -- if is_nil(b) then b = true end
+    -- if not is_boolean(b) then return end
 
-    if b == true then
-        local page_class = mct:get_mct_page_type("infobox")
-        ---@cast page_class MCT.Page.Infobox
-        local page = page_class:new("Details", self)
+    -- if b == true then
+    --     local page_class = mct:get_mct_page_type("infobox")
+    --     ---@cast page_class MCT.Page.Infobox
+    --     local page = page_class:new("Details", self)
         
-        ---@cast page MCT.Page.Infobox
-        self._pages["Details"] = page
+    --     ---@cast page MCT.Page.Infobox
+    --     self._pages["Details"] = page
         
-        return page
-    else
-        self._pages["Details"] = nil
-    end
+    --     return page
+    -- else
+    --     self._pages["Details"] = nil
+    -- end
 end
 
 -- function mct_mod:create_rowbased_settings_page(title)
@@ -163,18 +234,6 @@ end
 
 --     return page
 -- end
-
----@return MCT.Page.Settings
-function mct_mod:create_settings_page(title, num_columns)
-    local page_class = mct:get_mct_page_type("settings")
-    ---@cast page_class MCT.Page.Settings
-    local page = page_class:new(title, self, num_columns)
-    
-    ---@cast page MCT.Page.Settings
-    self._pages[title] = page
-
-    return page
-end
 
 --- Create a new MCT Page that's a blank canvas to draw whatever on.
 ---@param key string The key for this Page, to get it later.
@@ -232,7 +291,7 @@ function mct_mod:add_new_section(section_key, localised_name)
         --return false
     end
 
-    local new_section = mct:get_mct_section().new(section_key, self)
+    local new_section = mct:get_mct_section_class().new(section_key, self)
 
     if localised_name ~= "" then
         new_section:set_localised_text(localised_name)
@@ -241,7 +300,7 @@ function mct_mod:add_new_section(section_key, localised_name)
     self._sections[section_key] = new_section
     self._last_section = new_section
 
-    new_section:assign_to_page(self:get_main_page())
+    new_section:assign_to_page(self:get_first_settings_page())
 
     return new_section
 end
@@ -719,10 +778,54 @@ function mct_mod:get_tooltip_text()
     return GLib.HandleLocalisedText(self._tooltip_text, "", "mct_"..self:get_key().."_tooltip_text")
 end
 
-function mct_mod:set_workshop_link(link_text)
-    if is_string(link_text) then
-        self._workshop_link = link_text
+
+
+--- Set the ID for this mod.
+---@param id string The ID for this mod. This is the ID that will be used to identify this mod in the workshop. Please note that this is NOT the workshop link, but the ID that is used to identify the mod in the workshop. For example, if the workshop link is: https://steamcommunity.com/sharedfiles/filedetails/?id=123456789, then the ID is 123456789.
+function mct_mod:set_workshop_id(id)
+    if is_string(id) then
+        self._workshop_id = id
     end
+end
+
+function mct_mod:get_workshop_link()
+    if self._workshop_id == "" then return "" end
+
+    return "https://steamcommunity.com/sharedfiles/filedetails/?id=" .. self._workshop_id
+end
+
+--- Ask for just the ?id= part of the workshop link. MCT will automatically add the rest of the link.
+function mct_mod:set_workshop_link(link_text)
+    -- if is_string(link_text) then
+    --     -- check if they provided the entire link, or just the id
+    --     if string.find(link_text, "steamcommunity.com/sharedfiles/filedetails/?id=") then
+    --         -- they provided the entire link, so we'll keep it as it is.
+    --     else
+    --         -- check if the link is just a number; if so, we'll add the rest of the link
+    --         if string.find(link_text, "%d+") then
+    --             link_text = "https://steamcommunity.com/sharedfiles/filedetails/?id="..link_text
+    --         else
+    --             -- they're being tricksy and trying to submit a non-workshop link; we'll just ignore it.
+    --             link_text = ""
+    --         end
+    --     end
+
+    --     self._workshop_link = link_text
+    -- end
+end
+
+-- Set the Github ID for this mod.
+---@param id string The username/repo path for this mod's GitHub page. For example, if the GitHub link is: https://github.com/chadvandy/van_mct/ then the ID is chadvandy/van_mct.
+function mct_mod:set_github_id(id)
+    if is_string(id) then
+        self._github_id = id
+    end
+end
+
+function mct_mod:get_github_link()
+    if self._github_id == "" then return "" end
+
+    return "https://github.com/" .. self._github_id
 end
 
 --- Grabs the title text. First checks for a loc-key `mct_[mct_mod_key]_title`, then checks to see if anything was set using @{mct_mod:set_title}. If not, "No title assigned" is returned.
@@ -741,10 +844,6 @@ end
 --- @return string description_text The returned string for this mct_mod's description.
 function mct_mod:get_description()
     return GLib.HandleLocalisedText(self._description, "", "mct_"..self:get_key().."_description")
-end
-
-function mct_mod:get_workshop_link()
-    return self._workshop_link
 end
 
 --- Returns all three localised texts - title, author, description.
@@ -839,18 +938,9 @@ function mct_mod:add_new_option(option_key, option_type)
         return
     end
 
-    local new_option
-    local ok, err = pcall(function()
-
-    logf("Creating option %s for mod %s", option_key, self:get_key())
     local option_class = mct:get_option_type(option_type)
     ---@cast option_class MCT.Option
-    logf("Option class gotten for type %s", option_type)
-    new_option = option_class:new(self, option_key)
-
-    logf("Creating new option obj")
-
-    logf("Saving %s._options['%s']", self:get_key(), option_key)
+    local new_option = option_class:new(self, option_key)
 
     self._options[option_key] = new_option
     self._options_by_type[option_type][#self._options_by_type[option_type]+1] = option_key
@@ -862,9 +952,44 @@ function mct_mod:add_new_option(option_key, option_type)
         core:trigger_custom_event("MctNewOptionCreated", {["mct"] = mct, ["mod"] = self, ["option"] = new_option})
     --end
 
-    end) if not ok then errf(err) end
 
     return new_option
+end
+
+-- Add a new main page tab to this mod.
+--- This is the main page tab that appears in the main page of the UI.
+---@param title string The title for this tab.
+---@param tooltip string The tooltip for this tab.
+---@param populate_function fun(UIComponent) The description of this tab, as it appears in the UI.
+function mct_mod:add_main_page_tab(title, tooltip, populate_function)
+    if not is_string(title) then
+        err("Trying `add_main_page_tab()` for mod ["..self:get_key().."] but title provided ["..tostring(title).."] is not a string! Returning false.")
+        return
+    end
+
+    if not is_string(tooltip) then
+        err("Trying `add_main_page_tab()` for mod ["..self:get_key().."] but tooltip provided ["..tostring(tooltip).."] is not a string! Returning false.")
+        return
+    end
+
+    if not is_function(populate_function) then
+        err("Trying `add_main_page_tab()` for mod ["..self:get_key().."] but populate_function provided ["..tostring(populate_function).."] is not a function! Returning false.")
+        return
+    end
+
+    local tab = {
+        title = title,
+        tooltip = tooltip,
+        populate_function = populate_function,
+    }
+
+    self._main_page_tabs[#self._main_page_tabs+1] = tab
+end
+
+--- Get all main page tabs for this mod.
+---@return table<number, {title:string, tooltip:string, populate_function:fun(UIComponent)}>
+function mct_mod:get_main_page_tabs()
+    return self._main_page_tabs
 end
 
 --- This function removes an @{mct_option} from this mct_mod. Be very sure you want to call this - it can have potential unwanted repercussions.
@@ -904,10 +1029,110 @@ function mct_mod:clear_uics(b)
     end
 
     self._row_uic = nil
+    self.__uics = {}
 end
 
-function mct_mod:set_page_uic(uic)
-    self._page_uics[#self._page_uics+1] = uic
+function mct_mod:toggle_subrows(b)
+    --- toggle __bRowsOpen and change the visibility of all the subrows (but not the main row)
+    if not is_boolean(b) then b = not self.__bRowsOpen end
+    self.__bRowsOpen = b
+
+    if is_boolean(b) then
+        -- we have to manually set the button since it wasn't directly pressed!
+        local button_open_close = self.__uics.button_open_close
+
+        if b then
+            button_open_close:SetState("selected")
+        else
+            button_open_close:SetState("active")
+        end
+    end
+
+    local pages = self:get_settings_pages()
+    for _, page in ipairs(pages) do
+        -- skip the main page
+        if self:get_main_page():get_key() ~= page:get_key() then
+            local row = page:get_row_uic()
+            row:SetVisible(self.__bRowsOpen)
+        end
+    end
+end
+
+---@param parent UIComponent
+function mct_mod:create_row(parent)
+    local row = core:get_or_create_component(self:get_key(), "ui/groovy/buttons/button_row", parent)
+    row:SetVisible(true)
+    row:SetCanResizeHeight(true) row:SetCanResizeWidth(true)
+    row:Resize(parent:Width() * 0.95, 34 * 1.8)
+    row:SetDockingPoint(2)
+    
+    row:SetState("active")
+    row:SetProperty("mct_mod", self:get_key())
+    row:SetProperty("mct_layout", self:get_main_page():get_key())
+
+    local txt_uic = find_uicomponent(row, "dy_title")
+
+    txt_uic:Resize(row:Width() - 40, row:Height() * 0.9)
+    txt_uic:SetTextXOffset(5, 5)
+    txt_uic:SetTextYOffset(0, 0)
+
+    local title_txt = self:get_title()
+    local author_txt = self:get_author()
+
+    if not is_string(title_txt) then
+        title_txt = "No title assigned"
+    end
+
+    title_txt = title_txt .. "\n" .. author_txt
+
+    txt_uic:SetStateText(title_txt)
+
+    local tt = self:get_tooltip_text()
+
+    if is_string(tt) and tt ~= "" then
+        row:SetTooltipText(tt, true)
+    end
+
+    local button_open_close = core:get_or_create_component("button_open_close", "ui/templates/square_small_toggle_plus_minus", row)
+    button_open_close:SetProperty("mct_mod", self:get_key())
+
+    local button_more_options = core:get_or_create_component("button_more_options", "ui/mct/more_options_button", row)
+    button_more_options:SetProperty("mct_mod", self:get_key())
+
+    button_open_close:SetDockingPoint(4)
+    button_open_close:SetDockOffset(5, 0)
+    button_open_close:SetTooltipText("Open/Close", true)
+    -- button_open_close:SetState("selected")
+
+    button_more_options:SetContextObject(cco("CcoScriptObject", "mct_mod_commands"))
+    button_more_options:SetDockingPoint(6)
+    button_more_options:SetDockOffset(-8, 0)
+    button_more_options:SetTooltipText("More Options", true)
+
+    if self:is_disabled() then
+        row:SetState("inactive")
+        row:SetInteractive(true)
+        row:SetTooltipText("[[col:red]]Disabled||" .. self:get_disabled_reason() .. "[[/col]]", true)
+        
+        button_open_close:SetVisible(false)
+        button_more_options:SetState("inactive")
+        txt_uic:SetStateText("[[col:red]]"..title_txt .. "[[/col]]")
+    else
+        --- create the subpages for this mod row and then hide them to be reopened when this mod is selected.
+        for i, settings_page in ipairs(self:get_settings_pages()) do
+            settings_page:create_row_uic()
+        end
+    end
+
+    self.__uics = {
+        row = row,
+        button_open_close = button_open_close,
+        button_more_options = button_more_options,
+        txt_uic = txt_uic
+    }
+
+    self:get_main_page():set_row_uic(row)
+    self:set_row_uic(row)
 end
 
 --- INTERNAL ONLY.

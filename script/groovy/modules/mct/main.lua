@@ -15,11 +15,17 @@ local mct_defaults = {
     ---@type {[1]: MCT.Mod, [2]: MCT.Page}
     _selected_mod = {nil, nil},
 
-    _version = 0.9,
+    _version = "0.9-beta",
 
     _Systems = {},
 
     _Objects = {},
+
+    ---@type {context:'"global"'|'"campaign"', edit: boolean} The current mode we're in.
+    __mode = {
+        context = "global",
+        edit = false,
+    },
 }
 
 local load_module = GLib.LoadModule
@@ -77,19 +83,22 @@ function mct:get_ui() return self:get_system("ui") end
 ---@return MCT.Sync
 function mct:get_sync() return self:get_system("sync") end
 ---@return MCT.Mod
-function mct:get_mct_mod() return self:get_object("mods") end
+function mct:get_mct_mod_class() return self:get_object("mods") end
 ---@return MCT.Option
-function mct:get_mct_option() return self:get_object("options") end
+function mct:get_mct_option_class() return self:get_object("options") end
 ---@return MCT.Option
-function mct:get_mct_option_type(t) return self:get_object_type("options", t) end
+function mct:get_mct_option_class_subtype(t) return self:get_object_type("options", t) end
 ---@return MCT.Section
-function mct:get_mct_section() return self:get_object("sections") end
+function mct:get_mct_section_class() return self:get_object("sections") end
+
+---@return MCT.Profile
+function mct:get_profile_class() return self:get_object("profiles") end
 
 ---@return MCT.Notification
-function mct:get_notification() return self:get_object("notifications") end
+function mct:get_notification_class() return self:get_object("notifications") end
 ---@param type string
 ---@return MCT.Notification
-function mct:get_notification_type(type) return self:get_object_type("notifications", type) end
+function mct:get_notification_class_subtype(type) return self:get_object_type("notifications", type) end
 
 ---@return MCT.Page
 function mct:get_mct_page() return self:get_object("page") end
@@ -262,29 +271,25 @@ function mct:load_mods()
             for mod_key, mod_obj in pairs(mods) do
                 mod_str[#mod_str+1] = mod_key
 
-                --- TODO put the MCT.Mod in timeout
-                -- mod_obj:
+                --- put the MCT.Mod in timeout
+                mod_obj:set_disabled(true, "Error while loading Mod File!")
             end
 
             mod_str = table.concat(mod_str, ", ")
 
-            --- TODO trigger a notification with the error message + the mod in question.
-            get_mct():get_ui():add_ui_created_callback(function()
-                local n = self:get_notification_system():create_error_notification()
+            local n = self:get_notification_system():create_error_notification()
                     
-                n
-                    :set_title("Error Loading MCT Mod!")
-                    :set_short_text(string.format("[[col:red]]Error while loading the mod %q.[[/col]]\nThis mod has been disabled until the next game start.", mod_str))
-                    :set_error_text(string.format("[[col:red]]%q has been disabled due to an error while loading it.[[/col]] Report this issue to the mod author.\nError: %s", mod_str, err))
-                    :set_long_text(long_err)
-                    :set_persistent(true)
-                    :trigger_banner_popup()
-            end)
-
+            n
+                :set_title("Error Loading MCT Mod!")
+                :set_short_text(string.format("[[col:red]]Error while loading the mod %q.[[/col]]\nThis mod has been disabled until the next game start.", mod_str))
+            n:set_error_text(string.format("[[col:red]]%q has been disabled due to an error while loading it.[[/col]] Report this issue to the mod author.\nError: %s", mod_str, err))
+                :set_long_text(long_err)
+                :set_persistent(true)
         end
     )
 end
 
+--- TODO this should be in GLib!
 --- the main holder with collapsible sections and all action buttons
 ---@param parent UIC The CA topbar that we're attaching underneath.
 function mct:create_main_holder(parent)
@@ -304,7 +309,7 @@ function mct:create_main_holder(parent)
     local box = find_uicomponent(list, "list_clip", "list_box")
 
     self:get_ui():create_mct_button(box)
-    self:get_notification_system()._UI:create_button(box)
+    self:get_notification_system():get_ui():create_button(box)
 end
 
 function mct:open_panel()
@@ -344,7 +349,7 @@ function mct:get_mod_with_name(mod_name)
 end
 
 --- Internal use only. Triggers all the functionality for "Finalize Settings!"
-function mct:finalize()
+function mct:finalize(bForce)
     -- if not self:get_registry():has_pending_changes() then return end
 
     -- check if it's MP!
@@ -426,7 +431,7 @@ function mct:register_mod(mod_name)
     end
 
 
-    local new_mod = self:get_mct_mod():new(mod_name)
+    local new_mod = self:get_mct_mod_class():new(mod_name)
     new_mod._FILENAME = filename
     self._registered_mods[mod_name] = new_mod
 
@@ -463,6 +468,34 @@ function mct:get_state()
         },
         is_client = false,
     }
+end
+
+function mct:set_mode(state, edit)
+    if state == "global" or state == "campaign" then
+        self.__mode.context = state
+        self.__mode.edit = edit
+    else
+        GLib.Error("Invalid mode [%s] passed to set_mode().", state)
+    end
+end
+
+function mct:get_mode()
+    return self.__mode
+end
+
+function mct:get_mode_text()
+    local mode = self:get_mode()
+
+    -- Capitalize the word "global" or "campaign"
+    local state = mode.context
+    state = state:sub(1, 1):upper() .. state:sub(2)
+
+    if mode.edit then
+        return string.format("Editing %s Settings", state)
+    else
+        return string.format("Viewing %s Settings", state)
+    end
+    -- return string.format("Settings loaded from %s", mode.state)
 end
 
 function mct:get_state_text()
@@ -503,7 +536,7 @@ end
 --- @return boolean Whether it passes.
 function mct:is_mct_mod(obj)
     return is_table(obj) and obj.class
-    and obj:instanceOf(mct:get_mct_mod())
+    and obj:instanceOf(mct:get_mct_mod_class())
 end
 
 --- Type-checker for @{mct_option}s
@@ -511,7 +544,7 @@ end
 --- @return boolean Whether it passes.
 function mct:is_mct_option(obj)
     return is_table(obj) and obj.class
-    and obj:instanceOf(mct:get_mct_option())
+    and obj:instanceOf(mct:get_mct_option_class())
 end
 
 --- Type-checker for @{mct_section}s
@@ -519,7 +552,7 @@ end
 --- @return boolean Whether it passes.
 function mct:is_mct_section(obj)
     return is_table(obj) and obj.class
-    and obj:instanceOf(mct:get_mct_section())
+    and obj:instanceOf(mct:get_mct_section_class())
 end
 
 --- Type-checker for @{mct_option} types.

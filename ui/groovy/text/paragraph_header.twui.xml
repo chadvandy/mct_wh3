@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<layout
+	version="137"
+	comment=""
+	precache_condition="">
+	<hierarchy>
+		<root this="F9AFE679-B84C-FD18-277991CF27DC72EF">
+			<text this="BBF0FCA8-C864-D2A2-44EF85D462B40D0E"/>
+		</root>
+	</hierarchy>
+	<components>
+		<root
+			this="F9AFE679-B84C-FD18-277991CF27DC72EF"
+			id="root"
+			tooltipslocalised="true"
+			uniqueguid="F9AFE679-B84C-FD18-277991CF27DC72EF"
+			currentstate="F262B80F-DC61-E0A1-956D2B1BC5523786"
+			defaultstate="F262B80F-DC61-E0A1-956D2B1BC5523786">
+			<componentimages>
+				<component_image
+					this="F9600B82-5480-94A1-6E5102DAA4194275"
+					uniqueguid="F9600B82-5480-94A1-6E5102DAA4194275"/>
+			</componentimages>
+			<states>
+				<newstate
+					this="F262B80F-DC61-E0A1-956D2B1BC5523786"
+					name="NewState"
+					width="1600"
+					height="900"
+					texthbehaviour="Never split"
+					interactive="true"
+					uniqueguid="F262B80F-DC61-E0A1-956D2B1BC5523786">
+					<imagemetrics>
+						<image
+							this="44951A35-A73A-EBC9-1F72F8794982B90C"
+							uniqueguid="44951A35-A73A-EBC9-1F72F8794982B90C"
+							componentimage="F9600B82-5480-94A1-6E5102DAA4194275"
+							width="1600"
+							height="900"
+							colour="#F0F0F0FF"/>
+					</imagemetrics>
+				</newstate>
+			</states>
+		</root>
+		<text
+			this="BBF0FCA8-C864-D2A2-44EF85D462B40D0E"
+			id="text"
+			offset="0.00,0.00"
+			allowhorizontalresize="true"
+			allowverticalresize="true"
+			priority="42"
+			tooltipslocalised="true"
+			component_anchor_point="0.50,0.50"
+			uniqueguid="BBF0FCA8-C864-D2A2-44EF85D462B40D0E"
+			currentstate="6232BA5E-CD4F-D9EC-773BF518B7E0E6F4"
+			defaultstate="6232BA5E-CD4F-D9EC-773BF518B7E0E6F4">
+			<states>
+				<active
+					this="6232BA5E-CD4F-D9EC-773BF518B7E0E6F4"
+					name="active"
+					width="80"
+					height="16"
+                    text=""
+					textxoffset="0.00,0.00"
+					textyoffset="0.00,0.00"
+					texthbehaviour="Slip by character"
+					font_m_font_name="brand_header"
+					font_m_size="16"
+					font_m_colour="#FFF8D7FF"
+					font_m_leading="1"
+					fontcat_name="fe_paragraph_heading"
+					uniqueguid="6232BA5E-CD4F-D9EC-773BF518B7E0E6F4">
+				</active>
+			</states>
+		</text>
+	</components>
+</layout>

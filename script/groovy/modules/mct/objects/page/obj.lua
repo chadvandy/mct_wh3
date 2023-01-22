@@ -46,6 +46,10 @@ function Page:get_key()
     return self._key
 end
 
+function Page:get_mod()
+    return self._mod_obj
+end
+
 --- Create the UI panel for this layout. (Overridden by subclasses)
 function Page:populate(panel)
 
@@ -61,7 +65,7 @@ function Page:create_row_uic()
     if not list_view then return end
 
     local page_row = core:get_or_create_component(mod_obj:get_key().."_"..page_key, "ui/vandy_lib/row_header", left_panel)
-    page_row:SetVisible(true)
+    page_row:SetVisible(false)
     page_row:SetCanResizeHeight(true) page_row:SetCanResizeWidth(true)
     page_row:Resize(list_view:Width() * 0.8, page_row:Height() * 0.95)
     page_row:SetDockingPoint(2)
@@ -97,7 +101,6 @@ function Page:create_row_uic()
     -- page_row:SetVisible(false)
 
     self:set_row_uic(page_row)
-    mod_obj:set_page_uic(page_row)
 end
 
 return Page

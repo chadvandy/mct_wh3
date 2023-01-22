@@ -6,6 +6,9 @@ local mct = get_mct()
 local defaults = {
     ---@type UIC #The primary button on the docker for this UI.
     _Button = nil,
+
+    ---@type boolean The filter state for show/hide read notifications. False is show all, true is hide read.
+    _FilterState = false,
 }
 
 ---@class MCT.UI.Notifications : Class
@@ -19,12 +22,16 @@ function UI_Notifications:close_banner()
     -- close the banner holder, by setting it invisible
     local banner_holder = self:get_banner_holder()
     banner_holder:SetVisible(false)
+
+    self._Button:SetState("active")
 end
 
 function UI_Notifications:open_banner()
     -- open the banner holder, by setting it visible
     local banner_holder = self:get_banner_holder()
     banner_holder:SetVisible(true)
+
+    self._Button:SetState("selected")
 end
 
 --- TODO resize holder based on the number of notifications
@@ -110,6 +117,19 @@ function UI_Notifications:create_banner_holder(parent)
         true
     )
 
+    core:add_listener(
+        "mct_notifications_filter_checkbox_pressed",
+        "ComponentLClickUp",
+        function(context)
+            return context.component == filter_checkbox:Address()
+        end,
+        function(context)
+            self._FilterState = not self._FilterState
+            UI_Notifications:apply_filter()
+        end,
+        true
+    )
+
     local list_clip = find_uicomponent(banner_holder, "list_clip")
     local list_box = find_uicomponent(list_clip, "list_box")
 
@@ -121,7 +141,9 @@ function UI_Notifications:create_banner_holder(parent)
 
     self._notification_banner = banner_holder
 
-    self:resize_panel()
+    self:populate_banner()
+    self:apply_filter()
+    self:close_banner()
 end
 
 function UI_Notifications:get_banner_holder()
@@ -130,6 +152,79 @@ end
 
 function UI_Notifications:get_banner_holder_box()
     return find_uicomponent(self._notification_banner, "list_clip", "list_box")
+end
+
+function UI_Notifications:apply_filter()
+    -- apply filter to the banner holder box, to hide any notifications that are read
+    local banner_holder_box = self:get_banner_holder_box()
+    local notifications = mct:get_notification_system():get_notifications()
+
+    for i = 1, #notifications do
+        local notification = notifications[i]
+        local notification_banner = find_uicomponent(banner_holder_box, "notification_banner_"..i)
+
+        if notification:is_read() then
+            notification_banner:SetVisible(not self._FilterState)
+        end
+    end
+end
+
+--- create each individual banner for each notification saved in NotificationSystem
+function UI_Notifications:populate_banner()
+    local banner_holder = self:get_banner_holder_box()
+    local notifications = mct:get_notification_system():get_notifications()
+
+    for i = 1, #notifications do
+        local notification = notifications[i]
+        local notification_banner = core:get_or_create_component("notification_banner_"..i, "ui/groovy/notifications/banner", banner_holder)
+    
+        --- TODO resize based on the size of the text!
+        notification_banner:Resize(banner_holder:Width(), 150)
+        --- Set the short text!
+        local dy_txt = find_uicomponent(notification_banner, "dy_txt")
+        dy_txt:SetStateText(notification:get_short_text())
+    
+        notification_banner:SetVisible(true)
+        notification_banner:TriggerAnimation("show")
+
+        notification_banner:SetProperty("index", i)
+    
+        --- TODO set up details / mark as read
+        
+        local button_view_details = find_uicomponent(notification_banner, "button_view_details")
+        local button_mark_read = find_uicomponent(notification_banner, "button_mark_read")
+
+        core:remove_listener("notification_"..i.."_button_view_details_pressed")
+        core:add_listener(
+            "notification_"..i.."_button_view_details_pressed",
+            "ComponentLClickUp",
+            function(context)
+                return context.component == button_view_details:Address()
+            end,
+            function(context)
+                notification:trigger_full_popup()
+                notification:mark_as_read()
+                UI_Notifications:refresh_button()
+            end,
+            true
+        )
+
+        core:remove_listener("notification_"..i.."_button_mark_read_pressed")
+        core:add_listener(
+            "notification_"..i.."_button_mark_read_pressed",
+            "ComponentLClickUp",
+            function(context)
+                return context.component == button_mark_read:Address()
+            end,
+            function(context)
+                notification:mark_as_read()
+                UI_Notifications:refresh_button()
+            end,
+            true
+        )
+    end
+
+    self:resize_panel()
 end
 
 function UI_Notifications:create_button(parent)
@@ -160,10 +255,21 @@ function UI_Notifications:create_button(parent)
             return context.component == notifications_button:Address()
         end,
         function(context)
-            UI_Notifications:open_banner()
+            UI_Notifications:toggle()
         end,
         true
     )
+end
+
+-- Close if open, open if close, and set the state for the button
+function UI_Notifications:toggle()
+    local banner_holder = self:get_banner_holder()
+
+    if banner_holder:Visible() then
+        self:close_banner()
+    else
+        self:open_banner()
+    end
 end
 
 function UI_Notifications:refresh_button()

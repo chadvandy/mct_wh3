@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<layout
+	version="137"
+	comment=""
+	precache_condition="">
+	<hierarchy>
+		<root this="FC0EEA4D-5F3D-D6F9-B28331809E343FA3">
+			<text this="CA342B5C-4538-CE59-454F575F4A595645"/>
+		</root>
+	</hierarchy>
+	<components>
+		<root
+			this="FC0EEA4D-5F3D-D6F9-B28331809E343FA3"
+			id="root"
+			tooltipslocalised="true"
+			uniqueguid="FC0EEA4D-5F3D-D6F9-B28331809E343FA3"
+			currentstate="7E8EF891-A0D5-D0E2-C36EFC95E32BEB27"
+			defaultstate="7E8EF891-A0D5-D0E2-C36EFC95E32BEB27">
+			<componentimages>
+				<component_image
+					this="FB6F784A-2145-1E56-5B26B35B2219E271"
+					uniqueguid="FB6F784A-2145-1E56-5B26B35B2219E271"/>
+			</componentimages>
+			<states>
+				<newstate
+					this="7E8EF891-A0D5-D0E2-C36EFC95E32BEB27"
+					name="NewState"
+					width="1600"
+					height="900"
+					texthbehaviour="Never split"
+					interactive="true"
+					uniqueguid="7E8EF891-A0D5-D0E2-C36EFC95E32BEB27">
+					<imagemetrics>
+						<image
+							this="C9DDEE2B-9633-459E-9FF093ABDA7D68BF"
+							uniqueguid="C9DDEE2B-9633-459E-9FF093ABDA7D68BF"
+							componentimage="FB6F784A-2145-1E56-5B26B35B2219E271"
+							width="1600"
+							height="900"
+							colour="#F0F0F0FF"/>
+					</imagemetrics>
+				</newstate>
+			</states>
+		</root>
+		<text
+			this="CA342B5C-4538-CE59-454F575F4A595645"
+			id="text"
+			offset="0.00,0.00"
+			allowhorizontalresize="true"
+			allowverticalresize="true"
+			priority="42"
+			tooltipslocalised="true"
+			component_anchor_point="0.50,0.50"
+			uniqueguid="CA342B5C-4538-CE59-454F575F4A595645"
+			currentstate="09C18A45-F069-A813-4222F643E9F03BE6"
+			defaultstate="09C18A45-F069-A813-4222F643E9F03BE6">
+			<states>
+				<active
+					this="09C18A45-F069-A813-4222F643E9F03BE6"
+					name="active"
+					width="80"
+					height="16"
+                    text=""
+					textxoffset="0.00,0.00"
+					textyoffset="0.00,0.00"
+					texthbehaviour="Slip by character"
+					font_m_size="12"
+					font_m_colour="#FFF8D7FF"
+					font_m_leading="1"
+					fontcat_name="fe_text_faded_warhammer3"
+					uniqueguid="09C18A45-F069-A813-4222F643E9F03BE6">
+				</active>
+			</states>
+		</text>
+	</components>
+</layout>

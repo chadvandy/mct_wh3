@@ -127,9 +127,12 @@ function SettingsPage:populate(panel)
     --- TODO do the "pull into page" on the MCT.Mod level - grab any orphaned sections and toss them into main?
     --- TODO this should pull all sections that don't have a page already; right now this will pull all sections everywhere
     if #sections == 0 then
-        local sorted = self:sort_sections()
-        for _,key in ipairs(sorted) do
-            sections[#sections+1] = self._mod_obj:get_section_by_key(key)
+        local all = self._mod_obj:get_sections()
+        for key,section in pairs(all) do
+            if not section:get_page() then
+                sections[#sections+1] = section
+                section:assign_to_page(self)
+            end
         end
     end
 

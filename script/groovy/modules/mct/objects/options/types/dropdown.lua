@@ -3,7 +3,7 @@
 --- TODO prettify
 
 local mct = get_mct()
-local Super = mct:get_mct_option()
+local Super = mct:get_mct_option_class()
 local log,logf,err,errf = get_vlog("[mct]")
 
 ---@type MCT.Option.Dropdown
@@ -213,7 +213,8 @@ end
 ---@param dropdown_table {key:string,text:string?,tt:string?,is_default:boolean?}[]
 ---@return boolean? #Isn't valid if false
 function Dropdown:add_dropdown_values(dropdown_table)
-    --[[if not self:get_type() == "dropdown" then
+    --[[
+    if not self:get_type() == "dropdown" then
         err("add_dropdown_values() called for option ["..self:get_key().."] in mct_mod ["..self:get_mod():get_key().."], but the option is not a dropdown! Returning false.")
         return false
     end]]

@@ -71,6 +71,8 @@ for i = 1, 100 do
     local o = mct_mod:add_new_option("test_"..i, "checkbox"):set_text("Checkbox: " ..i)
 end
 
+local new = mct_mod:add_new_option("newly_made", "checkbox"):set_text("New Checkbox")
+
 c:set_collapsed(true)
 
 -- page:set_section_sort_function("text_sort")

@@ -4,7 +4,7 @@
 
 
 ---@type MCT.Option.Dropdown
-local Super = get_mct():get_mct_option_type("dropdown")
+local Super = get_mct():get_mct_option_class_subtype("dropdown")
 
 local mct = get_mct()
 local log,logf,err,errf = get_vlog("[mct]")

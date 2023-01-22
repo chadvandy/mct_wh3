@@ -150,7 +150,7 @@
 			template_id="parchment_slider_horizontal"
 			part_of_template="true"
 			uniqueguid="9F241BEA-941C-443B-80644989C5D9DFF1"
-			dimensions="300.00,20.00"
+			dimensions="270.00,20.00"
 			dock_point="Bottom Center External"
 			offset="0.00,5.00"
 			priority="45">

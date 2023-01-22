@@ -55,35 +55,9 @@ function Notification:populate(panel)
 end
 
 --- TODO trigger a free-standing popup
-function Notification:trigger_banner_popup()
+function Notification:create_banner_popup()
     local banner_holder = get_mct():get_notification_system():get_ui():get_banner_holder_box()
-    local banner = core:get_or_create_component("mct_notification_banner", "ui/groovy/notifications/banner", banner_holder)
-    
-    --- TODO resize based on the size of the text!
-    banner:Resize(banner_holder:Width(), 150)
-    --- Set the short text!
-    local dy_txt = find_uicomponent(banner, "dy_txt")
-    dy_txt:SetStateText(self:get_short_text())
 
-    banner:SetVisible(true)
-    banner:TriggerAnimation("show")
-
-    --- TODO set up details / mark as read
-    
-    local button_view_details = find_uicomponent(banner, "button_view_details")
-    local button_mark_read = find_uicomponent(banner, "button_mark_read")
-
-    core:add_listener(
-        "mct_notification_banner_view_details",
-        "ComponentLClickUp",
-        function(context)
-            return context.component == button_view_details:Address()
-        end,
-        function(context)
-            self:trigger_full_popup()
-        end,
-        true
-    )
 
     get_mct():get_notification_system():get_ui():resize_panel()
 end
@@ -135,6 +109,7 @@ end
 
 --- a function to mark the notificationa as read or unread
 function Notification:mark_as_read(b)
+    if is_nil(b) then b = true end
     self._is_read = b
 end
 

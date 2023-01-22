@@ -29,32 +29,36 @@ function NotificationSystem:save()
 end
 
 --- Simply create a new notification and return it to the caller.
+---@param notif MCT.Notification
 ---@return MCT.Notification
-function NotificationSystem:create_notification()
-    ---@type MCT.Notification
-    local Notification = get_mct():get_notification()
-    local o = Notification:new()
-
+function NotificationSystem:save_notification(notif)
     --- TODO save it internally? Do what?
 
-    return o
+    self._notifications[#self._notifications+1] = notif
+
+    return notif
 end
 
 --- TODO pass forward anything special?
 function NotificationSystem:create_title_and_text_notification()
-    local Notification = get_mct():get_notification_type("title_and_text")
+    local Notification = get_mct():get_notification_class_subtype("title_and_text")
     ---@cast Notification MCT.Notification.TitleText
 
     local o = Notification:new()
+    self:save_notification(o)
+
     return o
 end
 
 ---@return MCT.Notification.Error
 function NotificationSystem:create_error_notification()
-    local Notification = get_mct():get_notification_type("error")
+    local Notification = get_mct():get_notification_class_subtype("error")
     ---@cast Notification MCT.Notification.Error
 
-    return Notification:new()
+    local o = Notification:new()
+    self:save_notification(o)
+
+    return o
 end
 
 function NotificationSystem:create_banner_notification()
@@ -65,7 +69,7 @@ end
 ---@return MCT.Notification[]
 function NotificationSystem:get_unread_notifications()
     local unread = {}
-    for i,notification in pairs(self:get_notifications()) do 
+    for i,notification in ipairs(self:get_notifications()) do 
         if not notification:is_read() then
             table.insert(unread, notification)
         end
@@ -86,7 +90,9 @@ function NotificationSystem:get_notifications()
 end
 
 function NotificationSystem:mark_all_as_read()
-
+    for i,notification in ipairs(self:get_notifications()) do
+        notification:mark_as_read()
+    end
 end
 
 function NotificationSystem:get_ui()
