@@ -8,6 +8,9 @@ local defaults = {
 
     ---@type MCT.Mod #The MCT.Mod this page belongs to.
     _mod_obj = nil,
+
+    ---@type boolean #Whether or not this page is visible.
+    _visibility = true,
 }
 
 ---@class MCT.Page : Class
@@ -55,6 +58,21 @@ function Page:populate(panel)
 
 end
 
+---@param bool boolean
+function Page:set_visibility(bool)
+    assert(is_boolean(bool), "set_visibility() must be passed a boolean!")
+    self._visibility = bool
+
+    if self:get_row_uic() then
+        self:get_row_uic():SetVisible(bool)
+    end
+end
+
+---@return boolean
+function Page:get_visibility()
+    return self._visibility
+end
+
 --- Called on UIC creation.
 function Page:create_row_uic()
     local left_panel = get_mct():get_ui().mod_row_list_box
@@ -89,9 +107,9 @@ function Page:create_row_uic()
     txt:SetDockOffset(0,0)
 
     txt:SetStateText(page_key)
-    txt:SetTextXOffset(5, 5)
+    txt:SetTextXOffset(10, 15)
     txt:SetTextVAlign("centre")
-    txt:SetTextHAlign("centre")
+    txt:SetTextHAlign("left")
 
     -- local tt = mod_obj:get_tooltip_text()
 

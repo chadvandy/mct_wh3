@@ -604,6 +604,9 @@ function UI_Main:create_top_bar(w, h, xo, yo)
     info_holder:SetDockOffset(10, -10)
     info_holder:Resize(top_bar:Width() * 0.2, top_bar:Height() * 0.85)
 
+    --- TODO temp disabled
+    info_holder:SetVisible(false)
+
     -- TODO state the currently loaded settings, the state, and add a settings button w/ popup to change it.
     local currently_loaded_txt = core:get_or_create_component("currently_loaded", "ui/groovy/text/fe_default", info_holder)
     currently_loaded_txt:SetStateText(mct:get_mode_text())
@@ -674,24 +677,24 @@ function UI_Main:create_save_button(parent)
     save_button:SetCanResizeHeight(false)
     save_button:SetCanResizeWidth(false)
 
-    save_button:SetState("active")
+    save_button:SetState("inactive")
 
     save_button:SetImagePath("ui/skins/default/icon_quick_save.png")
-    save_button:SetTooltipText("Save||Save the currently selected settings. This is done automatically on exiting the Panel.", true)
+    save_button:SetTooltipText("Save||This will be enabled soon!", true)
 
-    local addr = save_button:Address()
+    -- local addr = save_button:Address()
 
-    core:add_listener(
-        "mct_save_button",
-        "ComponentLClickUp",
-        function(context)
-            return context.string == addr
-        end,
-        function(context)
-            mct:finalize(true)
-        end,
-        true
-    )
+    -- core:add_listener(
+    --     "mct_save_button",
+    --     "ComponentLClickUp",
+    --     function(context)
+    --         return context.string == addr
+    --     end,
+    --     function(context)
+    --         mct:finalize(true)
+    --     end,
+    --     true
+    -- )
 end
 
 --- TODO hide/show the left panel w/ quick animation, not urgent by any means.
@@ -848,15 +851,20 @@ function UI_Main:OnComponentClick(comp, f, persistent, disable)
 end
 
 --- TODO add MCT button to the Esc menu(?)
-function UI_Main:create_mct_button(parent)
+function UI_Main:create_mct_button(parent, x, y)
     local mct_button = core:get_or_create_component("button_mct", "ui/templates/round_small_button_toggle", parent)
     logf("Calling create_mct_button!")
 
     mct_button:SetImagePath(GLib.SkinImage("icon_options"))
     mct_button:SetTooltipText(common.get_localised_string("mct_mct_mod_title"), true)
     mct_button:SetVisible(true)
-    mct_button:SetDockingPoint(0)
-    mct_button:SetDockOffset(0, 0)
+
+    if x and y then
+        mct_button:MoveTo(x, y)
+    else
+        mct_button:SetDockingPoint(6)
+        mct_button:SetDockOffset(mct_button:Width() * -2.8, 0)
+    end
 
     core:add_listener(
         "MctButton",

@@ -68,8 +68,11 @@ local mct_mod_defaults = {
     ---@type string The current version number of this mod. Used for Notifications, Changelogs, etc.
     _version = "",
 
+    ---@type MCT.Page.Settings #The default MCT-Created settings page. This is the one that will be used if no settings pages are defined.
+    _default_page = nil,
+
     ---@type {path:string, width:number, height:number} The info of a main image for this mod, to display where relevant. Optional w/h overrides (they may be clamped lower, but aspect ratio defined here will be kept!) 
-    _main_image = {path = "", width = 100, height = 100,},
+    _main_image = {path = "ui/mct/van_mct.png", width = 100, height = 100,},
 
     ---@type boolean Whether or not this mod is enabled. If false, the mod will not be loaded.
     __bIsDisabled = false,
@@ -98,10 +101,20 @@ function mct_mod:new(key)
     local o = mct_mod:__new()
     assert(mct:verify_key(o, key))
 
-    -- Create the default Settings page, that can be disabled by the Moddeur if desired.
-    local S = o:create_settings_page("Settings", 2)
+    o:create_default_settings_page()
 
     return o
+end
+
+function mct_mod:create_default_settings_page()
+    local S = self:create_settings_page("Settings", 2)
+    self._default_page = S
+end
+
+--- Get the default settings page
+---@return MCT.Page.Settings
+function mct_mod:get_default_setings_page()
+    return self._default_page
 end
 
 ---@return MCT.Page.Main
@@ -1050,8 +1063,7 @@ function mct_mod:toggle_subrows(b)
 
     local pages = self:get_settings_pages()
     for _, page in ipairs(pages) do
-        -- skip the main page
-        if self:get_main_page():get_key() ~= page:get_key() then
+        if page:get_visibility() then
             local row = page:get_row_uic()
             row:SetVisible(self.__bRowsOpen)
         end

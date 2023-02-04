@@ -22,10 +22,11 @@ function UI_Frontend:ui_created()
     -- local mct_button = get_mct():get_ui():create_mct_button(bar)
     -- mct_button:MoveTo(x, y)
 
-    get_mct():create_main_holder(bar)
-
     existing:SetVisible(false)
     bar:SetVisible(true)
+
+    get_mct():create_main_holder(bar)
+
 
     get_mct():get_sync():new_frontend()
 end

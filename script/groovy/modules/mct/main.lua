@@ -297,19 +297,56 @@ function mct:create_main_holder(parent)
     --- TODO add an open/close button for collapsing
 
     
-    local holder = core:get_or_create_component("groovy_holder", "ui/groovy/holders/intense_holder", parent)
-    holder:SetVisible(true)
-    holder:Resize(parent:Width() * 0.7, 50)
-    holder:SetDockingPoint(1)
-    holder:SetDockOffset(5, parent:Height() * 0.7)
+    -- local holder = core:get_or_create_component("groovy_holder", "ui/groovy/holders/intense_holder", parent)
+    -- holder:SetVisible(true)
+    -- holder:Resize(parent:Width() * 0.7, 50)
+    -- holder:SetDockingPoint(1)
+    -- holder:SetDockOffset(5, parent:Height() * 0.7)
 
-    local list = core:get_or_create_component("listview", "ui/groovy/layouts/hlistview", holder)
-    list:Resize(holder:Width(), holder:Height())
+    -- local list = core:get_or_create_component("listview", "ui/groovy/layouts/hlistview", holder)
+    -- list:Resize(holder:Width(), holder:Height())
 
-    local box = find_uicomponent(list, "list_clip", "list_box")
+    -- local box = find_uicomponent(list, "list_clip", "list_box")
 
-    self:get_ui():create_mct_button(box)
-    self:get_notification_system():get_ui():create_button(box)
+    local existing_button
+    local x = 0
+    local x1,x2,y = 0,0,0
+    local w = 0
+
+    -- find the further button to the right on this holder, to use for spacing purposes
+    for i = parent:ChildCount() - 1, 0, -1 do
+        local child = UIComponent(parent:Find(i))
+
+        if string.find(child:Id(), "button_") then
+            -- set the last button to existing_button even if its not visible, so we always have ONE.
+            if not existing_button then
+                existing_button = child
+            end
+
+            if child:VisibleFromRoot()  then
+                existing_button = child
+                break
+            end
+        end
+    end
+
+    if existing_button then
+        x, y = existing_button:Position()
+        w = existing_button:Width()
+
+        if existing_button:VisibleFromRoot() then
+            x1 = x + w
+            x2 = x + (w) * 2
+        else
+            -- we're in frontend so move stuff backwards
+            x1 = x - w
+            x2 = x
+            y = y + 5
+        end
+    end
+
+    local button = self:get_ui():create_mct_button(parent, x1, y)
+    local other_button = self:get_notification_system():get_ui():create_button(parent, x2, y)
 end
 
 function mct:open_panel()

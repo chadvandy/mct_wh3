@@ -88,8 +88,6 @@ function Log:log(t, ...)
     t = string.format("\n%s %s%s", self.prefix, self:get_tabs(), t)
 
     self.lines[#self.lines+1] = t
-
-    out(t)
     self.file:write(t)
 end
 

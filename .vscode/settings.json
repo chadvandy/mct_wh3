@@ -12,4 +12,5 @@
         "lowercase-global",
         "need-check-nil"
     ],
+    "Lua.runtime.version": "Lua 5.4",
 }

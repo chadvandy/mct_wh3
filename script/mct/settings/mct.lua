@@ -20,7 +20,7 @@ mct_mod:add_main_page_tab(
     end
 )
 
-mct_mod:use_infobox(true)
+-- mct_mod:use_infobox(true)
 
 -- mct_mod:create_infobox_page("Details", "My Description", "ui/mct/van_mct.png")
 

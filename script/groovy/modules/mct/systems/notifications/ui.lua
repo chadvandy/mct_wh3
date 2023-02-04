@@ -47,9 +47,9 @@ function UI_Notifications:create_banner_holder(parent)
     local x, y = parent:Position()
     banner_holder:MoveTo(x - 10, y + parent:Height() + 10)
 
-    banner_holder:Resize(300, 800)
+    banner_holder:Resize(300, 800, false)
 
-    local title = core:get_or_create_component("tite", "ui/vandy_lib/text/paragraph_header", banner_holder)
+    local title = core:get_or_create_component("title", "ui/vandy_lib/text/paragraph_header", banner_holder)
     title:SetDockingPoint(2)
     title:SetDockOffset(0, 10)
     title:SetStateText("Notifications")
@@ -136,8 +136,11 @@ function UI_Notifications:create_banner_holder(parent)
     list_clip:SetDockingPoint(8)
     list_box:SetDockingPoint(8)
 
-    list_clip:Resize(290, 700)
-    list_box:Resize(290, 700)
+    list_clip:Resize(290, 700, false)
+    list_box:Resize(290, 700, false)
+
+    list_box:SetInteractive(false)
+    list_clip:SetInteractive(false)
 
     self._notification_banner = banner_holder
 
@@ -227,14 +230,18 @@ function UI_Notifications:populate_banner()
     self:resize_panel()
 end
 
-function UI_Notifications:create_button(parent)
+function UI_Notifications:create_button(parent, x, y)
     local notifications_button = core:get_or_create_component("button_mct_notifications", "ui/templates/round_small_button_toggle", parent)
 
     notifications_button:SetImagePath("ui/skins/default/icon_end_turn_notification_generic.png")
     notifications_button:SetTooltipText("Notifications||Review any notifications", true)
 
-    notifications_button:SetDockingPoint(0)
-    notifications_button:SetDockOffset(0, 0)
+    if x and y then
+        notifications_button:MoveTo(x, y)
+    else
+        notifications_button:SetDockingPoint(6)
+        notifications_button:SetDockOffset(notifications_button:Width() * -4, 0)
+    end
 
     self._Button = notifications_button
 
@@ -259,6 +266,8 @@ function UI_Notifications:create_button(parent)
         end,
         true
     )
+
+    return notifications_button
 end
 
 -- Close if open, open if close, and set the state for the button
