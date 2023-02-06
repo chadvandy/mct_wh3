@@ -10,12 +10,14 @@ local mct_defaults = {
     
     _registered_mods = {},
     _selected_mod = nil,
+
+    _version = "0.8",
 }
 
 local load_module = VLib.LoadModule
 local load_modules = VLib.LoadModules
 
----@type ModConfigurationTool
+---@class ModConfigurationTool:Class
 local mct = VLib.NewClass("ModConfigurationTool", mct_defaults)
 
 --- Initial creation and loading of MCT, and all the individual MCT Mods.
@@ -119,6 +121,10 @@ function mct:get_option_type(key)
     end
 
     return self._MCT_TYPES[key]
+end
+
+function mct:get_version()
+    return self._version
 end
 
 --- TODO kill?
