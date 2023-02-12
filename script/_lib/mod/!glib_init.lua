@@ -36,6 +36,8 @@ local log_defaults = {
     
     file_name = "",
 
+    enabled = true,
+
     ---@type file*
     file = nil,
 }
@@ -80,6 +82,8 @@ function Log:get_tabs()
 end
 
 function Log:log(t, ...)
+    if not self.enabled then return end
+
     --- TODO prevent errors if the string fails to format (ie. you pass a %s but no varargs)
     if ... then
         t = string.format(t, ...)
@@ -88,9 +92,16 @@ function Log:log(t, ...)
     t = string.format("\n%s %s%s", self.prefix, self:get_tabs(), t)
 
     self.lines[#self.lines+1] = t
+
+    out(t)
     self.file:write(t)
 end
 
+function Log:set_enabled(b)
+    if not is_boolean(b) then b = true end
+
+    self.enabled = b
+end
 
 --- Change the tab amount for this log.
 ---@param change number? The amount to change the tabs by (ie. -1, 1). Defaults to 1 if left blank.
@@ -114,7 +125,7 @@ end
 
 function GLib.init()
     --- TODO print
-    GLib.logs.lib = GLib.NewLog("lib", "!vandy_lib_log.txt")
+    GLib.logs.lib = GLib.NewLog("lib", "!groove_log.txt")
 
     local function start_flush()
         core:get_tm():repeat_real_callback(function()
@@ -203,7 +214,6 @@ function GLib.LoadInternalModules()
     ---@type CommandManager
     GLib.CommandManager = GLib.LoadModule("main", m("command_manager"))
     GLib.CommandManager:init()
-    
 end
 
 --- Load a single file, and return its contents.
@@ -305,6 +315,7 @@ function GLib.LoadModules(path, search_override, func_for_each, fail_func)
             if func_for_each and is_function(func_for_each) then
                 func_for_each(filename, module)
             end
+            
         end)
         
         if not ok then
@@ -387,6 +398,71 @@ function verrf(text, ...)
     GLib.Error(text, ...)
 end
 
+function GLib.EnableInternalLogging(b)
+    GLib.logs.lib:set_enabled(b)
+end
+
+function GLib.EnableGameLogging(b)
+    if b then
+        -- Already enabled!
+        if __write_output_to_logfile == true then
+            return
+        end
+
+        __write_output_to_logfile = true
+
+        -- if the logfile wasn't made yet, set it to the default.
+        if __logfile_path == "" then
+            -- Set the path to script_log_DDMMYY_HHMM.txt, based on the time this session was started (current_time - run_time)
+            __logfile_path = "script_log_" .. os.date("%d".."".."%m".."".."%y".."_".."%H".."".."%M", os.time() - os.clock()) .. ".txt"
+
+            local file, err_str = io.open(__logfile_path, "w");
+	
+            if not file then
+                __write_output_to_logfile = false;
+                script_error("ERROR: tried to create logfile with filename " .. __logfile_path .. " but operation failed with error: " .. tostring(err_str));
+            else
+                file:write("\n");
+                file:write("creating logfile " .. __logfile_path .. "\n");
+                file:write("\n");
+                file:close();
+                _G.logfile_path = __logfile_path;
+            end;
+        end
+    else
+        __write_output_to_logfile = false
+    end
+end
+
+core:add_listener(
+    "MctInitialized",
+    "MctInitialized",
+    true,
+    function()
+        local mod = get_mct():get_mod_by_key("mct_mod")
+        local lib_logging = mod:get_option_by_key("lib_logging")
+        local game_logging = mod:get_option_by_key("game_logging")
+
+        GLib.EnableInternalLogging(lib_logging:get_finalized_setting())
+        GLib.EnableGameLogging(game_logging:get_finalized_setting())
+    end,
+    true
+)
+
+core:add_listener(
+    "MctFinalized",
+    "MctFinalized",
+    true,
+    function()
+        local mod = get_mct():get_mod_by_key("mct_mod")
+        local lib_logging = mod:get_option_by_key("lib_logging")
+        local game_logging = mod:get_option_by_key("game_logging")
+
+        GLib.EnableInternalLogging(lib_logging:get_finalized_setting())
+        GLib.EnableGameLogging(game_logging:get_finalized_setting())
+    end,
+    true
+)
 
 GLib.init()
 

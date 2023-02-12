@@ -919,6 +919,7 @@ end
 ---@overload fun(self:MCT.Mod, option_key:string, option_type:"slider"):MCT.Option.Slider
 ---@overload fun(self:MCT.Mod, option_key:string, option_type:"text_input"):MCT.Option.TextInput
 ---@overload fun(self:MCT.Mod, option_key:string, option_type:"dummy"):MCT.Option.Dummy
+---@overload fun(self:MCT.Mod, option_key:string, option_type:"radio_button"):MCT.Option.Dummy
 ---@param option_key string The unique identifier for the new mct_option.
 ---@param option_type MCT.OptionType The type for the new mct_option.
 ---@return MCT.Option?

@@ -43,6 +43,9 @@ local mct_option_defaults = {
     _default_setting = nil,
     _finalized_setting = nil,
 
+    ---@type any #If this setting is NOT global, then we need to track its "global" value separately from its finalized value.
+    _global_value = nil,
+
     _is_locked = false,
     _lock_reason = "",
 
@@ -74,6 +77,9 @@ local mct_option_defaults = {
 
     ---@type boolean Whether this option has its settings stored globally or within independent campaigns.
     _is_global = false,
+
+    _control_dock_point = 6, -- the dock point for the control
+    _control_dock_offset = {0, 0} -- the dock position for the control
 }
 
 ---@class MCT.Option : Class
@@ -100,6 +106,32 @@ function mct_option:init(mod_obj, option_key)
     mod_obj:get_section_by_key(self._assigned_section):assign_option(self)
 end
 
+function mct_option:get_global_value()
+    if self:is_global() then
+        return self:get_finalized_setting()
+    end
+
+    if is_nil(self._global_value) then
+        self._global_value = self:get_default_value()
+    end
+
+    return self._global_value
+end
+
+function mct_option:set_global_value(val)
+    if self:is_global() then
+        self:set_finalized_setting(val)
+    end
+
+    local is_valid, new_val = self:check_validity(val)
+
+    if not is_valid then
+        errf("set_global_value() called for mct_option [%s] in mct_mod [%s], but the value passed is not valid! Value passed: [%s], new value: [%s]", self:get_key(), self:get_mod():get_key(), tostring(val), tostring(new_val))
+        val = new_val
+    end
+
+    self._global_value = val
+end
 
 ---- Read whether this mct_option is edited exclusively for the client, instead of passed between both PC's.
 --- --@return boolean local_only Whether this option is only edited on the local PC, instead of both.
@@ -721,29 +753,42 @@ function mct_option:ui_create_option_base(parent, w, h)
 
     self:set_uic_with_key("text", option_text, true)
 
-    -- resize the text so it takes up the space of the dummy column that is not used by the option
     local n_w = new_option:Width()
     local t_w = dummy_option:Width()
-    local ow = t_w - n_w - 35 -- -25 is for some spacing! -15 for the offset, -10 for spacing between the option to the right
     local oh = dummy_option:Height() * 0.95
-    
-    option_text:Resize(ow, oh)
-    option_text:SetTextVAlign("centre")
-    option_text:SetTextHAlign("left")
-    option_text:SetTextXOffset(5, 0)
 
-    do
-        -- local w, h = option_text:TextDimensionsForText(option_obj:get_text())
+    if self._control_dock_point == 6 then
+        -- standard
+
+        -- resize the text so it takes up the space of the dummy column that is not used by the option
+        local ow = t_w - n_w - 35 -- -25 is for some spacing! -15 for the offset, -10 for spacing between the option to the right
+        
+        option_text:Resize(ow, oh)
+        option_text:SetTextVAlign("centre")
+        option_text:SetTextHAlign("left")
+        option_text:SetTextXOffset(5, 0)
+
         option_text:ResizeTextResizingComponentToInitialSize(ow, oh)
 
         option_text:SetStateText(self:get_text())
+    elseif self._control_dock_point == 8 then
+        -- radio buttons, for now.
 
-        -- w,h = option_text:TextDimensionsForText(option_obj:get_text())
-        -- option_text:ResizeTextResizingComponentToInitialSize(ow, oh)
+        local ow, oh = t_w * 0.4, oh/2
+        option_text:Resize(ow, oh)
+        option_text:SetTextVAlign("centre")
+        option_text:SetTextHAlign("left")
+        option_text:SetTextXOffset(10, 0)
+
+        option_text:ResizeTextResizingComponentToInitialSize(ow, oh)
+        option_text:SetStateText(self:get_text())
+
+        option_text:SetDockingPoint(1)
+        option_text:SetDockOffset(0, 0)
     end
 
-    new_option:SetDockingPoint(6)
-    new_option:SetDockOffset(0, 0)
+    new_option:SetDockingPoint(self._control_dock_point)
+    new_option:SetDockOffset(self._control_dock_offset[1], self._control_dock_offset[2])
 
     --- TODO absolutely don't handle this here
     -- read if the option is read-only in campaign (and that we're in campaign)
@@ -769,7 +814,13 @@ function mct_option:ui_create_option_base(parent, w, h)
     --- a horizontal list engine to hold icons
     local icon_holder = core:get_or_create_component("icons_holder", "ui/groovy/layouts/hlist_reverse", dummy_option)
     icon_holder:SetDockingPoint(6)
-    icon_holder:SetDockOffset(-new_option:Width() - 5, 0)
+
+    if self._control_dock_point == 6 then
+        icon_holder:SetDockOffset(-new_option:Width() - 5, 0)
+    else
+        icon_holder:SetDockingPoint(1)
+        icon_holder:SetDockOffset(option_text:Width() + 10, 0) -- will prolly look bad for now.
+    end
 
     local function create_icon_button(key, image, tt, uses_click)
         local template = "ui/groovy/buttons/icon_button"
@@ -807,9 +858,37 @@ function mct_option:ui_create_option_base(parent, w, h)
                 true
             )
         end
-
     end
 
+    --- if this is a global option, show the global icon
+    if self:is_global() then
+        self:set_uic_with_key(
+            "button_global",
+            create_icon_button(
+                "button_global", 
+                "ui/skins/default/icon_registry.png",
+                "Global Option||This option is global, meaning its value is shared everywhere - between all campaigns, saves, etc. Changing it once changes it everywhere."
+            ),
+            true
+        )
+    else
+        local this_tt = "Campaign-Specific Option||This option is campaign-specific."
+        if mct:context() == "campaign" then
+            this_tt = this_tt .. " Changing this option will only change it for this ongoing campaign."
+        else
+            this_tt = this_tt .. " Changing this opption will only change it for the next campaign you start, and won't apply to any ongoing campaigns."
+        end
+        
+        self:set_uic_with_key(
+            "button_local",
+            create_icon_button(
+                "button_local", 
+                "ui/skins/default/icon_floppy_disk.png",
+                this_tt
+            ),
+            true
+        )
+    end
 
     --- if we have a default value set, create the revert-to-defaults button!
     if not is_nil(self:get_default_value(true)) then
@@ -854,7 +933,9 @@ end
 ---- Getter for the "finalized_setting" for this `mct_option`.
 --- @return any finalized_setting Finalized setting for this `mct_option` - either the default value set via @{mct_option:set_default_value}, or the latest saved value if in a campaign, or the latest mct_settings.lua - value if in a new campaign or in frontend.
 function mct_option:get_finalized_setting(finalized_only)
-    if finalized_only then return self._finalized_setting end
+    if finalized_only then
+        return self._finalized_setting
+    end
     
     if is_nil(self._finalized_setting) then
         self._finalized_setting = self:get_default_value()
@@ -1014,7 +1095,7 @@ end
 
 ---- Getter for this option's text. Will read the loc key, `mct_[mct_mod_key]_[mct_option_key]_tooltip`, before seeing if any was supplied through @{mct_option:set_tooltip_text}.
 function mct_option:get_tooltip_text()
-    return GLib.HandleLocalisedText(self._tooltip_text, "No text assigned", "mct_"..self:get_mod_key().."_"..self:get_key().."_tooltip")
+    return GLib.HandleLocalisedText(self._tooltip_text, "", "mct_"..self:get_mod_key().."_"..self:get_key().."_tooltip")
 end
 
 return mct_option

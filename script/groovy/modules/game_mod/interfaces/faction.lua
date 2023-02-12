@@ -12,8 +12,8 @@ local defaults = {
 local Super = InterfaceSuper
 
 ---@class Interface.Faction : Interface.Super
----@field __new fun():Interface.Faction
----@field __get fun():FACTION_SCRIPT_INTERFACE
+---@field __new function: Interface.Faction
+---@field __get function: FACTION_SCRIPT_INTERFACE
 local FactionInterface = Super:extend("Interface.Faction", defaults)
 
 function FactionInterface:new(key)

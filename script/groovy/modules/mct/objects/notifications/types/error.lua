@@ -63,24 +63,26 @@ function This:trigger_full_popup()
     title:SetDockOffset(5, 5)
     title:SetStateText(self:get_title())
 
-    local error_code = core:get_or_create_component("error_code", "ui/groovy/text/fe_italic", panel)
+    local error_code = core:get_or_create_component("error_code", "ui/groovy/text/fe_bold", panel)
     error_code:SetDockingPoint(2)
     error_code:SetDockOffset(0, title:Height() + 10)
     error_code:SetStateText(self:get_error_text())
-    error_code:Resize(panel:Width() * 0.8, panel:Height() * 0.1)
+    error_code:Resize(panel:Width() * 0.8, panel:Height() * 0.125)
     error_code:SetTextHAlign("centre")
 
     -- create a text component and dock it to 8, and set it to the long text of this notification
-    local textview = core:get_or_create_component("mct_notification_text", "ui/groovy/layouts/textview", panel)
-    textview:SetDockingPoint(2)
-    textview:SetDockOffset(0, title:Height() +  error_code:Height() + 15)
-    textview:SetCanResizeWidth(true)
-    textview:SetCanResizeHeight(true)
-    textview:Resize(panel:Width() * 0.9, panel:Height() * 0.5)
-    textview:SetCanResizeHeight(false)
-    textview:SetCanResizeWidth(false)
+    local listview = core:get_or_create_component("mct_notification_text", "ui/groovy/layouts/listview", panel)
+    listview:SetDockingPoint(2)
+    listview:SetDockOffset(0, title:Height() +  error_code:Height() + 15)
+    listview:SetCanResizeWidth(true)
+    listview:SetCanResizeHeight(true)
+    listview:Resize(panel:Width() * 0.9, panel:Height() * 0.65)
+    listview:SetCanResizeHeight(false)
+    listview:SetCanResizeWidth(false)
 
-    local text = find_uicomponent(textview, "text")
+    local box = find_uicomponent(listview, "list_clip", "list_box")
+
+    local text = core:get_or_create_component("text", "ui/groovy/text/fe_default", box)
     text:SetStateText(self:get_long_text())
     text:SetCanResizeWidth(true)
     text:SetCanResizeHeight(true)
@@ -88,6 +90,13 @@ function This:trigger_full_popup()
     -- text:SetCanResizeHeight(false)
     text:SetCanResizeWidth(false)
     text:SetTextHAlign("left")
+    text:SetTextXOffset(10, 30)
+
+    do
+        local tw,th = text:TextDimensions()
+        text:Resize(tw, th)
+    end
+    -- text:ResizeTextResizingComponentToInitialSize()
 
     --  a button to copy the text of the error to the clipboard
     local button_copy = core:get_or_create_component("mct_notification_button_copy", "ui/templates/square_medium_text_button", panel)

@@ -1,8 +1,8 @@
 {
     "workbench.colorCustomizations": {
-        "activityBar.background": "#0A332F",
-        "titleBar.activeBackground": "#0F4842",
-        "titleBar.activeForeground": "#F1FCFB"
+        "activityBar.background": "#342E0C",
+        "titleBar.activeBackground": "#494011",
+        "titleBar.activeForeground": "#FCFAF0"
     },
     "Lua.workspace.library": [
         // ".vscode/def.lua",

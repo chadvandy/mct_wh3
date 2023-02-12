@@ -95,12 +95,12 @@
 					</imagemetrics>
 				</newstate>
 			</states>
-			<LayoutEngine
+			<!-- <LayoutEngine
 				type="HorizontalList"
                 sizetocontent="false"
                 spacing="5.00,5.00"
                 vertical_alignment="Center"
-                />
+                /> -->
 		</holder>
 	</components>
 </layout>

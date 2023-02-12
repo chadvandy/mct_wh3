@@ -1,10 +1,13 @@
 ---@alias MCT.OptionType 'slider'|'dropdown'|'checkbox'|'text_input'
 ---@alias MCT.System {_Types : {}, _Object : {}, _UI : {}, }
 
+---@alias MCT.SelectedMod {[1]: MCT.Mod, [2]: MCT.Page}
+---@alias MCT.Mode {context:'"global"'|'"campaign"', edit: boolean} #The current mode we're in.
+
 --- (...) convert the full path of this file (ie. script/folder/folders/this_file.lua) to just the path leading to specifically this file (ie. script/folder/folders/), to grab subfolders easily while still allowing me to restructure this entire mod four times a year!
 local this_path = string.gsub( (...) , "[^/]+$", "")
 
----@class ModConfigurationTool : Class
+--- @class ModConfigurationTool : Class
 local mct_defaults = {
     _mods_path = "/script/mct/settings/",
     _self_path = this_path,
@@ -12,7 +15,7 @@ local mct_defaults = {
     
     _registered_mods = {},
 
-    ---@type {[1]: MCT.Mod, [2]: MCT.Page}
+    ---@type MCT.SelectedMod
     _selected_mod = {nil, nil},
 
     _version = "0.9-beta",
@@ -21,7 +24,7 @@ local mct_defaults = {
 
     _Objects = {},
 
-    ---@type {context:'"global"'|'"campaign"', edit: boolean} The current mode we're in.
+    ---@type MCT.Mode
     __mode = {
         context = "global",
         edit = false,
@@ -262,7 +265,7 @@ function mct:load_mods()
         function (filename, err)
             vlogf("Failed to load mod file %s! Error is %s", filename, err)
 
-            local long_err = debug.traceback("", 2)
+            local long_err = debug.traceback("", 1)
 
             local mods = self:get_mods_from_file(filename)
             ---@type string|string[]
@@ -281,8 +284,8 @@ function mct:load_mods()
                     
             n
                 :set_title("Error Loading MCT Mod!")
-                :set_short_text(string.format("[[col:red]]Error while loading the mod %q.[[/col]]\nThis mod has been disabled until the next game start.", mod_str))
-            n:set_error_text(string.format("[[col:red]]%q has been disabled due to an error while loading it.[[/col]] Report this issue to the mod author.\nError: %s", mod_str, err))
+                :set_short_text(string.format("[[col:red]]Error while loading the mod %q in settings file `script/mct/settings/%s.lua`.[[/col]]\nThis mod has been disabled until the next game start.", mod_str, filename))
+            n:set_error_text(string.format("[[col:red]]%q has been disabled due to an error while loading it.[[/col]] Report this issue to the mod author.\nFilepath is script/mct/settings/%s.lua\n\nError: %s", mod_str, filename, err))
                 :set_long_text(long_err)
                 :set_persistent(true)
         end
@@ -485,7 +488,7 @@ function mct:context(test_context)
     end
 
     if not is_nil(bm) then
-        if bm:get_campaign_key() == "" then 
+        if bm:get_campaign_key() == "" then
             return "battle"
         else
             return "campaign"
@@ -634,3 +637,4 @@ end) if not ok then GLib.Log("Error loading MCT!\n%s", err) end
 core:add_ui_created_callback(function()
     mct:get_ui():ui_created()
 end)
+

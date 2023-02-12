@@ -622,6 +622,34 @@ function UI_Main:create_top_bar(w, h, xo, yo)
     button_edit_state:SetTooltipText("Edit State||Change the view settings!", true)
     button_edit_state:SetImagePath("ui/skins/default/icon_custom_options.png")
 
+    local how_it_works = core:get_or_create_component("how_it_works_holder", "ui/groovy/holders/intense_holder", top_bar)
+    how_it_works:SetDockingPoint(5)
+    how_it_works:SetDockOffset(-20, 0)
+    how_it_works:Resize(how_it_works:Width() * 0.8, how_it_works:Height() * 0.7)
+
+    local how_it_works_txt = core:get_or_create_component("how_it_works_txt", "ui/groovy/text/fe_default", how_it_works)
+    how_it_works_txt:SetDockingPoint(2)
+    how_it_works_txt:SetTextVAlign("centre")
+    how_it_works_txt:SetTextHAlign("centre")
+    how_it_works_txt:Resize(how_it_works:Width() * 0.4, how_it_works:Height() * 0.6)
+    how_it_works_txt:SetTextXOffset(5, 5)
+    how_it_works_txt:SetTextYOffset(5, 5)
+
+    local how_it_works_button = core:get_or_create_component("how_it_works_button", "ui/groovy/buttons/icon_button", how_it_works)
+    how_it_works_button:SetDockingPoint(2)
+    how_it_works_button:SetDockOffset(0, how_it_works_txt:Height() * 0.5 + 5)
+    how_it_works_button:SetImagePath("ui/skins/default/icon_question_mark.png", 0)
+
+    do
+        if mct:context() == "campaign" then
+            how_it_works_txt:SetStateText("Campaign Registry")
+            how_it_works_button:SetTooltipText("Campaign Registry||MCT is loaded in a Campaign Registry.\n\n [[img:mct_campaign]][[/img]]Campaign-specific settings changed in this campaign will have their settings changed in the save, but it won't change for other campaigns or the main menu.\n [[img:mct_registry]]Global settings will have their value changed everywhere.", true)
+        else
+            how_it_works_txt:SetStateText("Global Registry")
+            how_it_works_button:SetTooltipText("Global Registry||MCT is loaded in the Global Registry (ie., outside of a campaign save).\n\n [[img:mct_campaign]][[/img]]Campaign-specific settings changed in the main menu will be applied to any newly-created campaigns, and will hold their value until changed in the main menu.\n [[img:mct_registry]]Global settings will have their value changed everywhere.", true)
+        end
+    end
+
     self.top_bar = top_bar
     
     self:create_profiles_button(buttons_holder)
@@ -728,12 +756,24 @@ function UI_Main:create_left_panel(ew, eh, xo, yo)
     left_panel_title:SetDockingPoint(2)
     left_panel_title:SetDockOffset(0,0)
 
+    local expand_collapse_button = core:get_or_create_component("button_expand_collapse_mct_mods", "ui/templates/square_small_toggle_plus_minus", left_panel)
+    expand_collapse_button:SetDockingPoint(1)
+    expand_collapse_button:SetDockOffset(5, left_panel_title:Height() + 5)
+    expand_collapse_button:SetState("active")
+    expand_collapse_button:SetTooltipText("Expand", true)
+
+    local expand_collapse_txt = core:get_or_create_component("label", "ui/groovy/text/fe_default", expand_collapse_button)
+    expand_collapse_txt:SetStateText("Expand All Rows")
+    expand_collapse_txt:SetDockingPoint(6 + 9) -- center right External
+    expand_collapse_txt:SetDockOffset(5, 0)
+    expand_collapse_txt:Resize(left_panel_title:Width() * 0.6, expand_collapse_txt:Height())
+
     -- create listview
     local left_panel_listview = core:get_or_create_component("left_panel_listview", "ui/groovy/layouts/listview", left_panel)
     left_panel_listview:SetCanResizeWidth(true) left_panel_listview:SetCanResizeHeight(true)
-    left_panel_listview:Resize(w, h-left_panel_title:Height()-5) 
+    left_panel_listview:Resize(w, h-left_panel_title:Height() - expand_collapse_button:Height() - 10) 
     left_panel_listview:SetDockingPoint(2)
-    left_panel_listview:SetDockOffset(0, left_panel_title:Height()+5)
+    left_panel_listview:SetDockOffset(0, left_panel_title:Height() + expand_collapse_button:Height() + 10)
 
     -- local w,h = left_panel_listview:Dimensions()
 
@@ -1028,6 +1068,44 @@ core:add_listener(
     end,
     true
 )
+
+--- TODO hook up profiles!
+core:add_listener(
+    "button_expand_collapse_mct_mods_pressed",
+    "ComponentLClickUp",
+    function(context)
+        return context.string == "button_expand_collapse_mct_mods"
+    end,
+    function(context)
+        local all_mods = mct:get_mods()
+        local button = UIComponent(context.component)
+        local txt = find_uicomponent(button, "label")
+
+        -- if active, we're expanding; else, we're collapsing
+        local to_expand = txt:GetStateText() == "Expand All Rows"
+
+        local selected = mct:get_selected_mod()
+
+        for key,obj in pairs(all_mods) do
+            if obj == selected then
+                -- ignore the selected mod
+            else
+                obj:toggle_subrows(to_expand)
+            end
+        end
+
+        -- toggle the button
+        if to_expand then
+            button:SetState("selected")
+            txt:SetStateText("Collapse All Rows")
+        else
+            button:SetState("active")
+            txt:SetStateText("Expand All Rows")
+        end
+    end,
+    true
+)
+
 
 core:add_listener(
     "mct_mod_toggle_subrows",
