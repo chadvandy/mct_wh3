@@ -57,6 +57,19 @@ function Dropdown:get_fallback_value()
     return values[1]
 end
 
+function Dropdown:get_option(key)
+    local values = self:get_values()
+    for i = 1, #values do
+        local test = values[i].key
+
+        if key == test then
+            return values[i]
+        end
+    end
+
+    return nil
+end
+
 --- TODO use a Cco call instead somehow?
 --- Select a value within the UI; ie., change from the first dropdown value to the second.
 function Dropdown:ui_select_value(val)
@@ -170,6 +183,17 @@ function Dropdown:ui_create_option(dummy_parent)
             tooltip = value.tt,
             sort_order = i,
         }
+
+        local text = common.get_localised_string(value.text)
+        local tt = common.get_localised_string(value.tt)
+
+        if text ~= "" then
+            dd.values[value.key].text = text
+        end
+
+        if tt ~= "" then
+            dd.values[value.key].tooltip = tt
+        end
     end
 
     local context_key = self:get_mod_key().."_"..self:get_key().."_dropdown"
@@ -284,103 +308,6 @@ function Dropdown:add_dropdown_value(key, text, tt, is_default)
         self:get_uic_with_key("option"):Layout()
     end
 end
-
-
--- --- Only called on creation & add_dropdown_value, if the latter is called after the UI is created
--- --- Allows for dynamic dropdowns!
--- function Dropdown:refresh_dropdown_box()
---     local uic = self:get_uic_with_key("option")
-
---     local popup_menu = UIComponent(uic:Find("popup_menu"))
---     local popup_list = UIComponent(popup_menu:Find("popup_list"))
-
---     -- clear out any extant chil'uns
---     popup_list:DestroyChildren()
-
---     local selected_tx = UIComponent(uic:Find("dy_selected_txt"))
---     selected_tx:SetTextHAlign('left')
---     selected_tx:SetTextVAlign('centre')
-    
---     local selected_value = self:get_selected_setting()
-
---     local dropdown_values = self:get_values()
-
---     local dropdown_option_template = "ui/vandy_lib/dropdown_option"
-
---     for i = 1, #dropdown_values do
---         local dropdown_value = dropdown_values[i]
-
---         local key = dropdown_value.key
---         local text = dropdown_value.text
---         local tt = dropdown_value.tt
-
---         local new_entry = core:get_or_create_component(key, dropdown_option_template, popup_list)
---         new_entry:SetProperty("mct_option", self:get_key())
---         new_entry:SetProperty("mct_mod", self:get_mod_key())
-        
---         -- if they're localised text strings, localise them!
---         do
---             local test_tt = common.get_localised_string(tt)
---             if test_tt ~= "" then
---                 tt = test_tt
---             end
-
---             local test_text = common.get_localised_string(text)
---             if test_text ~= "" then
---                 text = test_text
---             end
---         end
-
---         new_entry:SetTooltipText(tt, true)
-
---         local off_y = 5 + (new_entry:Height() * (i-1))
-
---         new_entry:SetDockingPoint(2)
---         new_entry:SetDockOffset(0, off_y)
-
---         w,h = new_entry:Dimensions()
-
---         local txt = find_uicomponent(new_entry, "row_tx")
-
---         txt:SetStateText(text)
-
---         -- check if this is the default value
---         if selected_value == key then
---             new_entry:SetState("selected")
-
---             -- add the value's tt to the actual dropdown box
---             selected_tx:SetStateText(text)
---             uic:SetTooltipText(tt, true)
---         end
-
---         new_entry:SetCanResizeHeight(false)
---         new_entry:SetCanResizeWidth(false)
---     end
-
-
---     local border_top = find_uicomponent(popup_menu, "border_top")
---     local border_bottom = find_uicomponent(popup_menu, "border_bottom")
-    
---     border_top:SetCanResizeHeight(true)
---     border_top:SetCanResizeWidth(true)
---     border_bottom:SetCanResizeHeight(true)
---     border_bottom:SetCanResizeWidth(true)
-
---     popup_list:SetCanResizeHeight(true)
---     popup_list:SetCanResizeWidth(true)
---     popup_list:Resize(w * 1.1, h * (#dropdown_values) + 10)
---     --popup_list:MoveTo(popup_menu:Position())
---     popup_list:SetDockingPoint(2)
---     --popup_list:SetDocKOffset()
-
---     popup_menu:SetCanResizeHeight(true)
---     popup_menu:SetCanResizeWidth(true)
---     popup_list:SetCanResizeHeight(false)
---     popup_list:SetCanResizeWidth(false)
-    
---     local w, h = popup_list:Bounds()
---     popup_menu:Resize(w,h)
--- end
 
 ---- Specific listeners for the UI ----
 

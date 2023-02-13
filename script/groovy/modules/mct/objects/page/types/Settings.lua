@@ -9,7 +9,7 @@ local defaults = {
     ---@type MCT.Section[]
     assigned_sections = {},
 
-    num_columns = 3,
+    num_columns = 2,
 
     _section_sort_order_function = sort_functions.index,
 }
