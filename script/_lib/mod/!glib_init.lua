@@ -443,6 +443,13 @@ core:add_listener(
         local lib_logging = mod:get_option_by_key("lib_logging")
         local game_logging = mod:get_option_by_key("game_logging")
 
+        -- if __write_output_to_logfile is already set, we can assume the user has already enabled it, so we should disable these functions.
+        if __write_output_to_logfile then
+            function GLib.EnableGameLogging() end
+
+            game_logging:set_locked(true, "You already have game logging enabled.")
+        end
+
         GLib.EnableInternalLogging(lib_logging:get_finalized_setting())
         GLib.EnableGameLogging(game_logging:get_finalized_setting())
     end,
