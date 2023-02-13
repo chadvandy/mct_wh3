@@ -14,12 +14,14 @@ local defaults = {
 
     ---@type MCT.Control.RadioButton.Option[] #The options for this radio button.
     _options = {},
+    _max_options = 6,
 
     ---@type "vertical"|"horizontal" #The layout of the radio buttons. Defaults to horizontal.
     _layout = "horizontal",
 
     _control_dock_point = 8,
     _control_dock_offset = {0, 0},
+
 }
 
 ---@class MCT.Option.RadioButton : MCT.Option
@@ -41,10 +43,17 @@ end
 --- Checks the validity of the value passed.
 ---@param value any Tested value.
 --- @return boolean valid Returns true if the value passed is valid, false otherwise.
---- @return boolean? valid_return If the value passed isn't valid, a second return is sent, for a valid value to replace the tested one with.
+--- @return string? valid_return If the value passed isn't valid, a second return is sent, for a valid value to replace the tested one with.
 function RadioButton:check_validity(value)
-    if not is_boolean(value) then
-        return false, false
+    if not is_string(value) then
+        return false, self:get_fallback_value()
+    end
+
+    -- confirm that this is a valid option
+    for i, option in pairs(self._options) do
+        if option.key == value then
+            return true
+        end
     end
 
     return true
@@ -88,7 +97,9 @@ function RadioButton:set_options(option_table)
 
     local option_count = 0
 
-    for i, option in pairs(option_table) do
+    for i, option in ipairs(option_table) do
+        -- triggering an assert if we're over the max options
+        assert(option_count < self._max_options, "set_options() called for option with key ["..self:get_key().."], but we're already at maximum options of "..self._max_options .. "!")
         assert(is_table(option), "set_options() called for option with key ["..self:get_key().."], but the option supplied ["..tostring(option).."] is not a table!")
         assert(is_string(option.key), "set_options() called for option with key ["..self:get_key().."], but the key supplied ["..tostring(option.key).."] is not a string!")
         assert(is_string(option.text), "set_options() called for option with key ["..self:get_key().."], but the option text supplied ["..tostring(option.text).."] is not a string!")
@@ -111,6 +122,7 @@ end
 ---@param tooltip string #The tooltip to display on the button.
 ---@param is_default boolean? #Whether or not this option should be the default.
 function RadioButton:create_option(key, text, tooltip, is_default)
+    assert(self._max_options > self:get_option_count(), "create_option() called for option with key ["..self:get_key().."], but we're already at maximum options of "..self._max_options .. "!")
     assert(is_string(key), "create_option() called for option with key ["..self:get_key().."], but the key supplied ["..tostring(key).."] is not a string!")
     assert(is_string(text), "create_option() called for option with key ["..self:get_key().."], but the text supplied ["..tostring(text).."] is not a string!")
     assert(is_string(tooltip), "create_option() called for option with key ["..self:get_key().."], but the tooltip supplied ["..tostring(tooltip).."] is not a string!")
@@ -138,11 +150,16 @@ function RadioButton:get_layout()
 end
 
 function RadioButton:ui_select_value(new_option_key)
+    logf("RadioButton:ui_select_value(%s)", new_option_key)
+
     for i, option in ipairs(self:get_options()) do
+        logf("Checking option w/ key %s", option.key)
         local option_uic = self:get_uic_with_key("option_"..option.key)
         if option.key == new_option_key then
+            logf("Setting option w/ key %s to selected", option.key)
             option_uic:SetState("selected")
         else
+            logf("Setting option w/ key %s to active", option.key)
             option_uic:SetState("active")
         end
     end
@@ -177,7 +194,7 @@ function RadioButton:ui_create_option(dummy_parent)
     -- new_uic:SetDockOffset(0, 0)
     -- new_uic:Resize(dummy_parent:Width() * 0.95, dummy_parent:Height() * 0.9)
 
-    local ow, oh = (dummy_parent:Width() * 0.95) / 4, dummy_parent:Height() * 0.4
+    local ow, oh = (dummy_parent:Width() * 0.95) / self._max_options, dummy_parent:Height() * 0.45
 
     local options = self:get_options()
     for i, option in ipairs(options) do
@@ -197,7 +214,7 @@ function RadioButton:ui_create_option(dummy_parent)
 
         local label = core:get_or_create_component("label", "ui/groovy/text/fe_default", option_holder)
         label:SetDockingPoint(5)
-        label:Resize(option_holder:Width() * 0.9, option_holder:Height() * 0.2)
+        label:Resize(option_holder:Width() * 0.9, option_holder:Height() - option_uic:Height() - 5)
         label:SetDockOffset(0, - (label:Height() * 0.6))
         label:SetStateText(option.text)
         label:SetTextHAlign("centre")
@@ -216,11 +233,11 @@ core:add_listener(
     "ComponentLClickUp",
     function(context)
         local uic = UIComponent(context.component)
+
         local p = uic:GetProperty("mct_control_type")
         return is_string(p) and p == "radio_button"
     end,
     function(context)
-        logf("Pressed radio button!")
         local uic = UIComponent(context.component)
         local mod_key = uic:GetProperty("mct_mod")
         local control_key = uic:GetProperty("mct_control")

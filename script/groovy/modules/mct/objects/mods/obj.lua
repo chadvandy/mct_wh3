@@ -970,6 +970,27 @@ function mct_mod:add_new_option(option_key, option_type)
     return new_option
 end
 
+function mct_mod:add_new_radio_button(option_key, label, tooltip, options, default)
+    local option_type = "radio_button"
+    local OptionClass = mct:get_option_type("radio_button")
+    ---@cast OptionClass MCT.Option.RadioButton
+
+    local new_option = OptionClass:new(self, option_key)
+    self._options[option_key] = new_option
+    self._options_by_type[option_type][#self._options_by_type[option_type]+1] = option_key
+    self._options_by_index_order[#self._options_by_index_order+1] = option_key
+
+    new_option:set_text(label)
+    if is_string(tooltip) then
+        new_option:set_tooltip_text(tooltip)
+    end
+
+    new_option:set_options(options)
+    new_option:set_default_value(default)
+
+    return new_option
+end
+
 -- Add a new main page tab to this mod.
 --- This is the main page tab that appears in the main page of the UI.
 ---@param title string The title for this tab.

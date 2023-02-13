@@ -614,6 +614,26 @@ function mct_option:get_position()
     return self._pos.x, self._pos.y
 end
 
+function mct_option:is_dropdown()
+    return self:get_type() == "MCT.Option.Dropdown"
+end
+
+function mct_option:is_checkbox()
+    return self:get_type() == "MCT.Option.Checkbox"
+end
+
+function mct_option:is_slider()
+    return self:get_type() == "MCT.Option.Slider"
+end
+
+function mct_option:is_textinput()
+    return self:get_type() == "MCT.Option.TextInput"
+end
+
+function mct_option:is_radiobutton()
+    return self:get_type() == "MCT.Option.RadioButton"
+end
+
 --- Internal checker to see if the values passed through mct_option methods are valid.
 --- This remains because I renamed the function to "check_validity" but didn't want to ruin backwards compatibility.
 ---@param val any Value being tested for type.
@@ -778,13 +798,13 @@ function mct_option:ui_create_option_base(parent, w, h)
         option_text:Resize(ow, oh)
         option_text:SetTextVAlign("centre")
         option_text:SetTextHAlign("left")
-        option_text:SetTextXOffset(10, 0)
+        option_text:SetTextXOffset(5, 0)
 
         option_text:ResizeTextResizingComponentToInitialSize(ow, oh)
         option_text:SetStateText(self:get_text())
 
         option_text:SetDockingPoint(1)
-        option_text:SetDockOffset(0, 0)
+        option_text:SetDockOffset(15, 0)
     end
 
     new_option:SetDockingPoint(self._control_dock_point)
@@ -812,15 +832,9 @@ function mct_option:ui_create_option_base(parent, w, h)
     -- end
 
     --- a horizontal list engine to hold icons
-    local icon_holder = core:get_or_create_component("icons_holder", "ui/groovy/layouts/hlist_reverse", dummy_option)
-    icon_holder:SetDockingPoint(6)
-
-    if self._control_dock_point == 6 then
-        icon_holder:SetDockOffset(-new_option:Width() - 5, 0)
-    else
-        icon_holder:SetDockingPoint(1)
-        icon_holder:SetDockOffset(option_text:Width() + 10, 0) -- will prolly look bad for now.
-    end
+    local icon_holder = core:get_or_create_component("icons_holder", "ui/groovy/layouts/hlist", option_text)
+    icon_holder:SetDockingPoint(7)
+    icon_holder:SetDockOffset(15, 0)
 
     local function create_icon_button(key, image, tt, uses_click)
         local template = "ui/groovy/buttons/icon_button"
@@ -836,28 +850,6 @@ function mct_option:ui_create_option_base(parent, w, h)
         icon_button:SetTooltipText(tt, true)
 
         return icon_button
-    end
-    
-    --- TODO if we have an info button to show, show it!
-    local tt = self:get_tooltip_text()
-    local has_info_popup = false
-
-    if is_string(tt) and tt ~= "" then
-        -- If we need a full info popup, then set the micro tt on the tt button
-        if has_info_popup then
-
-        else -- Otherwise, we just need a tooltip icon
-            -- Create the tooltip icon
-            self:set_uic_with_key(
-                "button_tooltip",
-                create_icon_button(
-                    "button_tooltip", 
-                    "ui/skins/default/icon_question_mark.png",
-                    tt
-                ),
-                true
-            )
-        end
     end
 
     --- if this is a global option, show the global icon
@@ -889,19 +881,66 @@ function mct_option:ui_create_option_base(parent, w, h)
             true
         )
     end
+    
+    --- TODO if we have an info button to show, show it!
+    local tt = self:get_tooltip_text()
+    local has_info_popup = false
+
+    if is_string(tt) and tt ~= "" then
+        -- If we need a full info popup, then set the micro tt on the tt button
+        if has_info_popup then
+
+        else -- Otherwise, we just need a tooltip icon
+            -- Create the tooltip icon
+            self:set_uic_with_key(
+                "button_tooltip",
+                create_icon_button(
+                    "button_tooltip", 
+                    "ui/skins/default/icon_question_mark.png",
+                    tt
+                ),
+                true
+            )
+        end
+    end
 
     --- if we have a default value set, create the revert-to-defaults button!
     if not is_nil(self:get_default_value(true)) then
+        -- get the localised text associated with the default value, if it's a dropdown or radio button
+        local default_value = self:get_default_value(true)
+        local default_value_text = tostring(default_value)
+
+        if self:is_dropdown() then
+            ---@cast self MCT.Option.Dropdown
+            local value = self:get_option(default_value)
+            default_value_text = value.text
+        elseif self:is_radiobutton() then
+            ---@cast self MCT.Option.RadioButton
+            local option = self:get_option(default_value)
+            default_value_text = option.text
+        end
+
+        local test = common.get_localised_string(default_value_text)
+        if test ~= "" then
+            default_value_text = test
+        end
+
         self:set_uic_with_key(
             "revert_to_defaults", 
             create_icon_button(
                 "mct_revert_to_defaults", 
                 "ui/skins/default/icon_reset.png", 
-                "Revert this option to its default value.||Default value: " .. tostring(self:get_default_value(true)),
+                "Revert this option to its default value.||Default value: " .. default_value_text,
                 true
             ),
             true
         )
+    end
+
+    
+    if self._control_dock_point == 8 then
+        icon_holder:SetDockingPoint(1)
+        icon_holder:SetDockOffset(option_text:Width() + 10, option_text:Height() / 2 - icon_holder:Height() / 2) -- will prolly look bad for now.
     end
 
     self:ui_refresh()
@@ -909,7 +948,7 @@ end
 
 --- set the state, value, visibility, and actions (ie. revert to defaults)
 function mct_option:ui_refresh()
-    if not self:get_uic_with_key("option") then return end
+    -- if not self:get_uic_with_key("option") then return end
     local setting = self:get_selected_setting()
     
     self:ui_select_value(setting)
