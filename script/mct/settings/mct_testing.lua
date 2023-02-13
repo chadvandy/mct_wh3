@@ -3,26 +3,44 @@
 
 -- local mct_mod = mct:register_mod("mct_demo")
 
--- local page = mct_mod:create_settings_page("Test Page", 3)
--- mct_mod:get_default_setings_page():set_visibility(false)
+-- local test = mct_mod:add_new_radio_button(
+--     "test",
+--     "Testing Radio Button",
+--     "Testing Tooltip",
+--     {
+--         {
+--             key = "test_1",
+--             text = "Test 1",
+--         },
+--         {
+--             key = "test_2",
+--             text = "Test 2",
+--         },
+--         {
+--             key = "test_3",
+--             text = "Test 3",
+--         },
+--     },
+--     "test_2"
+-- )
 
--- local b = mct_mod:add_new_section("section_b", "Section B (index first)")
--- b:assign_to_page(page)
+-- local dummy = mct_mod:add_new_option("dummy", "checkbox")
+-- dummy:set_text("Dummy")
 
 -- ---@type MCT.Option.Dropdown
 -- local test = mct_mod:add_new_option("test_dropdown", "dropdown")
 -- test:add_dropdown_values({
 --     {
 --         key = "one",
---         text = "one",
+--         text = "mct_ui_mods_header",
 --     },
 --     {
 --         key = "two",
---         text = "two",
+--         text = "mct_ui_settings_title",
 --     },
 --     {
 --         key = "three",
---         text = "three",
+--         text = "mct_button_client_change",
 --     },
 --     {
 --         key = "four",
@@ -58,6 +76,6 @@
 --     },
 -- })
 
--- -- local s = mct_mod:add_new_option("testing_slider", "slider"):slider_set_precision(2):set_default_value(50):slider_set_min_max(0, 100):set_text("Testing Slider")
+-- -- -- local s = mct_mod:add_new_option("testing_slider", "slider"):slider_set_precision(2):set_default_value(50):slider_set_min_max(0, 100):set_text("Testing Slider")
 
--- -- mct_mod:add_new_option("test_b", 'checkbox'):set_text("Testing Checkbox")
+-- -- -- mct_mod:add_new_option("test_b", 'checkbox'):set_text("Testing Checkbox")
