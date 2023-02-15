@@ -201,18 +201,6 @@ function mct_option:set_context_specific(context)
 
 end
 
---- Set this Option as an array-type. That means the option will have a table-type saved setting, useful for options which can 
----@param max_fields number
----@param min_fields number
-function mct_option:set_is_array(max_fields, min_fields)
-    self._is_array = true
-
-    self._array = {
-        max = max_fields,
-        min = min_fields,
-    }
-end
-
 ---- Set whether this mct_option exists for MP campaigns.
 --- If set to true, this option is invisible for MP and completely untracked by MCT.
 ---@param enabled boolean True for MP-disabled, false to MP-enabled
@@ -548,6 +536,7 @@ function mct_option:set_selected_setting(val, is_from_popup)
 
     -- check if the UI is currently locked for this option; if it is, don't change the selected setting
     if self:is_locked() then
+        self:ui_refresh()
         return
     end
     
@@ -948,7 +937,7 @@ end
 
 --- set the state, value, visibility, and actions (ie. revert to defaults)
 function mct_option:ui_refresh()
-    -- if not self:get_uic_with_key("option") then return end
+    if not self:get_uic_with_key("option") then return end
     local setting = self:get_selected_setting()
     
     self:ui_select_value(setting)

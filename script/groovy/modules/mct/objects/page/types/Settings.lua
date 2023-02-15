@@ -287,6 +287,8 @@ function SettingsPage:populate(panel)
 
         end
     end
+
+    self:OnPopulate(panel)
 end
 
 return SettingsPage

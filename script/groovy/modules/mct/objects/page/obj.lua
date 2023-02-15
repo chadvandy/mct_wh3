@@ -53,9 +53,14 @@ function Page:get_mod()
     return self._mod_obj
 end
 
+---@param uic UIComponent
+---@abstracted
+function Page:OnPopulate(uic)
+
+end
+
 --- Create the UI panel for this layout. (Overridden by subclasses)
 function Page:populate(panel)
-
 end
 
 ---@param bool boolean

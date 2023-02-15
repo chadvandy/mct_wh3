@@ -3,6 +3,31 @@
 
 -- local mct_mod = mct:register_mod("mct_demo")
 
+-- -- create an array control group
+-- ---@type MCT.ControlGroup.Array
+-- local array_class = mct:get_object_type("control_groups", "array")
+
+-- local checkbox_class = mct:get_mct_option_class_subtype("checkbox")
+-- ---@cast checkbox_class MCT.Option.Checkbox
+
+-- local array = array_class:new()
+-- array:set_key("array_test")
+
+-- local ck = checkbox_class:new(mct_mod, "test_1")
+-- local ck2 = checkbox_class:new(mct_mod, "test_2")
+
+-- array:add_control(ck, 1)
+-- array:add_control(ck2, 2)
+
+-- local page = mct_mod:get_default_setings_page()
+
+-- ---@diagnostic disable-next-line: duplicate-set-field
+-- function page:OnPopulate(uic)
+--     local column = find_uicomponent(uic, "settings_column_1")
+--     local box = find_uicomponent(column, "list_clip", "list_box")
+--     array:display(box)
+-- end
+
 -- local test = mct_mod:add_new_radio_button(
 --     "test",
 --     "Testing Radio Button",

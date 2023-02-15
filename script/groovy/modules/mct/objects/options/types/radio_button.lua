@@ -189,6 +189,8 @@ function RadioButton:ui_create_option(dummy_parent)
 
     local new_uic = core:get_or_create_component(self:get_key().."_holder", "ui/groovy/layouts/hlist", dummy_parent)
 
+    self:set_uic_with_key("option", new_uic, true)
+
     -- these are handled elsewhere.
     -- new_uic:SetDockingPoint(8 + 9) -- bottom center external
     -- new_uic:SetDockOffset(0, 0)

@@ -4,13 +4,14 @@
         "titleBar.activeBackground": "#494011",
         "titleBar.activeForeground": "#FCFAF0"
     },
-    "Lua.workspace.library": [
-        // ".vscode/def.lua",
-        "S:/modding/tw_autogen/output/wh3/",
+    "Lua.workspace.library" : [
+        "C:/Users/vandy/AppData/Roaming/rpfm/config/tw_autogen/output/wh3/global/",
+        "C:/Users/vandy/AppData/Roaming/rpfm/config/tw_autogen/output/wh3/campaign/",
+        "C:/Users/vandy/AppData/Roaming/rpfm/config/tw_autogen/output/wh3/battle/",
+        "C:/Users/vandy/AppData/Roaming/rpfm/config/tw_autogen/output/wh3/frontend/",
     ],
     "Lua.diagnostics.disable": [
         "lowercase-global",
         "need-check-nil"
-    ],
-    "Lua.runtime.version": "Lua 5.4",
+    ]
 }

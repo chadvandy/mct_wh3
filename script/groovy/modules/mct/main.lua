@@ -1,6 +1,8 @@
 ---@alias MCT.OptionType 'slider'|'dropdown'|'checkbox'|'text_input'
 ---@alias MCT.System {_Types : {}, _Object : {}, _UI : {}, }
 
+---@alias MCT.Control MCT.Option
+
 ---@alias MCT.SelectedMod {[1]: MCT.Mod, [2]: MCT.Page}
 ---@alias MCT.Mode {context:'"global"'|'"campaign"', edit: boolean} #The current mode we're in.
 
@@ -102,6 +104,9 @@ function mct:get_notification_class() return self:get_object("notifications") en
 ---@param type string
 ---@return MCT.Notification
 function mct:get_notification_class_subtype(type) return self:get_object_type("notifications", type) end
+
+---@return MCT.ControlGroup
+function mct:get_control_group_class() return self:get_object("control_groups") end
 
 ---@return MCT.Page
 function mct:get_mct_page() return self:get_object("page") end
@@ -216,6 +221,8 @@ function mct:load_modules()
     self:load_system("notifications")
 
     local ok, err = pcall(function()
+    
+    self:load_object("control_groups")
     
     self:load_object("options")
     self:load_object("mods")
