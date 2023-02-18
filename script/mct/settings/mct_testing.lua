@@ -1,7 +1,26 @@
 
 -- local mct = get_mct()
 
--- local mct_mod = mct:register_mod("mct_demo")
+-- local mct_mod = mct:register_mod("mct-demo")
+
+-- local new_page = mct_mod:create_settings_page("New Page", 1)
+-- local old_page = mct_mod:get_default_setings_page()
+
+-- mct_mod:set_default_settings_page(new_page)
+-- old_page:remove()
+
+-- local test = mct_mod:add_new_option("testing_campaign", 'checkbox')
+-- test:set_default_value(true)
+-- test:set_text("Campaign Test: Default is True")
+
+-- local slider = mct_mod:add_new_option("test_slider", 'slider')
+-- slider:set_text("Testing Slider Lock")
+-- slider:set_locked(true, "Testing Lock")
+
+-- for i = 1, 20 do
+--     local mctmod = mct:register_mod("mct-demo-"..i)
+--     mctmod:set_title("Mod " .. i)
+-- end
 
 -- -- create an array control group
 -- ---@type MCT.ControlGroup.Array

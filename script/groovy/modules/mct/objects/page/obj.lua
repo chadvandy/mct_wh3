@@ -88,7 +88,8 @@ function Page:create_row_uic()
     if not list_view then return end
 
     local page_row = core:get_or_create_component(mod_obj:get_key().."_"..page_key, "ui/vandy_lib/row_header", left_panel)
-    page_row:SetVisible(false)
+    
+    page_row:SetVisible(mod_obj.__bRowsOpen)
     page_row:SetCanResizeHeight(true) page_row:SetCanResizeWidth(true)
     page_row:Resize(list_view:Width() * 0.8, page_row:Height() * 0.95)
     page_row:SetDockingPoint(2)

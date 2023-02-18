@@ -1,7 +1,7 @@
 --- a do-anything-to-it canvas page
 
 local mct = get_mct()
-local Super = mct:get_mct_page()
+local Super = mct:get_mct_page_class()
 
 ---@class MCT.Page.Canvas
 local defaults = {

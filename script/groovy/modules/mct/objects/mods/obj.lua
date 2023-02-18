@@ -36,8 +36,8 @@ local mct_mod_defaults = {
     _log_file_path = nil,
 
     _title = "No Title Assigned",
-    _author = "No Author Assigned",
-    _description = "No Description Assigned",
+    _author = "",
+    _description = "",
 
     ---@type string The tooltip text for this mod, shown on the row header.
     _tooltip_text = "",
@@ -83,6 +83,9 @@ local mct_mod_defaults = {
     ---@type boolean Whether or not the mod's subrows are open. If true, the mod's subrows are visible.
     __bRowsOpen = false,
 
+    ---@type boolean #Whether the subrows were automatically opened on clicking the main page. If true, the subrows will be closed when the main page is closed.
+    __bRowsOpenedOnMainPage = false,
+
     ---@type table<string, UIC> The UI components for this mod.
     __uics = {},
 
@@ -115,6 +118,12 @@ end
 ---@return MCT.Page.Settings
 function mct_mod:get_default_setings_page()
     return self._default_page
+end
+
+---@param page MCT.Page.Settings
+function mct_mod:set_default_settings_page(page)
+    assert(mct:is_mct_settings_page(page), "mct_mod:set_default_settings_page() - page must be a MCT.Page.Settings object!")
+    self._default_page = page
 end
 
 ---@return MCT.Page.Main
@@ -167,6 +176,19 @@ function mct_mod:get_settings_page_with_key(key)
     end
 
     -- if none found, return a default page?
+end
+
+---@param page MCT.Page.Settings
+function mct_mod:remove_settings_page(page)
+    assert(mct:is_mct_settings_page(page), "mct_mod:remove_settings_page() - page must be a MCT.Page.Settings object!")
+    for i, p in pairs(self._settings_pages) do
+        if p == page then
+            table.remove(self._settings_pages, i)
+            return
+        end
+    end
+
+    GLib.Error("Trying to remove settings page [%s] in mct_mod [%s] but nothing exists with that key!", page:get_key(), self:get_key())
 end
 
 function mct_mod:set_disabled(b, strReason)
@@ -442,6 +464,10 @@ end
 
 --- TODO global table sanitizer
 
+function mct_mod:clear_userdata()
+    self._userdata = {}
+end
+
 function mct_mod:set_userdata(t)
     if not is_table(t) then return end
 
@@ -449,12 +475,14 @@ function mct_mod:set_userdata(t)
     self._userdata = t
 end
 
----@param as_table boolean? #If we want the Lua table instead of the sanitized printed string.
----@return string|table
-function mct_mod:get_userdata(as_table)
-    if as_table then return self._userdata end
+---@param as_string boolean? #If we want the sanitized printed string instead of the Lua table.
+---@return table|string
+function mct_mod:get_userdata(as_string)
+    if is_boolean(as_string) and as_string == true then
+        return table_printer:print(self._userdata)
+    end
 
-    return table_printer:print(self._userdata)
+    return self._userdata
 end
 
 function mct_mod:set_userdata_kv(k, v)
@@ -472,6 +500,12 @@ function mct_mod:set_userdata_kv(k, v)
     end
 
     self._userdata[k] = v
+end
+
+function mct_mod:get_userdata_kv(k)
+    -- if not is_table(self._userdata) then return nil end
+
+    return self._userdata[k]
 end
 
 --- Set the option-sort-function for every section
@@ -844,13 +878,13 @@ end
 --- Grabs the title text. First checks for a loc-key `mct_[mct_mod_key]_title`, then checks to see if anything was set using @{mct_mod:set_title}. If not, "No title assigned" is returned.
 --- @return string title_text The returned string for this mct_mod's title.
 function mct_mod:get_title()
-    return GLib.HandleLocalisedText(self._title, "No title set", "mct_"..self:get_key().."_title")
+    return GLib.HandleLocalisedText(self._title, "", "mct_"..self:get_key().."_title")
 end
 
 --- Grabs the author text. First checks for a loc-key `mct_[mct_mod_key]_author`, then checks to see if anything was set using @{mct_mod:set_author}. If not, "No author assigned" is returned.
 --- @return string author_text The returned string for this mct_mod's author.
 function mct_mod:get_author()
-    return GLib.HandleLocalisedText(self._author, "No author assigned", "mct_"..self:get_key().."_author")
+    return GLib.HandleLocalisedText(self._author, "", "mct_"..self:get_key().."_author")
 end
 
 --- Grabs the description text. First checks for a loc-key `mct_[mct_mod_key]_description`, then checks to see if anything was set using @{mct_mod:set_description}. If not, "No description assigned" is returned.
@@ -1067,10 +1101,35 @@ function mct_mod:clear_uics(b)
     self.__uics = {}
 end
 
-function mct_mod:toggle_subrows(b)
-    --- toggle __bRowsOpen and change the visibility of all the subrows (but not the main row)
+--- toggle __bRowsOpen and change the visibility of all the subrows (but not the main row)
+function mct_mod:toggle_subrows(b, is_automatic)
+    -- check if the rows are already opened.
+    local bAlreadyOpen = self.__bRowsOpen == true
+
+    -- treat this as a toggle if we don't provide a state.
     if not is_boolean(b) then b = not self.__bRowsOpen end
+
+    -- if we're trying to change the rows automatically...
+    if is_automatic == true then
+        -- and we're trying to open them, and they WEREN'T already open, set the flag to true.
+        -- this ensures that the following automatic close will go through.
+        if b == true and bAlreadyOpen == false then
+            self.__bRowsOpenedOnMainPage = true
+        end
+        
+        -- if we're trying to close the rows, and they weren't opened automatically, just cancel.
+        if b == false and self.__bRowsOpenedOnMainPage == false then
+            return
+        end
+    else
+        -- clear the flag if we're opening the rows manually.
+        if b == true then
+            self.__bRowsOpenedOnMainPage = false
+        end
+    end
+
     self.__bRowsOpen = b
+
 
     if is_boolean(b) then
         -- we have to manually set the button since it wasn't directly pressed!
@@ -1136,7 +1195,12 @@ function mct_mod:create_row(parent)
     button_open_close:SetDockingPoint(4)
     button_open_close:SetDockOffset(5, 0)
     button_open_close:SetTooltipText("Open/Close", true)
-    -- button_open_close:SetState("selected")
+
+    if self.__bRowsOpen then
+        button_open_close:SetState("selected")
+    else
+        button_open_close:SetState("active")
+    end
 
     button_more_options:SetContextObject(cco("CcoScriptObject", "mct_mod_commands"))
     button_more_options:SetDockingPoint(6)

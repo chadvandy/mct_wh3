@@ -1,8 +1,6 @@
 ---@alias MCT.OptionType 'slider'|'dropdown'|'checkbox'|'text_input'
 ---@alias MCT.System {_Types : {}, _Object : {}, _UI : {}, }
 
----@alias MCT.Control MCT.Option
-
 ---@alias MCT.SelectedMod {[1]: MCT.Mod, [2]: MCT.Page}
 ---@alias MCT.Mode {context:'"global"'|'"campaign"', edit: boolean} #The current mode we're in.
 
@@ -68,9 +66,7 @@ function mct:init()
             end,
             false
         )
-    else
-        vlog("LISTENING FOR LOAD GAME")
-        
+    else        
         mct:load_and_start()
     end
 end
@@ -109,10 +105,15 @@ function mct:get_notification_class_subtype(type) return self:get_object_type("n
 function mct:get_control_group_class() return self:get_object("control_groups") end
 
 ---@return MCT.Page
-function mct:get_mct_page() return self:get_object("page") end
+function mct:get_mct_page_class() return self:get_object("page") end
 ---@param key string
 ---@return MCT.Page
 function mct:get_mct_page_type(key) return self:get_object_type("page", key) end
+
+---@return MCT.Page.Main
+function mct:get_mct_main_page_clas() return self:get_object_type("page", "main") end
+---@return MCT.Page.Settings
+function mct:get_mct_settings_page_class() return self:get_object_type("page", "settings") end
 
 function mct:get_system(system_name, internal)
     local s = self._Systems[system_name]
@@ -569,9 +570,9 @@ function mct:verify_key(obj, key)
         return false, "You can't have any spaces in MCT keys!"
     end
 
-    -- Search for anything BUT (^) alphanumeric characters (%w) and underscores (_)
-    if key:match("[^%w_]") then
-        return false, "Only alphanumerical characters and underscores are allowed in MCT keys!"
+    -- Search for anything BUT (^) alphanumeric characters (%w), hyphens (-) and underscores (_)
+    if key:match("[^%w_%-]") then
+        return false, "Only alphanumerical characters, hyphens and underscores are allowed in MCT keys!"
     end
 
     obj._key = key
@@ -584,6 +585,21 @@ end
 function mct:is_mct_mod(obj)
     return is_table(obj) and obj.class
     and obj:instanceOf(mct:get_mct_mod_class())
+end
+
+function mct:is_mct_page(obj)
+    return is_table(obj) and obj.class
+    and obj:instanceOf(mct:get_mct_page_class())
+end
+
+function mct:is_mct_settings_page(obj)
+    return is_table(obj) and obj.class
+    and obj:instanceOf(mct:get_mct_settings_page_class())
+end
+
+function mct:is_mct_main_page(obj)
+    return is_table(obj) and obj.class
+    and obj:instanceOf(mct:get_mct_main_page_clas())
 end
 
 --- Type-checker for @{mct_option}s

@@ -247,7 +247,8 @@ function UI_Notifications:create_button(parent, x, y)
 
     local label_num = core:get_or_create_component("label_num", "ui/groovy/label_num", notifications_button)
     label_num:SetTooltipText("", true)
-    label_num:SetDockOffset(15, -20)
+    label_num:SetDockOffset(18, 13)
+    label_num:SetImageRotation(0, math.rad(90))
 
     self:refresh_button()
     self:create_banner_holder(notifications_button)

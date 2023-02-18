@@ -170,13 +170,6 @@ end
 --- Creates the mct_option in the UI. Do not call externally.
 ---@param dummy_parent UIC #The parent to create the mct_option in.
 function RadioButton:ui_create_option(dummy_parent)
-    -- local template = self:get_uic_template()
-
-    -- local new_uic = core:get_or_create_component("mct_checkbox_toggle", template, dummy_parent)
-    -- new_uic:SetVisible(true)
-
-    -- self:set_uic_with_key("option", new_uic, true)
-
     -- create a layout based on the layout selected
     local mod_key = self:get_mod():get_key()
     local control_key = self:get_key()

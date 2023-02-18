@@ -291,15 +291,20 @@ function UI_Main:create_popup(key, text, two_buttons, button_one_callback, butto
 end
 
 --- TODO if no layout object is supplied, assume "Main" page
----@param mod_obj MCT.Mod
----@param page MCT.Page
+---@param mod_obj MCT.Mod?
+---@param page MCT.Page?
 function UI_Main:set_selected_mod(mod_obj, page)
-    local ok, err = pcall(function()
+
+    local left_panel = self.left_panel
+    local scrollbar = find_uicomponent(left_panel, "left_panel_listview", "vslider")
+    local handle = find_uicomponent(scrollbar, "handle")
+    local handle_x,handle_y = handle:Position()
+
     -- deselect the former one
     local former = mct:get_selected_mod()
     if former then
         -- former:clear_uics(false)
-        former:toggle_subrows(false)
+        former:toggle_subrows(false, true)
     end
 
     local former_uic = self.selected_mod_row
@@ -307,11 +312,21 @@ function UI_Main:set_selected_mod(mod_obj, page)
         former_uic:SetState("active")
     end
 
+    -- if mod_obj / page aren't provided, check MCT for the selected mod / page; if none there, provide default.
+    if not mod_obj then
+        mod_obj, page = mct:get_selected_mod()
+
+        if not mod_obj then
+            mod_obj = mct:get_mod_by_key("mct_mod")
+            page = mod_obj:get_main_page()
+        end
+    end
+
     local mod_key = mod_obj:get_key()
     local page_key = page:get_key()
     local row_uic = page:get_row_uic()
 
-    mod_obj:toggle_subrows(true)
+    mod_obj:toggle_subrows(true, true)
 
     if is_uicomponent(row_uic) then
         logf("Setting %s page %s as selcted!", mod_key, page_key)
@@ -328,20 +343,18 @@ function UI_Main:set_selected_mod(mod_obj, page)
         ---@type UIC
         local uic = self.right_panel
         uic:DestroyChildren()
-        -- local list = find_uicomponent(uic, "list_view")
-        -- local box = find_uicomponent(list, "list_clip", "list_box")
-        -- box:DestroyChildren()
-        -- box:Layout()
-        -- box:Resize(list:Width(), list:Height())
     
         self:set_title(mod_obj)
         page:populate(uic)
 
-        -- box:Layout()
-
         core:trigger_custom_event("MctPanelPopulated", {["mct"] = mct, ["ui_obj"] = self, ["mod"] = mod_obj, ["page"] = page})
         
-    end end) if not ok then GLib.Error(err) end
+    end
+
+    -- scroll to the selected mod
+    core:get_tm():real_callback(function()
+        handle:MoveTo(handle_x, handle_y)
+    end, 10)
 end
 
 function UI_Main:open_frame(provided_panel, is_pre_campaign)
@@ -383,10 +396,7 @@ function UI_Main:open_frame(provided_panel, is_pre_campaign)
             end
         end
 
-        local mct_mod = mct:get_mod_by_key("mct_mod")
-        ---@cast mct_mod MCT.Mod
-        self:set_selected_mod(mct_mod, mct_mod:get_main_page())
-        self.mod_row_list_box:Layout()
+        self:set_selected_mod()
 
         core:remove_listener("MctRowClicked")
         --- The listener for selecting an individual mod
@@ -631,7 +641,7 @@ function UI_Main:create_top_bar(w, h, xo, yo)
     how_it_works_txt:SetDockingPoint(2)
     how_it_works_txt:SetTextVAlign("centre")
     how_it_works_txt:SetTextHAlign("centre")
-    how_it_works_txt:Resize(how_it_works:Width() * 0.4, how_it_works:Height() * 0.6)
+    how_it_works_txt:Resize(how_it_works:Width() * 0.7, how_it_works:Height() * 0.6)
     how_it_works_txt:SetTextXOffset(5, 5)
     how_it_works_txt:SetTextYOffset(5, 5)
 
@@ -643,7 +653,7 @@ function UI_Main:create_top_bar(w, h, xo, yo)
     do
         if mct:context() == "campaign" then
             how_it_works_txt:SetStateText("Campaign Registry")
-            how_it_works_button:SetTooltipText("Campaign Registry||MCT is loaded in a Campaign Registry.\n\n [[img:mct_campaign]][[/img]]Campaign-specific settings changed in this campaign will have their settings changed in the save, but it won't change for other campaigns or the main menu.\n [[img:mct_registry]]Global settings will have their value changed everywhere.", true)
+            how_it_works_button:SetTooltipText("Campaign Registry||MCT is loaded in a .\n\n [[img:mct_campaign]][[/img]]Campaign-specific settings changed in this campaign will have their settings changed in the save, but it won't change for other campaigns or the main menu.\n [[img:mct_registry]]Global settings will have their value changed everywhere.", true)
         else
             how_it_works_txt:SetStateText("Global Registry")
             how_it_works_button:SetTooltipText("Global Registry||MCT is loaded in the Global Registry (ie., outside of a campaign save).\n\n [[img:mct_campaign]][[/img]]Campaign-specific settings changed in the main menu will be applied to any newly-created campaigns, and will hold their value until changed in the main menu.\n [[img:mct_registry]]Global settings will have their value changed everywhere.", true)
@@ -878,7 +888,6 @@ function UI_Main:OnComponentClick(comp, f, persistent, disable)
         id,
         addr,
         function()
-            ModLog("component_click_up")
             if comp:Visible() == nil then
                 core:remove_lookup_listener_callback("component_click_up", id)
                 return
@@ -1001,7 +1010,6 @@ core:add_listener(
     "MCT_ContextCommands",
     "ContextTriggerEvent",
     function(context)
-        ModLog("ContextTriggerEvent: " .. context.string)
         return context.string:starts_with("mct_")
     end,
     function(context)
@@ -1011,43 +1019,26 @@ core:add_listener(
 
         --- TODO multiple params, accept a table here
         local param = string.match(command_string, "|([^|]-)$")
-
-        ModLog("Context: " .. command_context)
-        ModLog("Command: " .. command_key)
-        ModLog("Param: " .. param)
         
         local this_context = GLib.CommandManager.commands[command_context]
 
         if this_context then
-            ModLog("ContextTriggerEvent context is: " .. command_context)
-            ModLog("Command is: " .. command_key)
 
             local this_command = this_context[command_key]
-            -- local last_component_guid = common.get_context_value("CcoScriptObject", command_context, "LastComponentThatSetOurValue")
-    
-            -- if is_string(last_component_guid) and last_component_guid ~= "" then
-                -- ModLog("Last component guid is: " .. last_component_guid)
-                -- local last_commponent = cco("CcoComponent", last_component_guid)
-                -- ModLog("Cco is: " .. tostring(last_commponent))
 
-                -- common.call_context_command("CcoScriptObject", command_context, "SetStringValue('')")
-    
-                --- TODO instead of this being hardcoded per context, it should probably just be that we use `SetProperty("param_1", mct_mod)` etc., and loop through param_i where i = 1, 10 until we can't find a property, and then just pass all those forward.
 
-                --- Figure out the context we need from the component!
-                if command_context == "mct_mod_commands" then
-                    -- local mod_key = last_commponent:Call("ParentContext.ParentContext.ParentContext.ParentContext.ParentContext.GetProperty('mct_mod')")
+            --- Figure out the context we need from the component!
+            if command_context == "mct_mod_commands" then
+                -- local mod_key = last_commponent:Call("ParentContext.ParentContext.ParentContext.ParentContext.ParentContext.GetProperty('mct_mod')")
 
-                    local mod_key = param
-            
-                    ModLog("Running an mct_mod_command, for mod: " .. mod_key)
-                    --- TODO get the relevant properties from the component
-                    local mod_obj = mct:get_mod_by_key(mod_key)
-                    if mod_obj then
-                        this_command.callback(mod_obj)
-                    end
+                local mod_key = param
+        
+                --- TODO get the relevant properties from the component
+                local mod_obj = mct:get_mod_by_key(mod_key)
+                if mod_obj then
+                    this_command.callback(mod_obj)
                 end
-            -- end
+            end
         end
 
     end,

@@ -415,7 +415,16 @@ function Registry:get_save_co()
     return self.__save_co
 end
 
-function Registry:save(first)
+function Registry:save()
+    if cm then
+        -- delay this call to first tick (so we can guarantee we've got all the details we need and can save the save file propa)
+        ---@diagnostic disable-next-line: undefined-field
+        if not cm.model_is_created then
+            cm:add_first_tick_callback(function() Registry:save() end)
+            return
+        end
+    end
+
     local mods = mct:get_mods()
 
     for key, mod in pairs(mods) do
@@ -430,10 +439,8 @@ function Registry:save(first)
     end) if not ok then log(errmsg) end
 
     -- Automatically save the game whenever the settings are edited.
-    if not first then
-        if cm then
-            cm:save()
-        end
+    if cm then
+        cm:save()
     end
 end
 
@@ -621,14 +628,12 @@ function Registry:read_registry_file()
                 else
                     -- we don't have anything saved in the global registry, so we need to set the finalized setting to the default value
                     option_obj._finalized_setting = option_obj:get_default_value()
-                    option_obj._is_locked = false
-                    option_obj._lock_reason = ""
                 end
             end
             
             if t.global.saved_mods[mod_key].data then
                 if t.global.saved_mods[mod_key].data.userdata then
-                    mod_obj:set_userdata(loadstring(t.global.saved_mods[mod_key].data.userdata))
+                    mod_obj:set_userdata(t.global.saved_mods[mod_key].data.userdata)
                 end
             end
         else
@@ -639,10 +644,7 @@ function Registry:read_registry_file()
     self.__last_used_campaign_index = t.last_used_campaign_index
     self.__campaigns = t.campaigns
 
-    --- Loaded in save_game()
-    self.__this_campaign = 0
-
-    self:save(true)
+    self:save()
 
     -- -- update the file with the new t table, in case we added any new options etc.
     -- local t_str = table_printer:print(t)
@@ -681,8 +683,9 @@ function Registry:load()
             local ok, err = pcall(function()
                 self:read_registry_file()
                 self:read_profiles_file()
-                
+
                 self:load_game(context)
+
                 logf("Trigger MctInitialized")
                 core:trigger_custom_event("MctInitialized", {["mct"] = mct, ["is_multiplayer"] = is_mp})
             end) if not ok then logf(err) end
@@ -967,7 +970,7 @@ function Registry:save_game(context)
     core:get_svr():SaveString("mct_registry_campaign_index", tostring(self.__this_campaign))
 end
 
---- TODO load the settings for this campaign into memory
+--- load the settings for this campaign into memory
 function Registry:load_game(context)
     logf("Registry loading game!")
     local registry_data = cm:load_named_value("mct_registry", {}, context)
@@ -980,8 +983,9 @@ function Registry:load_game(context)
         self.__this_campaign = index
         self.__last_used_campaign_index = index
 
+        logf("Loading new campaign index %d", self.__this_campaign)
+
         core:get_svr():SaveString("mct_registry_campaign_index", tostring(self.__this_campaign))
-        logf("Ending")
         return
     end
 

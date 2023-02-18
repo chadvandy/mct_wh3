@@ -319,7 +319,6 @@ core:add_listener(
         return context.string:starts_with("mct_dropdown_item_selected|")
     end,
     function(context)
-        GLib.Log("MCT DROPDOWN CLICK: " .. context.string)
 
         --- TODO handle command stripping entirely through command_manager.
         ---@type string

@@ -141,8 +141,7 @@ end
 --- Change the UI state; ie., lock if it's set to lock.
 --- Called from @{mct_option:set_uic_locked}.
 function Slider:ui_change_state()
-    local option_uic = self:get_uic_with_key("option")
-    local text_uic = self:get_uic_with_key("text")
+    local text_uic = self:get_uic_with_key("option")
 
     local locked = self:is_locked()
     local lock_reason = self:get_lock_reason()
@@ -155,6 +154,8 @@ function Slider:ui_change_state()
     if locked then
         state = "inactive"
         tt = lock_reason .. "\n" .. tt
+
+        text_uic:SetInteractive(false)
     end
 
     --_SetInteractive(text_input, not locked)
@@ -436,6 +437,8 @@ core:add_listener(
             return false
         end
 
+        if option_obj:is_locked() then return end
+
         --- set the left/right buttons inactive until clicked out
         local left_button = option_obj:get_uic_with_key("left_button")
         local right_button = option_obj:get_uic_with_key("right_button")
@@ -528,6 +531,8 @@ core:add_listener(
         log("finding option with key "..option_key)
 
         local option_obj = mod_obj:get_option_by_key(option_key)
+
+        if option_obj:is_locked() then return end
 
         local values = option_obj:get_values()
         local step_size = values.step_size

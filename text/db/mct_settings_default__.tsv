@@ -1,5 +1,5 @@
 key	text	tooltip
 #Loc PackedFile;1;text/db/mct_settings_default__.loc		
 mct_mct_mod_title	Mod Configuration Tool	true
-mct_mct_mod_author	Vandy	true
+mct_mct_mod_author	Groove Wizard	true
 mct_mct_mod_description	The following are the settings for the mod you're looking at right now. Try it out!	true

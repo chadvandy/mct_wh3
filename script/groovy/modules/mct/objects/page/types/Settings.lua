@@ -1,4 +1,4 @@
-local Super = get_mct():get_mct_page()
+local Super = get_mct():get_mct_page_class()
 
 --- TODO do this better prolly
 ---@type {key:fun(), index:fun(), localised_text: fun()}
@@ -38,6 +38,29 @@ function SettingsPage:init(key, mod, num_columns, row_based)
         self.is_row_based = true
         self.num_columns = 1
     end
+end
+
+function SettingsPage:remove()
+    local mod = self:get_mod()
+
+    if mod:get_default_setings_page() == self then
+        -- we can't remove the default settings page!
+        GLib.Error("Trying to remove settings page [%s] for mod [%s], but it's the default settings page! Cannot remove it! Use `mct_mod:set_default_settings_page()` first!", self:get_key(), mod:get_key())
+        return
+    end
+
+    -- remove the page from the mod
+    mod:remove_settings_page(self)
+
+    -- kill it in the UI
+    local row_uic = self:get_row_uic()
+
+    if is_uicomponent(row_uic) then
+        row_uic:Destroy()
+    end
+
+    -- trash collect
+    self = nil
 end
 
 --- Attach a settings section to this page. They will be displayed in order that they are added.

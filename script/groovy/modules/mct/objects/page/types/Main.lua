@@ -2,7 +2,7 @@
 -- Includes a description, primary image, author[s], version, patch notes, and the ability to customize for the modder in question.
 
 local MCT = get_mct()
-local Super = MCT:get_mct_page()
+local Super = MCT:get_mct_page_class()
 
 ---@class MCT.Page.Main : MCT.Page, Class
 local defaults = {
@@ -170,8 +170,15 @@ function Main:populate_sidebar()
         create_text(row, key, text)
     end
 
-    create_row("author", "Created by: ", mod:get_author())
-    create_row("version", "Current Version: ", mod:get_version())
+    local author, version = mod:get_author(), mod:get_version()
+
+    if author ~= "" then
+        create_row("author", "Created by: ", author)
+    end
+
+    if version ~= "" then
+        create_row("version", "Current Version: ", version)
+    end
 end
 
 function Main:populate_main_view()

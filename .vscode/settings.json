@@ -5,10 +5,7 @@
         "titleBar.activeForeground": "#FCFAF0"
     },
     "Lua.workspace.library" : [
-        "C:/Users/vandy/AppData/Roaming/rpfm/config/tw_autogen/output/wh3/global/",
-        "C:/Users/vandy/AppData/Roaming/rpfm/config/tw_autogen/output/wh3/campaign/",
-        "C:/Users/vandy/AppData/Roaming/rpfm/config/tw_autogen/output/wh3/battle/",
-        "C:/Users/vandy/AppData/Roaming/rpfm/config/tw_autogen/output/wh3/frontend/",
+        "S:/modding/tw_autogen/output/wh3/"
     ],
     "Lua.diagnostics.disable": [
         "lowercase-global",
