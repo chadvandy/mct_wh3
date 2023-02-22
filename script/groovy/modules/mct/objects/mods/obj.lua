@@ -116,7 +116,7 @@ end
 
 --- Get the default settings page
 ---@return MCT.Page.Settings
-function mct_mod:get_default_setings_page()
+function mct_mod:get_default_settings_page()
     return self._default_page
 end
 
@@ -1245,6 +1245,29 @@ end
 ---@return UIC #The row header UIC for this mod.
 function mct_mod:get_row_uic()
     return self._row_uic
+end
+
+function mct_mod:load_data(data_table)
+    logf("Checking saved settings for %s", self:get_key())
+
+    local options_data = data_table.options
+
+    if not is_table(options_data) then
+        logf("No saved settings for %s", self:get_key())
+        return
+    end
+
+    for option_key, option_obj in pairs(self:get_options()) do
+        local this_option_data = options_data[option_key]
+
+        if is_table(this_option_data) then
+            option_obj:load_data(this_option_data)
+        end
+    end
+end
+
+function mct_mod:save_data()
+
 end
 
 return mct_mod

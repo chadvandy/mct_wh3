@@ -43,7 +43,7 @@ end
 function SettingsPage:remove()
     local mod = self:get_mod()
 
-    if mod:get_default_setings_page() == self then
+    if mod:get_default_settings_page() == self then
         -- we can't remove the default settings page!
         GLib.Error("Trying to remove settings page [%s] for mod [%s], but it's the default settings page! Cannot remove it! Use `mct_mod:set_default_settings_page()` first!", self:get_key(), mod:get_key())
         return

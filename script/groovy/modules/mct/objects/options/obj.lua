@@ -429,6 +429,81 @@ function mct_option:get_border_image_path()
     return self._border_image_path
 end
 
+function mct_option:save_data()
+
+end
+
+function mct_option:load_data(data_table)
+    local mod_key, option_key = self:get_mod_key(), self:get_key()
+    logf("Checking saved settings for %s.%s", self:get_mod_key(), self:get_key())
+
+    --- TODO if we don't have anything saved in the Registry, we should set defaults and the like.
+    if not is_table(data_table) then
+        logf("No saved data found for %s.%s", self:get_mod_key(), self:get_key())
+        self._finalized_setting = self:get_default_value()
+        return false
+    end
+
+    -- TODO do I want this here?
+    if not is_nil(data_table.global_value) then
+        self._global_value = data_table.global_value
+    end
+
+    -- if this option is global, we only have to track a single finalized setting.
+    if self:is_global() then
+        local f_setting = data_table.setting
+        
+        if is_nil(data_table.setting) then
+            f_setting = self:get_default_value()
+        end
+
+        logf("%s.%s is global - setting the setting to %s", mod_key, option_key, tostring(f_setting))
+        -- assign finalized settings!
+        self._finalized_setting = f_setting
+        self._is_locked = (is_boolean(data_table.is_locked) and data_table.is_locked) or false
+        self._lock_reason = (is_string(data_table.lock_reason) and data_table.lock_reason) or ""
+    else
+        -- if we're not in campaign, we need to set the finalized setting to the global value.
+        if mct:context() ~= "campaign" then
+            local g_setting = data_table.global_value
+
+            if is_nil(data_table.global_value) then
+                g_setting = self:get_default_value()
+            end
+
+            local f_setting = g_setting
+
+            logf("%s.%s is not global - setting the value to %s and the global value to %s", mod_key, option_key, tostring(f_setting), tostring(g_setting))
+
+            self._finalized_setting = f_setting
+            self._global_value = g_setting
+            self._is_locked = (is_boolean(data_table.is_locked) and data_table.is_locked) or false
+            self._lock_reason = (is_string(data_table.lock_reason) and data_table.lock_reason) or ""
+
+        else -- we're in campaign
+            -- if the option is not global, we need to track its campaign-specific "finalized" setting AND its global setting.
+            if not is_nil(cm) and cm:is_new_game() then
+                -- assign finalized settings!
+                local f_setting = data_table.setting
+                local g_setting = data_table.global_value
+
+                if is_nil(data_table.setting) then
+                    f_setting = self:get_default_value()
+                end
+
+                if is_nil(data_table.global_value) then
+                    g_setting = self:get_default_value()
+                end
+
+                self._finalized_setting = f_setting
+                self._global_value = g_setting
+                self._is_locked = (is_boolean(data_table.is_locked) and data_table.is_locked) or false
+                self._lock_reason = (is_string(data_table.lock_reason) and data_table.lock_reason) or ""
+            end
+        end
+    end
+end
+
 ---- Setter for the image path. Provide the path from the base structure - ie., "ui/skins/default/panel_back_border.png" is the default image. Make sure to include the directory path and the .png!
 ---@param border_path string The image path for the border.
 function mct_option:set_border_image_path(border_path)

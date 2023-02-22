@@ -3,6 +3,13 @@
 
 -- local mct_mod = mct:register_mod("mct-demo")
 
+-- local test_checkbox = mct_mod:add_new_option("test_checkbox", "checkbox")
+-- test_checkbox:set_text("Testing Box for New Game")
+
+-- local slider = mct_mod:add_new_option("test_slider", "slider")
+-- slider:set_text("Testing Slider")
+-- slider:set_default_value(50)
+
 -- local new_page = mct_mod:create_settings_page("New Page", 1)
 -- local old_page = mct_mod:get_default_setings_page()
 

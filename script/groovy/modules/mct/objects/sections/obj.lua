@@ -390,7 +390,6 @@ function mct_section:populate(this_column, expected_width, expected_height)
         section_header:SetTooltipText(tt_text, true)
     end
 
-
     local desc = self:get_description()
     if desc ~= "" then
         local dy_desc = core:get_or_create_component("description", "ui/groovy/text/fe_default", section_holder)

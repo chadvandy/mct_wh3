@@ -14,20 +14,14 @@ function UI_Frontend:init()
 end
 
 function UI_Frontend:ui_created()
-    local bar = find_uicomponent("sp_frame", "menu_bar")
+    local frame = find_uicomponent("sp_frame")
+    local bar = find_uicomponent(frame, "menu_bar")
     local existing = find_uicomponent(bar, "button_tw_academy")
-
-    -- local x,y = existing:Position()
-
-    -- local mct_button = get_mct():get_ui():create_mct_button(bar)
-    -- mct_button:MoveTo(x, y)
-
-    existing:SetVisible(false)
+    
     bar:SetVisible(true)
+    existing:SetVisible(false)
 
     get_mct():create_main_holder(bar)
-
-
     get_mct():get_sync():new_frontend()
 end
 

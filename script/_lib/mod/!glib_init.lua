@@ -25,6 +25,9 @@ local defaults = {
 ---@class GLib : Class
 GLib = new_class("GLib", defaults)
 
+---@type json
+GLib.Json = require "script.groovy.includes.json"
+
 ---@class GLib.Log : Class
 local log_defaults = {
     prefix = "[lib]",
@@ -92,8 +95,6 @@ function Log:log(t, ...)
     t = string.format("\n%s %s%s", self.prefix, self:get_tabs(), t)
 
     self.lines[#self.lines+1] = t
-
-    out(t)
     self.file:write(t)
 end
 

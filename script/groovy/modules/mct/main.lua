@@ -334,7 +334,7 @@ function mct:create_main_holder(parent)
                 existing_button = child
             end
 
-            if child:VisibleFromRoot()  then
+            if child:VisibleFromRoot() then
                 existing_button = child
                 break
             end
@@ -352,7 +352,6 @@ function mct:create_main_holder(parent)
             -- we're in frontend so move stuff backwards
             x1 = x - w
             x2 = x
-            y = y + 5
         end
     end
 

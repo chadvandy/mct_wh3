@@ -571,7 +571,13 @@
 			uniqueguid="54C6DEFC-946D-4744-A48A8DD06EAC0B8F"
 			currentstate="262C8338-59F3-4424-9B94DCECEADD7867">
 			<callbackwithcontextlist>
-				<callback_with_context callback_id="Listview"/>
+				<callback_with_context callback_id="Listview">
+					<child_m_user_properties>
+						<property
+							name="dont_reset"
+							value=""/>
+					</child_m_user_properties>
+				</callback_with_context>
 			</callbackwithcontextlist>
 			<componentimages>
 				<component_image
