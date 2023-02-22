@@ -496,4 +496,22 @@ function mct_section:get_options()
     return self._options
 end
 
+--- Returns a @{mct_option} with the specific key the section.
+---@param option_key string The unique identifier for the desired mct_option.
+---@return MCT.Option
+function mct_section:get_option_by_key(option_key)
+    if not is_string(option_key) then
+        err("Trying `get_option_by_key` for section ["..self:get_key().."] but key provided ["..tostring(option_key).."] is not a string! Returning false.")
+        return false
+    end
+
+    if not self._options[option_key] then
+        VLib.Warn("Trying `%s:get_option_by_key(%s)`, but no option exists with that key!", self:get_key(), option_key)
+        return false
+    end
+
+    return self._options[option_key]
+end
+
+
 return mct_section
