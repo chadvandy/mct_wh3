@@ -646,10 +646,18 @@ function Registry:read_registry_file()
     if not file then self:save_file_with_defaults() return self:read_registry_file() end
 
     local str = file:read("*a")
-
-    local t = loadstring(str)()
-
     file:close()
+
+    local t, t_err = loadstring(str)
+
+    if not t then
+        --- Don't read - set values to default and save immediately.
+        errf("Error while reading MCT.Registry file: " .. tostring(t_err))
+        self:save_file_with_defaults()
+        return self:read_registry_file()
+    end
+
+    t = t()
 
     if not t or not t.global then
         --- Don't read - set values to default and save immediately.
@@ -935,9 +943,9 @@ function Registry:save_registry_file()
 
     local et3 = os.clock() - st3
 
-    logf("Time to build table: %dms", et * 1000)
-    logf("Time to build string: %dms", et2 * 1000)
-    logf("Time to print string: %dms", et3 * 1000)
+    -- logf("Time to build table: %dms", et * 1000)
+    -- logf("Time to build string: %dms", et2 * 1000)
+    -- logf("Time to print string: %dms", et3 * 1000)
 end
 
 --- TODO save the info of this campaign into a registry file so we can get the options and settings in the Frontend easily.

@@ -1,0 +1,4 @@
+key	image_path
+#ui_tagged_images_tables;0;db/ui_tagged_images_tables/groovy_mct	
+mct_campaign	ui/skins/default/icon_floppy_disk.png
+mct_registry	ui/skins/default/icon_registry.png
