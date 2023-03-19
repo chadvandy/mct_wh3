@@ -448,7 +448,9 @@ core:add_listener(
         if __write_output_to_logfile then
             function GLib.EnableGameLogging() end
 
-            game_logging:set_locked(true, "You already have game logging enabled.")
+            game_logging:set_locked(true, "Another mod has already enabled game logging!")
+        else
+            game_logging:set_locked(false)
         end
 
         GLib.EnableInternalLogging(lib_logging:get_finalized_setting())

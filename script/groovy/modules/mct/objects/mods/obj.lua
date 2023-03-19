@@ -65,8 +65,8 @@ local mct_mod_defaults = {
     ---@type table<string, any> Persistent userdata table that gets saved in Registry.
     _userdata = {},
 
-    ---@type string The current version number of this mod. Used for Notifications, Changelogs, etc.
-    _version = "",
+    ---@type {value: number, name: string} The current version number of this mod. Used for Notifications, Changelogs, etc.
+    _version = {0, ""},
 
     ---@type MCT.Page.Settings #The default MCT-Created settings page. This is the one that will be used if no settings pages are defined.
     _default_page = nil,
@@ -218,15 +218,29 @@ function mct_mod:set_main_page(page)
     -- self._main_page = page
 end
 
-function mct_mod:set_version(version_num)
-    assert(is_string(version_num), string.format("Version [%s] for mod %s is not a string!", tostring(version_num), self:get_key()))
+---@param version_num number #The version number, as a number. 1.0.0 would be 1, probably. 
+---@param version_name string #The version name, as a string. 1.0.0 would be "1.0.0".
+function mct_mod:set_version(version_num, version_name)
+    -- assert(is_string(version_name), string.format("Version [%s] for mod %s is not a string!", tostring(version_name), self:get_key()))
+    if is_string(version_num) then
+        ---@cast version_num string
+        version_name = version_num
+    end
 
-    self._version = version_num
+    if not is_number(version_num) then version_num = 0 end
+    if not is_string(version_name) then version_name = tostring(version_num) end
+
+    self._version = {version_num, version_name}
 end
 
 ---@return string
 function mct_mod:get_version()
-    return self._version
+    return self._version[2]
+end
+
+---@return number
+function mct_mod:get_version_number()
+    return self._version[1]
 end
 
 function mct_mod:set_main_image(path, w, h)
@@ -242,33 +256,9 @@ function mct_mod:get_main_image()
 end
 
 function mct_mod:use_infobox(b)
-    -- if is_nil(b) then b = true end
-    -- if not is_boolean(b) then return end
 
-    -- if b == true then
-    --     local page_class = mct:get_mct_page_type("infobox")
-    --     ---@cast page_class MCT.Page.Infobox
-    --     local page = page_class:new("Details", self)
-        
-    --     ---@cast page MCT.Page.Infobox
-    --     self._pages["Details"] = page
-        
-    --     return page
-    -- else
-    --     self._pages["Details"] = nil
-    -- end
 end
 
--- function mct_mod:create_rowbased_settings_page(title)
---     local page_class = mct:get_page_type("settings")
---     ---@cast page_class MCT.Page.Settings
---     local page = page_class:new(title, self, 1, true)
-    
---     ---@cast page MCT.Page.Settings
---     self._pages[title] = page
-
---     return page
--- end
 
 --- Create a new MCT Page that's a blank canvas to draw whatever on.
 ---@param key string The key for this Page, to get it later.
@@ -843,22 +833,7 @@ end
 
 --- Ask for just the ?id= part of the workshop link. MCT will automatically add the rest of the link.
 function mct_mod:set_workshop_link(link_text)
-    -- if is_string(link_text) then
-    --     -- check if they provided the entire link, or just the id
-    --     if string.find(link_text, "steamcommunity.com/sharedfiles/filedetails/?id=") then
-    --         -- they provided the entire link, so we'll keep it as it is.
-    --     else
-    --         -- check if the link is just a number; if so, we'll add the rest of the link
-    --         if string.find(link_text, "%d+") then
-    --             link_text = "https://steamcommunity.com/sharedfiles/filedetails/?id="..link_text
-    --         else
-    --             -- they're being tricksy and trying to submit a non-workshop link; we'll just ignore it.
-    --             link_text = ""
-    --         end
-    --     end
 
-    --     self._workshop_link = link_text
-    -- end
 end
 
 -- Set the Github ID for this mod.
@@ -1000,6 +975,27 @@ function mct_mod:add_new_option(option_key, option_type)
         core:trigger_custom_event("MctNewOptionCreated", {["mct"] = mct, ["mod"] = self, ["option"] = new_option})
     --end
 
+
+    return new_option
+end
+
+local function add_option_to_mod(mod, option_key, option_type)
+    local OptionClass = mct:get_option_type(option_type)
+    local new_option = OptionClass:new(mod, option_key)
+
+    mod._options[option_key] = new_option
+    mod._options_by_type[option_type][#mod._options_by_type[option_type]+1] = option_key
+    mod._options_by_index_order[#mod._options_by_index_order+1] = option_key
+
+    return new_option
+end
+
+function mct_mod:add_new_action(option_key, button_text, callback)
+    local new_option = add_option_to_mod(self, option_key, "action")
+    ---@cast new_option MCT.Option.Action
+
+    new_option:set_text(button_text)
+    new_option:set_callback(callback)
 
     return new_option
 end

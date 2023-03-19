@@ -77,12 +77,12 @@ function TextInput:ui_change_state()
 
     if locked then
         state = "inactive"
-        tt = lock_reason .. "\n" .. tt
+        -- tt = lock_reason .. "\n" .. tt
     end
 
     option_uic:SetInteractive(not locked)
     -- _SetState(edit_button, state)
-    text_uic:SetTooltipText(tt, true)
+    -- text_uic:SetTooltipText(tt, true)
 end
 
 --- Creates the option in UI.

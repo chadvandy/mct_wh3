@@ -917,33 +917,36 @@ function mct_option:ui_create_option_base(parent, w, h)
     end
 
     --- if this is a global option, show the global icon
-    if self:is_global() then
-        self:set_uic_with_key(
-            "button_global",
-            create_icon_button(
-                "button_global", 
-                "ui/skins/default/icon_registry.png",
-                "Global Option||This option is global, meaning its value is shared everywhere - between all campaigns, saves, etc. Changing it once changes it everywhere."
-            ),
-            true
-        )
-    else
-        local this_tt = "Campaign-Specific Option||This option is campaign-specific."
-        if mct:context() == "campaign" then
-            this_tt = this_tt .. " Changing this option will only change it for this ongoing campaign."
+    if self:get_type() ~= "MCT.Option.Action" and self:get_type() ~= "MCT.Option.Dummy" then
+        if self:is_global() then
+            self:set_uic_with_key(
+                "button_global",
+                create_icon_button(
+                    "button_global", 
+                    "ui/skins/default/icon_registry.png",
+                    "Global Option||This option is global, meaning its value is shared everywhere - between all campaigns, saves, etc. Changing it once changes it everywhere."
+                ),
+                true
+            )
         else
-            this_tt = this_tt .. " Changing this opption will only change it for the next campaign you start, and won't apply to any ongoing campaigns."
+            local this_tt = "Campaign-Specific Option||This option is campaign-specific."
+            if mct:context() == "campaign" then
+                this_tt = this_tt .. " Changing this option will only change it for this ongoing campaign."
+            else
+                this_tt = this_tt .. " Changing this opption will only change it for the next campaign you start, and won't apply to any ongoing campaigns."
+            end
+            
+            self:set_uic_with_key(
+                "button_local",
+                create_icon_button(
+                    "button_local", 
+                    "ui/skins/default/icon_floppy_disk.png",
+                    this_tt
+                ),
+                true
+            )
         end
-        
-        self:set_uic_with_key(
-            "button_local",
-            create_icon_button(
-                "button_local", 
-                "ui/skins/default/icon_floppy_disk.png",
-                this_tt
-            ),
-            true
-        )
+
     end
     
     --- TODO if we have an info button to show, show it!
@@ -1001,6 +1004,18 @@ function mct_option:ui_create_option_base(parent, w, h)
         )
     end
 
+    -- create the lock icon, and set it if we're currently locked
+    self:set_uic_with_key(
+        "lock_icon",
+        create_icon_button(
+            "mct_lock_icon",
+            "ui/skins/default/icon_padlock.png",
+            "This Control is locked.||[[col:red]]" .. self:get_lock_reason() .. "[[/col]]",
+            false
+        ),
+        true
+    )
+
     
     if self._control_dock_point == 8 then
         icon_holder:SetDockingPoint(1)
@@ -1018,6 +1033,12 @@ function mct_option:ui_refresh()
     self:ui_select_value(setting)
     self:ui_change_state()
     self:set_uic_visibility(self:get_uic_visibility())
+
+    -- show lock icon and tooltip if we're locked
+    local lock = self:get_uic_with_key("lock_icon")
+    if lock then
+        lock:SetVisible(self:is_locked())
+    end
 
     local revert = self:get_uic_with_key("revert_to_defaults")
     if revert then

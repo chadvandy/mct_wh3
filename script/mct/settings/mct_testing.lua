@@ -3,6 +3,31 @@
 
 -- local mct_mod = mct:register_mod("mct-demo")
 
+-- mct_mod:set_title("MCT Demo")
+-- mct_mod:set_author("Groovy")
+
+-- mct_mod:add_new_action("test_action", "Test Action", function() out("Test Action!") end)
+
+
+-- local CGClass = mct:get_control_group_class()
+-- local ChbxClass = mct:get_mct_control_class_type("checkbox")
+-- ---@cast ChbxClass MCT.Control.Checkbox
+
+-- local test_cg = CGClass:new()
+-- test_cg:set_key("test_cg")
+-- test_cg:set_mod(mct_mod)
+
+-- ---@type MCT.Control.Checkbox
+-- local test_chbx = ChbxClass:new(mct_mod, "test_chbx")
+
+-- local new_tab = mct_mod:add_main_page_tab(
+--     "Demo Tab",
+--     "Testing Tab",
+--     function (uic)
+--         test_cg:display(uic)
+--     end
+-- )
+
 -- local test_checkbox = mct_mod:add_new_option("test_checkbox", "checkbox")
 -- test_checkbox:set_text("Testing Box for New Game")
 

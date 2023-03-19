@@ -100,17 +100,17 @@ function Checkbox:ui_change_state()
         end
 
         logf("Locking checkbox %s.%s, lock reason is %s", self:get_mod_key(), self:get_key(), tostring(lock_reason))
-        option_uic:SetTooltipText(lock_reason, true)
+        -- option_uic:SetTooltipText(lock_reason, true)
     else
         if value == true then
             state = "selected"
         end
 
-        option_uic:SetTooltipText(tt, true)
+        -- option_uic:SetTooltipText(tt, true)
     end
 
     option_uic:SetState(state)
-    text_uic:SetTooltipText(tt, true)
+    -- text_uic:SetTooltipText(tt, true)
 end
 
 --- Creates the mct_option in the UI. Do not call externally.

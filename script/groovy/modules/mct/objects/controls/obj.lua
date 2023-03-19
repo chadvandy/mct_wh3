@@ -12,6 +12,9 @@ local defaults = {
     ---@type string # The text for this Control.
     _type = nil,
 
+    ---@type UIC #The Control's UIComponent.
+    uic = nil,
+
     ---@type boolean # Whether or not this Control is global.
     _is_global = false,
 
@@ -46,6 +49,18 @@ end
 function Control:init(mod_obj, key)
     self._mod = mod_obj
     self._key = key
+end
+
+function Control:display()
+
+end
+
+function Control:set_uic(uic)
+    self.uic = uic
+end
+
+function Control:get_uic()
+    return self.uic
 end
 
 function Control:get_mod()
@@ -108,6 +123,10 @@ end
 
 -- TODO a clear way to get the current value based on context, globality, selectedness, etc.
 function Control:current()
+    return self:selected()
+end
+
+function Control:check_validity(value)
 
 end
 
@@ -121,3 +140,16 @@ function Control:set_global_value(value)
 
     self._global_value = value
 end
+
+function Control:set_default_value(value)
+    local is_valid, new_val = self:check_validity(value)
+
+    if not is_valid then
+        errf("set_default_value() called for mct_option [%s] in mct_mod [%s], but the value passed is not valid! Value passed: [%s], new value: [%s]", self:get_key(), self:get_mod():get_key(), tostring(value), tostring(new_val))
+        value = new_val
+    end
+
+    self._default_value = value
+end
+
+return Control

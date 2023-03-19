@@ -153,7 +153,7 @@ function Dropdown:ui_change_state()
 
     if locked then
         state = "inactive"
-        tt = lock_reason .. "\n" .. tt
+        -- tt = lock_reason .. "\n" .. tt
     end
 
     option_uic:SetState(state)

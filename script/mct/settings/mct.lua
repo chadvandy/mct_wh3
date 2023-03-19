@@ -2,7 +2,7 @@ local mct = get_mct()
 
 local mct_mod = mct:register_mod("mct_mod")
 mct_mod:set_workshop_id("2927955021")
-mct_mod:set_version(mct:get_version())
+mct_mod:set_version(mct:get_version_number(), mct:get_version())
 mct_mod:set_main_image("ui/mct/van_mct.png", 300, 300)
 mct_mod:set_description("The Mod Configuration Tool, home of all things mod and configuration!")
 

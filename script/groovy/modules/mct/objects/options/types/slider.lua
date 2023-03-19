@@ -153,7 +153,7 @@ function Slider:ui_change_state()
     local tt = self:get_tooltip_text()
     if locked then
         state = "inactive"
-        tt = lock_reason .. "\n" .. tt
+        -- tt = lock_reason .. "\n" .. tt
 
         text_uic:SetInteractive(false)
     end

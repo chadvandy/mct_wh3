@@ -18,7 +18,7 @@ local mct_defaults = {
     ---@type MCT.SelectedMod
     _selected_mod = {nil, nil},
 
-    _version = "0.9-beta",
+    _version = {0.9, "0.9-beta"},
 
     _Systems = {},
 
@@ -71,8 +71,14 @@ function mct:init()
     end
 end
 
+---@return string
 function mct:get_version()
-    return self._version
+    return self._version[2]
+end
+
+---@return number
+function mct:get_version_number()
+    return self._version[1]
 end
 
 ---@return MCT.Registry
@@ -85,6 +91,12 @@ function mct:get_ui() return self:get_system("ui") end
 function mct:get_sync() return self:get_system("sync") end
 ---@return MCT.Mod
 function mct:get_mct_mod_class() return self:get_object("mods") end
+
+---@return MCT.Control
+function mct:get_mct_control_class() return self:get_object("controls") end
+---@return MCT.Control
+function mct:get_mct_control_class_type(t) return self:get_object_type("controls", t) end
+
 ---@return MCT.Option
 function mct:get_mct_option_class() return self:get_object("options") end
 ---@return MCT.Option
@@ -224,6 +236,7 @@ function mct:load_modules()
     local ok, err = pcall(function()
     
     self:load_object("control_groups")
+    self:load_object("controls")
     
     self:load_object("options")
     self:load_object("mods")
@@ -397,7 +410,7 @@ end
 
 --- Internal use only. Triggers all the functionality for "Finalize Settings!"
 function mct:finalize(bForce)
-    -- if not self:get_registry():has_pending_changes() then return end
+    if not self:get_registry():has_pending_changes() then return end
 
     -- check if it's MP!
     if __game_mode == __lib_type_campaign and cm.game_interface:model():is_multiplayer() then

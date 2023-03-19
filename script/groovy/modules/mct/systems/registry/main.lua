@@ -517,14 +517,18 @@ function Registry:get_save_co()
     return self.__save_co
 end
 
-function Registry:save()
+function Registry:save(is_read)
+    -- only force a save if we have changes, AND we're not calling save from the read functions.
+    local has_changes = self:has_pending_changes()
+    local force_save = has_changes and not is_read
+
     if cm then
         logf("Saving Registry in campaign.")
         -- delay this call to first tick (so we can guarantee we've got all the details we need and can save the save file propa)
         ---@diagnostic disable-next-line: undefined-field
         if not cm.model_is_created then
             logf("Trying to save Registry in campaign before the model is created! Delaying until first tick.")
-            cm:add_first_tick_callback(function() Registry:save() end)
+            cm:add_first_tick_callback(function() Registry:save(is_read) end)
             return
         end
     end
@@ -537,14 +541,14 @@ function Registry:save()
     end
 
     local ok, errmsg = pcall(function()
-
         self:save_registry_file()
         self:save_profiles_file()
     end) if not ok then log(errmsg) end
 
     -- Automatically save the game whenever the settings are edited
         -- IF the user has already made a save for this game.
-    if cm and cm.save_counter > 1 then
+        -- AND this isn't the on-read save (ie. when a game is loaded and the Registry is read)
+    if force_save and cm and cm.save_counter > 1 then
         cm:save()
     end
 end
@@ -692,7 +696,7 @@ function Registry:read_registry_file()
     self.__last_used_campaign_index = t.last_used_campaign_index
     self.__campaigns = t.campaigns
 
-    self:save()
+    self:save(true)
 end
 
 --- TODO load new Profiles file

@@ -206,16 +206,25 @@ function Main:populate_main_view()
         self:add_tab(
             "description", 
             "Description", 
-            "View the mod's description.", 
+            "View the mod's description.",
             function(uic)
-                local txt = core:get_or_create_component("description_text", "ui/groovy/text/fe_default", uic)
+                local list = core:get_or_create_component("list_view", "ui/groovy/layouts/listview", uic)
+                list:Resize(uic:Width(), uic:Height())
+                list:SetDockingPoint(2)
+
+                local list_box = find_uicomponent(list, "list_clip", "list_box")
+                local txt = core:get_or_create_component("description_text", "ui/groovy/text/fe_default", list_box)
+
                 txt:Resize(uic:Width() - 10, uic:Height() - 10)
-                txt:SetDockingPoint(1)
-                txt:SetDockOffset(10, 15)
-                txt:SetStateText(mod_obj:get_description())
+
+                txt:SetDockingPoint(2)
                 txt:SetTextXOffset(5, 5)
-                -- txt:SetTextYOffset(0, 0)
+                txt:SetTextYOffset(5, 5)
+                txt:SetStateText(mod_obj:get_description())
                 txt:SetTextVAlign("top")
+
+                local tw, th = txt:TextDimensions()
+                txt:Resize(tw, th)
             end
         )
     end
