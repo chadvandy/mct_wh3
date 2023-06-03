@@ -1,3 +1,5 @@
+---@module Options
+
 --- TODO get rid of this, and just use mct_option?
 
 --- MCT dummy type. Does nothing on its own; it's just for UI spacing, or text.
@@ -8,8 +10,9 @@ local log,logf,err,errf = get_vlog("[mct]")
 
 local defaults = {}
 
----@class MCT.Option.Dummy : MCT.Option A Dummy type, that takes up a spot in the Settings list view but doesn't actually have any settings associated.
----@field __new fun():MCT.Option.Dummy
+---@deprecated
+---@class Dummy : mct_option A Dummy type, that takes up a spot in the Settings list view but doesn't actually have any settings associated.
+---@field __new fun():Dummy
 local Dummy = Super:extend("MCT.Option.Dummy", defaults)
 
 function Dummy:new(mod_obj, option_key)

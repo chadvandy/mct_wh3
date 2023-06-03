@@ -1,5 +1,6 @@
+---@ignoreFile
 return {
-    ---@param obj MCT.Section
+    ---@param obj mct_section
     key = function(obj)     
         local ret = {}
         local options = obj:get_options()
@@ -12,7 +13,7 @@ return {
     
         return ret 
     end,
-    ---@param obj MCT.Section
+    ---@param obj mct_section
     index = function(obj)
         local ret = {}
 
@@ -34,7 +35,7 @@ return {
     
         return ret
     end,
-    ---@param obj MCT.Section
+    ---@param obj mct_section
     localised_text = function(obj)
         -- return table, which will be the sorted option keys from top-left to bottom-right
         local ret = {}

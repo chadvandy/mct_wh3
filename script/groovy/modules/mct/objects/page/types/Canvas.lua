@@ -1,15 +1,18 @@
+---@module Page
+
 --- a do-anything-to-it canvas page
 
 local mct = get_mct()
 local Super = mct:get_mct_page_class()
 
----@class MCT.Page.Canvas
+---@ignore
+---@class Canvas
 local defaults = {
     creation_callback = function(canvas) end,
 }
 
----@class MCT.Page.Canvas : MCT.Page, Class
----@field __new fun():MCT.Page.Canvas
+---@class Canvas : Page, Class
+---@field __new fun():Canvas
 local Canvas = Super:extend("Canvas", defaults)
 
 function Canvas:new(key, mod, creation_callback)

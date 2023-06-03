@@ -1,3 +1,6 @@
+---@module Extensions
+--- Miscellaneous extensions to Lua functionality.
+
 --- Extend Lua functionality.
 function math.clamp(x, min, max)
     if not is_number(max) then max = math.huge end
@@ -46,7 +49,7 @@ function table.copy_add(t, o)
 end
 
 --- Used to test many items if they're a string: `are_string("test", "Test2", 5, "final test")`
----@vararg any The items passed to test.
+---@param ... any The items passed to test.
 ---@return boolean are_strings If or if not all objects passed are a string.
 function are_strings(...)
 	for i = 1, arg.n do
@@ -68,7 +71,7 @@ local types_to_test = {
 
 --- See if every arg passed is of the type supplied - AND operation, passes until failure.
 ---@param type any
----@vararg any Objects to test against the type.
+---@param ... any Objects to test against the type.
 ---@return boolean
 function all_of_type(type, ...)
 	if not is_string(type) or not types_to_test[type] then
@@ -87,9 +90,10 @@ function all_of_type(type, ...)
 	return true
 end
 
+
 --- See if any arg passed is of the type supplied - OR operation.
 ---@param type any
----@vararg any Objects to test against the type.
+---@param ... any Objects to test against the type.
 ---@return boolean
 function any_of_type(type, ...)
 	if not is_string(type) or not types_to_test[type] then
@@ -108,6 +112,9 @@ function any_of_type(type, ...)
 	return false
 end
 
+--- Extends table functionality to allow for a table to be copied.
+---@param tbl table
+---@return table A copy of the table passed.
 function table.copy(tbl)
 	local ret = {}
 	if not type(tbl) == "table" then return ret end
@@ -124,9 +131,12 @@ function table.join(t1, t2)
 	-- for i,v in ipairs(t1) 
 end
 
-function table.strip(t)
+--- Extends table functionality to allow for removing empty table entries from a table.
+---@param tbl table
+---@return table A copy of the table passed, with empty entries removed.
+function table.strip(tbl)
 	local o = {}
-	for k,v in pairs(t) do
+	for k,v in pairs(tbl) do
 		if is_table(v) then
 			o[k] = table.strip(v)
 		elseif is_number(v) or is_string(v) or is_boolean(v) then 
@@ -139,7 +149,10 @@ function table.strip(t)
 	return o
 end
 
----@return string[]
+--- Extends string functionality to allow for splitting a string with a given delimiter.
+---@param str string The string to split.
+---@param delim string The delimiter to split the string with.
+---@return table<string> A table of strings, split by the delimiter.
 function string.split(str, delim)
 	local ret = {}
 	if not str then
@@ -185,11 +198,21 @@ function string.format_with_linebreaks(s, x, indent)
     return indent..table.concat(t, "\n"..indent)
 end
 
+--- Extends string functionality to allow for checking if a string starts with a given pattern.
+---@param str string The string to check.
+---@param pattern string The pattern to check for.
+---@param plain boolean? Optional argument plain turns off the pattern matching facilities.
+---@return boolean Whether or not the string starts with the pattern.
 function string.startswith(str, pattern, plain)
 	local start = 1
 	return string.find(str, pattern, start, plain) == start
 end
 
+--- Extends string functionality to allow for checking if a string ends with a given pattern.
+---@param str string The string to check.
+---@param pattern string The pattern to check for.
+---@param plain boolean? Optional argument plain turns off the pattern matching facilities.
+---@return boolean Whether or not the string ends with the pattern.
 function string.endswith(str, pattern, plain)
 	local start = #str - #pattern + 1
 	return string.find(str, pattern, start, plain) == start
@@ -310,6 +333,7 @@ function table_printer:handle_table(t, is_first)
     end
 end
 
+---@ignore
 --- takes a table and returns the formatted text of its entirety
 function table_printer:print(t, ignored_fields)
     if not is_table(t) then return false end

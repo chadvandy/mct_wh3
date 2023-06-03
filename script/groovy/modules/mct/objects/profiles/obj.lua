@@ -1,3 +1,6 @@
+---@module Profiles
+--- Description text here
+
 --- TODO a Profile object, to store info about this profile, apply it, pull it into UI, etc. etc. etc. etc.
 --- TODO Import
 --- TODO Export
@@ -6,7 +9,8 @@
 --- TODO port forward old profiles (check the values in profile -> compare them against default value -> if they're different, save it to NuProfile)
 --- TODO make sure Profiles don't break if a mod setting changes/is removed/etc.
 
----@class MCT.Profile
+---@ignore
+---@class Profile
 local defaults = {
     ---@type string Localised name for this profile.
     __name = "",
@@ -21,8 +25,8 @@ local defaults = {
     __author = nil,
 }
 
----@class MCT.Profile : Class
----@field __new fun():MCT.Profile
+---@class Profile
+---@field __new fun():Profile
 local Profile = GLib.NewClass("MCT.Profile", defaults)
 
 function Profile:new(key)

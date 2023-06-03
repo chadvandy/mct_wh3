@@ -1,12 +1,15 @@
+---@module Page
+
 local Super = get_mct():get_mct_page_class()
 
 --- TODO do this better prolly
 ---@type {key:fun(), index:fun(), localised_text: fun()}
 local sort_functions = GLib.LoadModule("sections", get_mct():get_path("helpers", "sort_functions"))
 
----@class MCT.Page.Settings
+---@ignore
+---@class Settings
 local defaults = {
-    ---@type MCT.Section[]
+    ---@type table<mct_section>
     assigned_sections = {},
 
     num_columns = 2,
@@ -16,8 +19,8 @@ local defaults = {
 
 --- TODO support for side-to-side!
 
----@class MCT.Page.Settings : MCT.Page, Class
----@field __new fun():MCT.Page.Settings
+---@class Settings : Page
+---@field __new fun():Settings
 local SettingsPage = Super:extend("Settings", defaults)
 
 function SettingsPage:new(key, mod, num_columns, row_based)
@@ -64,7 +67,7 @@ function SettingsPage:remove()
 end
 
 --- Attach a settings section to this page. They will be displayed in order that they are added.
----@param section MCT.Section
+---@param section mct_section
 function SettingsPage:assign_section_to_page(section)
     self.assigned_sections[#self.assigned_sections+1] = section
 end
@@ -132,7 +135,7 @@ end
 
 --- Call the internal ._section_sort_order_function, determined by @{mct_mod:set_section_sort_function}
 -- @local
----@return MCT.Section[]
+---@return table<mct_section>
 function SettingsPage:sort_sections()
     -- perform the wrapped sort order function
 

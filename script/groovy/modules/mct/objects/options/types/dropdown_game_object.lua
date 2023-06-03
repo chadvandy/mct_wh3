@@ -1,22 +1,27 @@
+---@module Options
+
+
 --- TODO special Dropdown type that used Game Objects instead of predefined strings.
 
 --- TODO saved setting should be the DB key
 
 
----@type MCT.Option.Dropdown
+---@ignore
+---@type Dropdown
 local Super = get_mct():get_mct_option_class_subtype("dropdown")
 
 local mct = get_mct()
 local log,logf,err,errf = get_vlog("[mct]")
 
----@class MCT.Option.SpecialDropdown : MCT.Option.Dropdown
+---@ignore
+---@class SpecialDropdown : Dropdown
 local defaults = {
     database_record = "CcoFactionRecord", --- The Cco Class we're looking for.
     filtered_list = {"wh3_main_cth_cathay_mp", "wh3_main_ksl_kislev", "wh3_main_ogr_ogre_kingdoms"}, -- The filtered acceptable CcoClasses. This can be defined using :set_filtered_list() and supplying the Database keys for the desired objects, or you can set a filter function.
 }
 
----@class MCT.Option.SpecialDropdown : MCT.Option.Dropdown
----@field __new fun():MCT.Option.SpecialDropdown
+---@class SpecialDropdown : Dropdown
+---@field __new fun():SpecialDropdown
 local SpecialDropdown = Super:extend("SpecialDropdown", defaults)
 
 function SpecialDropdown:new(mod_obj, option_key)
@@ -159,7 +164,8 @@ function SpecialDropdown:refresh_dropdown_box()
     popup_menu:Resize(w,h)
 end
 
---- TODO 
+--- TODO
+---@internal
 function SpecialDropdown:ui_create_option(dummy_parent)
     local box = "ui/vandy_lib/dropdown_button"
 

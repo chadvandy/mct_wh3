@@ -1,3 +1,5 @@
+---@module UIComponent Handler
+
 --- TODO hate this!
 
 ---@alias UIComponent UIC
@@ -20,7 +22,7 @@ local function create_dummy(root)
 end
 
 --- Delete one or many components!
----@param component UIC|UIC[]
+---@param component UIC|table<UIC>
 function delete_component(component)
 	local dummy = create_dummy(core:get_ui_root())
 

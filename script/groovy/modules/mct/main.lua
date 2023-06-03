@@ -1,13 +1,16 @@
+---@module MCT
+
 ---@alias MCT.OptionType 'slider'|'dropdown'|'checkbox'|'text_input'
 ---@alias MCT.System {_Types : {}, _Object : {}, _UI : {}, }
 
----@alias MCT.SelectedMod {[1]: MCT.Mod, [2]: MCT.Page}
+---@alias MCT.SelectedMod {[1]: mct_mod, [2]: Page}
 ---@alias MCT.Mode {context:'"global"'|'"campaign"', edit: boolean} #The current mode we're in.
 
 --- (...) convert the full path of this file (ie. script/folder/folders/this_file.lua) to just the path leading to specifically this file (ie. script/folder/folders/), to grab subfolders easily while still allowing me to restructure this entire mod four times a year!
 local this_path = string.gsub( (...) , "[^/]+$", "")
 
---- @class ModConfigurationTool : Class
+---@ignore
+---@class mct
 local mct_defaults = {
     _mods_path = "/script/mct/settings/",
     _self_path = this_path,
@@ -34,7 +37,7 @@ local mct_defaults = {
 local load_module = GLib.LoadModule
 local load_modules = GLib.LoadModules
 
----@class ModConfigurationTool : Class
+---@class mct
 local mct = GLib.NewClass("ModConfigurationTool", mct_defaults)
 
 --- TODO figure out how to get "this path" w/ the way loadfile is being done 
@@ -81,50 +84,50 @@ function mct:get_version_number()
     return self._version[1]
 end
 
----@return MCT.Registry
+---@return Registry
 function mct:get_registry() return self:get_system("registry") end
----@return MCT.NotificationSystem
+---@return NotificationSystem
 function mct:get_notification_system() return self:get_system("notifications") end
----@return MCT.UI
+---@return UI_Main
 function mct:get_ui() return self:get_system("ui") end
----@return MCT.Sync
+---@return Sync
 function mct:get_sync() return self:get_system("sync") end
----@return MCT.Mod
+---@return mct_mod
 function mct:get_mct_mod_class() return self:get_object("mods") end
 
----@return MCT.Control
+---@return Control
 function mct:get_mct_control_class() return self:get_object("controls") end
----@return MCT.Control
+---@return Control
 function mct:get_mct_control_class_type(t) return self:get_object_type("controls", t) end
 
----@return MCT.Option
+---@return mct_option
 function mct:get_mct_option_class() return self:get_object("options") end
----@return MCT.Option
+---@return mct_option
 function mct:get_mct_option_class_subtype(t) return self:get_object_type("options", t) end
----@return MCT.Section
+---@return mct_section
 function mct:get_mct_section_class() return self:get_object("sections") end
 
----@return MCT.Profile
+---@return Profile
 function mct:get_profile_class() return self:get_object("profiles") end
 
----@return MCT.Notification
+---@return Notification
 function mct:get_notification_class() return self:get_object("notifications") end
 ---@param type string
----@return MCT.Notification
+---@return Notification
 function mct:get_notification_class_subtype(type) return self:get_object_type("notifications", type) end
 
----@return MCT.ControlGroup
+---@return ControlGroup
 function mct:get_control_group_class() return self:get_object("control_groups") end
 
----@return MCT.Page
+---@return Page
 function mct:get_mct_page_class() return self:get_object("page") end
 ---@param key string
----@return MCT.Page
+---@return Page
 function mct:get_mct_page_type(key) return self:get_object_type("page", key) end
 
----@return MCT.Page.Main
+---@return Main
 function mct:get_mct_main_page_clas() return self:get_object_type("page", "main") end
----@return MCT.Page.Settings
+---@return Settings
 function mct:get_mct_settings_page_class() return self:get_object_type("page", "settings") end
 
 function mct:get_system(system_name, internal)
@@ -252,13 +255,13 @@ function mct:load_modules()
 end
 
 ---comment
----@overload fun(key:"checkbox"):MCT.Option.Checkbox
----@overload fun(key:"text_input"):MCT.Option.TextInput
----@overload fun(key:"slider"):MCT.Option.Slider
----@overload fun(key:"dropdown"):MCT.Option.Dropdown
----@overload fun(key:"dummy"):MCT.Option.Dummy
+---@overload fun(key:"checkbox"):Checkbox
+---@overload fun(key:"text_input"):TextInput
+---@overload fun(key:"slider"):Slider
+---@overload fun(key:"dropdown"):Dropdown
+---@overload fun(key:"dummy"):Dummy
 ---@param key string
----@return MCT.Option?
+---@return Option?
 function mct:get_option_type(key)
     if not is_string(key) then
         --- errmsg
@@ -295,7 +298,7 @@ function mct:load_mods()
             for mod_key, mod_obj in pairs(mods) do
                 mod_str[#mod_str+1] = mod_key
 
-                --- put the MCT.Mod in timeout
+                --- put the Mod in timeout
                 mod_obj:set_disabled(true, "Error while loading Mod File!")
             end
 
@@ -379,8 +382,8 @@ function mct:open_panel()
 end
 
 ---comment
----@param mod_obj MCT.Mod
----@param page_obj MCT.Page
+---@param mod_obj mct_mod
+---@param page_obj Page
 function mct:set_selected_mod(mod_obj, page_obj)
     self._selected_mod  = {
         mod_obj,
@@ -394,8 +397,8 @@ function mct:get_selected_mod_name()
     return self._selected_mod[1]:get_key()
 end
 
----@return MCT.Mod
----@return MCT.Page #The opened page.
+---@return mct_mod
+---@return Page #The opened page.
 function mct:get_selected_mod()
     return self._selected_mod[1], self._selected_mod[2]
 end
@@ -431,7 +434,7 @@ end
 
 --- Getter for the @{mct_mod} with the supplied key.
 ---@param mod_name string Unique identifier for the desired mct_mod.
----@return MCT.Mod?
+---@return mct_mod?
 function mct:get_mod_by_key(mod_name)
     if not is_string(mod_name) then
         verr("get_mod_by_key() called, but the mod_name provided ["..tostring(mod_name).."] is not a string!")
@@ -447,12 +450,12 @@ function mct:get_mod_by_key(mod_name)
     return self._registered_mods[mod_name]
 end
 
----@return table<string, MCT.Mod>
+---@return table<string, mct_mod>
 function mct:get_mods()
     return self._registered_mods
 end
 
----@return table<string, MCT.Mod>
+---@return table<string, mct_mod>
 function mct:get_mods_from_file(filepath)
     local mod_list = self._registered_mods
     local retval = {}
@@ -471,7 +474,7 @@ end
 --- Calls the internal function @{mct_mod.new}.
 --- @param mod_name string The identifier for this mod.
 --- @see mct_mod.new
----@return MCT.Mod
+---@return mct_mod
 function mct:register_mod(mod_name)
     vlogf("Registering mod %s", mod_name)
 
@@ -660,7 +663,7 @@ function mct:get_valid_option_types_table()
     return o
 end
 
----@return ModConfigurationTool
+---@return mct
 function get_mct()
     return mct
 end
@@ -672,4 +675,3 @@ end) if not ok then GLib.Log("Error loading MCT!\n%s", err) end
 core:add_ui_created_callback(function()
     mct:get_ui():ui_created()
 end)
-

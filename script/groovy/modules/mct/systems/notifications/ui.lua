@@ -1,8 +1,11 @@
+---@module Notification System
+
 --- TODO the notifications UI stuff
 
 local mct = get_mct()
 
----@class MCT.UI.Notifications
+---@ignore
+---@class UI_Notifications
 local defaults = {
     ---@type UIC #The primary button on the docker for this UI.
     _Button = nil,
@@ -11,7 +14,7 @@ local defaults = {
     _FilterState = false,
 }
 
----@class MCT.UI.Notifications : Class
+---@class UI_Notifications
 local UI_Notifications = GLib.NewClass("UI_Notifications", defaults)
 
 function UI_Notifications:init()

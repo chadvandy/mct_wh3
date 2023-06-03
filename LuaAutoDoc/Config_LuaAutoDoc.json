@@ -1,0 +1,51 @@
+{
+    "_Description": [
+"Config file for LuaAutoDoc",
+
+"project_folder: The project root folder. Supports absolute path and relative path (from this cwd)",
+
+"build_folder: The folder to build the documentation in. Supports absolute path and relative path",
+
+"main_page_name: The name of the main page file. Adding '.html' to the end of the name is optional.",
+
+"html_fragment_directory: The directory to look for HTML fragments in. Supports absolute path and relative path",
+"                         (from 'project_folder')",
+
+"stylesheet_directory: The directory to look for CSS files in. Supports absolute path and relative path",
+"                      (from 'project_folder')",
+
+"assets_directory: The directory to look for assets in. Supports absolute path and relative path",
+"                  (from 'project_folder')",
+
+"show_hidden: Will ignore the @hidden tag for each @hidden tag in the list. If the list is empty, all @hidden tags",
+"             will be respected. If the option is set to 'True' (as text, not in a list), all @hidden tags will be",
+"             ignored.",
+
+"hide_source_code: If 'True', the source code will not be shown in the documentation.",
+
+"author: The author(s) of the project.",
+
+"version: The version of the project.",
+
+"multicore: If True or a number greater than 1, will use multiprocessing for code analysis. If a number is given,",
+"           that number of threads will be used, 'True' = 16 threads. If False or 1, will not use multiprocessing."
+
+],
+
+    "project_folder"            : "C:\\Users\\UlrikHD\\Documents\\git_projects\\van_mct",
+    "build_folder"              : "DocBuild",
+    "main_page_name"            : "index",
+    "html_fragment_directory"   : "LuaAutoDoc/HTMLFragments",
+    "stylesheet_directory"      : "LuaAutoDoc/StyleSheets",
+    "script_directory"          : "LuaAutoDoc/Scripts",
+    "favicon_directory"         : "LuaAutoDoc/Favicon",
+    "assets_directory"          : "LuaAutoDoc/Assets",
+    "show_hidden"               : "False",
+    "hide_source_code"          : "False",
+    "encoding"                  : "utf-8",
+    "lua_version"               : "5.1",
+    "author"                    : "Groove Wizard",
+    "version"                   : "0.9",
+    "project_name"              : "Mod Configuration Tool",
+    "multicore"                 : "16"
+}

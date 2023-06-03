@@ -1,11 +1,14 @@
+---@module Controls
+
 --- TODO a specific class for the Control type; this should just be the individual Control UI components and how they handle values and such.
 
 local mct = get_mct()
 local log,logf,err,errf = get_vlog("[mct_control]")
 
----@class MCT.Control : Class
+---@ignore
+---@class Control
 local defaults = {
-    ---@type MCT.Mod # The Mod this Control belongs to.
+    ---@type mct_mod # The Mod this Control belongs to.
     _mod = nil,
     ---@type string # The key for this Control.
     _key = "",
@@ -36,10 +39,13 @@ local defaults = {
     _is_hidden = false,
 }
 
----@class MCT.Control : Class
----@field __new fun(): MCT.Control
+---@class Control
+---@field __new fun(): Control
 local Control = GLib.NewClass("MCT.Control", defaults)
 
+
+--- Creates a new Control instance
+---@return Control
 function Control:new()
     -- this is a dummy class which should never be called.
     -- it's just here to make sure that all Controls have the same functions.

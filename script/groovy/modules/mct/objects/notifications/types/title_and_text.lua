@@ -1,7 +1,10 @@
+---@module Notification System
+
 local mct = get_mct()
 local Super = mct:get_notification_class()
 
----@class MCT.Notification.TitleText
+---@ignore
+---@class NotificationTitleText
 local defaults = {
     -- creation_callback = function(canvas) end,
 
@@ -9,11 +12,11 @@ local defaults = {
     _long_text = "",
 }
 
----@class MCT.Notification.TitleText : MCT.Notification, Class
----@field __new fun():MCT.Notification.TitleText
-local This = Super:extend("TitleText", defaults)
+---@class NotificationTitleText : Notification, Class
+---@field __new fun():NotificationTitleText
+local NotificationTitleText = Super:extend("TitleText", defaults)
 
-function This:trigger_full_popup()
+function NotificationTitleText:trigger_full_popup()
     -- create a panel using ui/vandy_lib/popups/pretty_popup
     local panel = core:get_or_create_component("mct_notification_panel", "ui/vandy_lib/popups/pretty_popup", core:get_ui_root())
     panel:Resize(500, 600)
@@ -53,4 +56,4 @@ function This:trigger_full_popup()
     text:SetStateText(self:get_long_text())
 end
 
-return This
+return NotificationTitleText

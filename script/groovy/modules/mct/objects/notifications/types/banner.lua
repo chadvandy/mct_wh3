@@ -1,2 +1,3 @@
---- TODO floating banner notification that hovers beneath the MCT  button
+---@module Notification System
 
+--- TODO floating banner notification that hovers beneath the MCT  button

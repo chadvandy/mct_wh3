@@ -1,3 +1,5 @@
+---@module Options
+
 --- TODO
 --- Select one of a collection of buttons!
 
@@ -8,7 +10,8 @@ local Super = mct:get_mct_option_class()
 
 ---@alias MCT.Control.RadioButton.Option {key: string, text: string, tooltip: string, is_default: boolean}
 
----@class MCT.Option.RadioButton
+---@ignore
+---@class RadioButton
 local defaults = {
     _template = "ui/templates/radio_button",
 
@@ -24,8 +27,8 @@ local defaults = {
 
 }
 
----@class MCT.Option.RadioButton : MCT.Option
----@field __new fun():MCT.Option.RadioButton
+---@class RadioButton : mct_option
+---@field __new fun():RadioButton
 local RadioButton = Super:extend("MCT.Option.RadioButton", defaults)
 
 function RadioButton:new(mod_obj, option_key)
@@ -167,6 +170,7 @@ function RadioButton:ui_select_value(new_option_key)
     Super.ui_select_value(self, new_option_key)
 end
 
+---@internal
 --- Creates the mct_option in the UI. Do not call externally.
 ---@param dummy_parent UIC #The parent to create the mct_option in.
 function RadioButton:ui_create_option(dummy_parent)
@@ -242,7 +246,7 @@ core:add_listener(
 
         local mod = mct:get_mod_by_key(mod_key)
         local control = mod:get_option_by_key(control_key)
-        ---@cast control MCT.Option.RadioButton
+        ---@cast control RadioButton
 
         local option = control:get_option(option_key)
 

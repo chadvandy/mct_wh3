@@ -1,3 +1,5 @@
+---@module Options
+
 --- TODO use an auto-fill similar to the new command button dropdowns.
 
 --- TODO prettify
@@ -6,13 +8,13 @@ local mct = get_mct()
 local Super = mct:get_mct_option_class()
 local log,logf,err,errf = get_vlog("[mct]")
 
----@type MCT.Option.Dropdown
+---@type Dropdown
 local defaults = {
     -- _template = {"ui/vandy_lib/dropdown_button", "ui/vandy_lib/dropdown_option"},
 }
 
----@class MCT.Option.Dropdown : MCT.Option A Dropdown object.
----@field __new fun():MCT.Option.Dropdown
+---@class Dropdown : mct_option A Dropdown object.
+---@field __new fun():Dropdown
 local Dropdown = Super:extend("MCT.Option.Dropdown", defaults)
 
 function Dropdown:new(mod_obj, option_key)
@@ -28,7 +30,7 @@ function Dropdown:init(mod_obj, option_key)
 end
 
 --- Checks the validity of the value passed.
----@param val any Tested value.
+--- @param val any Tested value.
 --- @return boolean valid Returns true if the value passed is valid, false otherwise.
 --- @return boolean? valid_return If the value passed isn't valid, a second return is sent, for a valid value to replace the tested one with.
 function Dropdown:check_validity(val)

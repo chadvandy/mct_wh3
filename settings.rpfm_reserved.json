@@ -1,7 +1,7 @@
 {
   "settings_text": {
     "diagnostics_files_to_ignore": "",
-    "import_files_to_ignore": ".vscode/\n.git/\n.gitattributes\n.gitignore\ndocs/"
+    "import_files_to_ignore": ".vscode/\n.git/\n.gitattributes\n.gitignore\ndocs/\nLuaAutoDoc/"
   },
   "settings_string": {},
   "settings_bool": {

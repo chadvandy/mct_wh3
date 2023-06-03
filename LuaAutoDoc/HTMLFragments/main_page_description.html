@@ -1,0 +1,402 @@
+#LuaAutoDoc-ProjectDescription
+<h2 id="FOREWORD___BETA" class="code-keyword">FOREWORD - BETA</h2>
+
+<p><strong>Keep in mind this is just a quick write-up for the beta testing version of MCT. The beta is not feature-complete, some stuff might be wrong, and everything is subject to change. If you find issues with MCT, have requests, or something isn’t clear - please just ping me and I’ll help you out!</strong></p>
+
+<h2 id="intro" class="code-keyword">Intro</h2>
+
+<p>Hallo. MCT stands for Mod Configuration Tool, an in-game tool that allows Lua modders to make some settings for their mods that can be decided within the UI created from MCT. It includes all functionality needed for making options, reading them, saving them, loading them, and so forth. All mods really need to do is define their options, settings, and then hook them into their code.</p>
+
+<h2 id="How_It_Works" class="code-keyword">How It Works</h2>
+
+<p>Before we go on, we've got to cover how MCT works at its core, so there's no confusion.</p>
+
+<p>The MCT is designed to be fairly simple to use for others, as it does 70% of the heavy lifting - all the UI design, it reads text easily through localisation keys, it saves and reads and sends settings.</p>
+
+<p>When the game is first loaded with MCT, it creates a local mct_settings.lua file on disk, in the same folder as the Warhammer2.exe. Don't touch that .lua file! It is the file used to read any settings that were set in the frontend UI, and "save" those settings into the campaign. When the UI is first "finalized", that .lua file is created, and will be edited by MCT as time goes whenever settings are changed.</p>
+
+<p>That file is only used in frontend, and for the <em>first</em> load of a campaign. After the campaign is created, all the settings saved in the mct_settings.lua file are then saved into the campaign save file via <code>cm:set_saved_value()</code>, and they're read through <code>cm:get_saved_value()</code> internally from then on.</p>
+
+<p>There is a separation internally for MCT. There is one file to <em>define</em> the settings you want for your mod in <code>script/mct/settings/?.lua</code>, and your .lua files elsewhere - ie., <code>script/campaign/mod/?.lua</code> - will be used to <em>read</em> the settings that the player has selected for your mod locally, using a handful of listeners and methods that let you easily read the current state of things.</p>
+
+<h2 id="Create_Settings_File" class="code-keyword">Create Settings File</h2>
+
+<p>To start off - make a file in <code>script/mct/settings/?.lua</code>. Give it a unique name, since two files of the same name in this folder will conflict.</p>
+
+<p>The first line of your file should be:</p>
+
+<pre class="code-field-class"><ol class="ol-linenum-class"><li class="li-code-field-line-entry row-1" id="line_1"><code class="code-text"><span class="code-keyword">local</span> <span class="code-local-var">mct_mod</span> <span class="code-token">=</span> <span class="code-global-var">mct</span><span class="code-token">:</span><span class="code-instance-method">register_mod</span><span class="code-rainbow-1">(</span><span class="code-string">"my_mod"</span><span class="code-rainbow-1">)</span></code></li></ol></pre>
+
+<p>Wherein ---@see mct_mod can be replaced with whatever, it's just a local variable, and "my_mod" should be a unique indentifier for your specific mod. Once that single line is done, when you open up the Mod Configuration Tool, you'll see a new mod - that's yours!</p>
+
+<p><img src="./doc_img/00.png" alt="Blank Mod"></p>
+
+<p>We'll cover <a href="#Localisation">localisation</a> for the mct_mod further down; for now, options!</p>
+
+<p>The ---@see mct_option object is the real bulk of the mod. They're the actual settings you can interact with and save to load up a game with changed settings and the like. There are currently only three types of options - checkbox, dropdown &amp; slider. As of writing, there are two mid-hookup: text input and tweakers (and/or buttons). The documentation will be edited once those are incorporated.</p>
+
+<p>To make a new mct_option, you use the following:</p>
+
+
+<pre class="code-field-class"><ol class="ol-linenum-class"><li class="li-code-field-line-entry row-0" id="line_10"><code class="code-text"><span class="code-keyword">local</span> <span class="code-local-var">mct_mod</span> <span class="code-token">=</span> <span class="code-global-var">mct</span><span class="code-token">:</span><span class="code-instance-method">register_mod</span><span class="code-rainbow-1">(</span><span class="code-string">"my_mod"</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_11"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_12"><code class="code-text"><span class="code-keyword">local</span> <span class="code-local-var">mct_option</span> <span class="code-token">=</span> <span class="code-local-var">mct_mod</span><span class="code-token">:</span><span class="code-instance-method">add_new_option</span><span class="code-rainbow-1">(</span><span class="code-string">"option_key"</span><span class="code-token">,</span> <span class="code-string">"option_type"</span><span class="code-rainbow-1">)</span></code></li></ol></pre>
+
+
+<p>Where, once more, <code>option_key</code> has to be unique (to your ---@see mct_mod). <code>option_type</code> is either "checkbox", "dropdown" or "slider".</p>
+
+<p>First up, if you are using a dropdown, you'll want to use ---@see Dropdown:add_dropdown_value() or ---@see Dropdown:add_dropdown_values(), to add the separate dropdown values for the box. This'll create the actual values within the dropdown box. There isn't an upper limit, but I recommend not doing too much, it'll start looking potentially ugly above 6 or 8 or so, depending on resolution.</p>
+
+<p>Alternatively, if you're using a slider, you'll want to use ---@see Slider:slider_set_min_max(), ---@see Slider:slider_set_step_size(), and/or ---@see Slider:slider_set_precision(). Those'll give you more fine control over the specifics of the slider.</p>
+
+<p>Next up, you'll want to set a default value.</p>
+
+<pre class="code-field-class"><ol class="ol-linenum-class"><li class="li-code-field-line-entry row-0" id="line_22"><code class="code-text"><span class="code-keyword">local</span> <span class="code-local-var">mct_mod</span> <span class="code-token">=</span> <span class="code-global-var">mct</span><span class="code-token">:</span><span class="code-instance-method">register_mod</span><span class="code-rainbow-1">(</span><span class="code-string">"my_mod"</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_23"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_24"><code class="code-text"><span class="code-keyword">local</span> <span class="code-local-var">mct_option</span> <span class="code-token">=</span> <span class="code-local-var">mct_mod</span><span class="code-token">:</span><span class="code-instance-method">add_new_option</span><span class="code-rainbow-1">(</span><span class="code-string">"my_cool_option"</span><span class="code-token">,</span> <span class="code-string">"dropdown"</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_25"><code class="code-text"><span class="code-local-var">mct_option</span><span class="code-token">:</span><span class="code-instance-method">add_dropdown_value</span><span class="code-rainbow-1">(</span><span class="code-string">"value1"</span><span class="code-token">,</span> <span class="code-string">"My Dropdown Value"</span><span class="code-token">,</span> <span class="code-string">"This dropdown value does this."</span><span class="code-token">,</span> <span class="code-true">true</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_26"><code class="code-text"><span class="code-local-var">mct_option</span><span class="code-token">:</span><span class="code-instance-method">add_dropdown_value</span><span class="code-rainbow-1">(</span><span class="code-string">"value2"</span><span class="code-token">,</span> <span class="code-string">"Another Dropdown Value"</span><span class="code-token">,</span> <span class="code-string">"This dropdown value does something."</span><span class="code-token">,</span> <span class="code-false">false</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_27"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_28"><code class="code-text"><span class="code-comment">-- Default to "Another Dropdown Value"</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_29"><code class="code-text"><span class="code-local-var">mct_option</span><span class="code-token">:</span><span class="code-instance-method">set_default_value</span><span class="code-rainbow-1">(</span><span class="code-string">"value2"</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_30"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-1" id="line_31"><code class="code-text"><span class="code-comment">-- OR --</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_32"><code class="code-text"><span class="code-keyword">local</span> <span class="code-local-var">mct_option</span> <span class="code-token">=</span> <span class="code-local-var">mct_mod</span><span class="code-token">:</span><span class="code-instance-method">add_new_option</span><span class="code-rainbow-1">(</span><span class="code-string">"my_cool_checkbox"</span><span class="code-token">,</span> <span class="code-string">"checkbox"</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_33"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_34"><code class="code-text"><span class="code-comment">-- Default to unchecked</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_35"><code class="code-text"><span class="code-local-var">mct_option</span><span class="code-token">:</span><span class="code-instance-method">set_default_value</span><span class="code-rainbow-1">(</span><span class="code-false">false</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_36"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-1" id="line_37"><code class="code-text"><span class="code-comment">-- OR ALSO --</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_38"><code class="code-text"><span class="code-keyword">local</span> <span class="code-local-var">mct_option</span> <span class="code-token">=</span> <span class="code-local-var">mct_mod</span><span class="code-token">:</span><span class="code-instance-method">add_new_option</span><span class="code-rainbow-1">(</span><span class="code-string">"look_mom_a_slider"</span><span class="code-token">,</span> <span class="code-string">"slider"</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_39"><code class="code-text"><span class="code-local-var">mct_option</span><span class="code-token">:</span><span class="code-instance-method">slider_set_min_max</span><span class="code-rainbow-1">(</span><span class="code-number">0</span><span class="code-token">,</span> <span class="code-number">100</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_40"><code class="code-text"><span class="code-local-var">mct_option</span><span class="code-token">:</span><span class="code-instance-method">slider_set_step_size</span><span class="code-rainbow-1">(</span><span class="code-number">1</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_41"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_42"><code class="code-text"><span class="code-comment">-- Default to 10</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_43"><code class="code-text"><span class="code-local-var">mct_option</span><span class="code-token">:</span><span class="code-instance-method">set_default_value</span><span class="code-rainbow-1">(</span><span class="code-number">10</span><span class="code-rainbow-1">)</span></code></li></ol></pre>
+
+
+<p>There's not much beyond that that's needed to really expand functionality, though you can jump through the API to find any extra methods that you'd like. Before we get into reading the settings in-campaign, we're going to do localisation.</p>
+
+<h2 id="Localisation" class="code-keyword">Localisation</h2>
+
+<p>Localisation with MCT is fairly robust. There are three options available for you - automatically read localisation keys, script-applicable localisation keys, and script-applicable loose text (ie. "My Localisation").</p>
+
+<p>For the ---@see mct_mod object, the auto-read keys are:</p>
+
+<pre class="code-field-class"><ol class="ol-linenum-class"><li class="li-code-field-line-entry row-1" id="line_57"><code class="code-text"><span class="code-token">-</span> <span class="code-global-var">mct_</span><span class="code-rainbow-1">[</span><span class="code-global-var">mct_mod_key</span><span class="code-rainbow-1">]</span><span class="code-global-var">_title</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_58"><code class="code-text"><span class="code-token">-</span> <span class="code-global-var">mct_</span><span class="code-rainbow-1">[</span><span class="code-global-var">mct_mod_key</span><span class="code-rainbow-1">]</span><span class="code-global-var">_author</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_59"><code class="code-text"><span class="code-token">-</span> <span class="code-global-var">mct_</span><span class="code-rainbow-1">[</span><span class="code-global-var">mct_mod_key</span><span class="code-rainbow-1">]</span><span class="code-global-var">_description</span></code></li></ol></pre>
+
+<p>Alternatively, you can use the following methods in script:</p>
+
+<pre class="code-field-class"><ol class="ol-linenum-class"><li class="li-code-field-line-entry row-1" id="line_67"><code class="code-text"><span class="code-keyword">local</span> <span class="code-local-var">mct_mod</span> <span class="code-token">=</span> <span class="code-global-var">mct</span><span class="code-token">:</span><span class="code-instance-method">register_mod</span><span class="code-rainbow-1">(</span><span class="code-string">"my_mod"</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_68"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-1" id="line_69"><code class="code-text"><span class="code-local-var">mct_mod</span><span class="code-token">:</span><span class="code-instance-method">set_title</span><span class="code-rainbow-1">(</span><span class="code-string">"My Title"</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_70"><code class="code-text"><span class="code-local-var">mct_mod</span><span class="code-token">:</span><span class="code-instance-method">set_author</span><span class="code-rainbow-1">(</span><span class="code-string">"Groovy"</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_71"><code class="code-text"><span class="code-local-var">mct_mod</span><span class="code-token">:</span><span class="code-instance-method">set_description</span><span class="code-rainbow-1">(</span><span class="code-string">"My cool mod is a very cool mod, thank you for asking."</span><span class="code-rainbow-1">)</span></code></li></ol></pre>
+
+<p>And, lastly, you can use the same methods to supply dynamic localisation keys instead:</p>
+
+<pre class="code-field-class"><ol class="ol-linenum-class"><li class="li-code-field-line-entry row-0" id="line_82"><code class="code-text"><span class="code-keyword">local</span> <span class="code-local-var">mct_mod</span> <span class="code-token">=</span> <span class="code-global-var">mct</span><span class="code-token">:</span><span class="code-instance-method">register_mod</span><span class="code-rainbow-1">(</span><span class="code-string">"my_mod"</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_83"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_84"><code class="code-text"><span class="code-local-var">mct_mod</span><span class="code-token">:</span><span class="code-instance-method">set_title</span><span class="code-rainbow-1">(</span><span class="code-string">"ui_text_replacements_localised_text_my_mod_title"</span><span class="code-token">,</span> <span class="code-true">true</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_85"><code class="code-text"><span class="code-local-var">mct_mod</span><span class="code-token">:</span><span class="code-instance-method">set_author</span><span class="code-rainbow-1">(</span><span class="code-string">"Vandy"</span><span class="code-rainbow-1">)</span> <span class="code-comment">-- doesn't accept localisation</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_86"><code class="code-text"><span class="code-local-var">mct_mod</span><span class="code-token">:</span><span class="code-instance-method">set_description</span><span class="code-rainbow-1">(</span><span class="code-string">"ui_text_replacements_localised_text_my_mod_desc"</span><span class="code-token">,</span> <span class="code-true">true</span><span class="code-rainbow-1">)</span></code></li></ol></pre>
+
+
+<p>Supply those methods with <code>true</code> and they will check for a localised string with the loc key you supply.</p>
+
+<p>For the ---@see mct_option object, the auto-read keys are:</p>
+
+<pre class="code-field-class"><ol class="ol-linenum-class"><li class="li-code-field-line-entry row-0" id="line_98"><code class="code-text"><span class="code-token">-</span> <span class="code-global-var">mct_</span><span class="code-rainbow-1">[</span><span class="code-global-var">mct_mod_key</span><span class="code-rainbow-1">]</span><span class="code-global-var">_</span><span class="code-rainbow-1">[</span><span class="code-global-var">mct_option_key</span><span class="code-rainbow-1">]</span><span class="code-global-var">_text</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_99"><code class="code-text"><span class="code-token">-</span> <span class="code-global-var">mct_</span><span class="code-rainbow-1">[</span><span class="code-global-var">mct_mod_key</span><span class="code-rainbow-1">]</span><span class="code-global-var">_</span><span class="code-rainbow-1">[</span><span class="code-global-var">mct_option_key</span><span class="code-rainbow-1">]</span><span class="code-global-var">_tooltip</span></code></li></ol></pre>
+
+<p>Alternatively, you can use the following methods in script:</p>
+
+<pre class="code-field-class"><ol class="ol-linenum-class"><li class="li-code-field-line-entry row-0" id="line_116"><code class="code-text"><span class="code-keyword">local</span> <span class="code-local-var">mct_mod</span> <span class="code-token">=</span> <span class="code-global-var">mct</span><span class="code-token">:</span><span class="code-instance-method">register_mod</span><span class="code-rainbow-1">(</span><span class="code-string">"my_mod"</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_117"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_118"><code class="code-text"><span class="code-keyword">local</span> <span class="code-local-var">my_option</span> <span class="code-token">=</span> <span class="code-local-var">mct_mod</span><span class="code-token">:</span><span class="code-instance-method">add_new_option</span><span class="code-rainbow-1">(</span><span class="code-string">"test_option"</span><span class="code-token">,</span> <span class="code-string">"checkbox"</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_119"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_120"><code class="code-text"><span class="code-local-var">my_option</span><span class="code-token">:</span><span class="code-instance-method">set_text</span><span class="code-rainbow-1">(</span><span class="code-string">"My Cool Option"</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_121"><code class="code-text"><span class="code-local-var">my_option</span><span class="code-token">:</span><span class="code-instance-method">set_tooltip_text</span><span class="code-rainbow-1">(</span><span class="code-string">"My cool option does this specifically, enjoy!"</span><span class="code-rainbow-1">)</span></code></li></ol></pre>
+
+<p>And likewise, you can supply localisation keys instead through script:</p>
+
+<pre class="code-field-class"><ol class="ol-linenum-class"><li class="li-code-field-line-entry row-0" id="line_134"><code class="code-text"><span class="code-keyword">local</span> <span class="code-local-var">mct_mod</span> <span class="code-token">=</span> <span class="code-global-var">mct</span><span class="code-token">:</span><span class="code-instance-method">register_mod</span><span class="code-rainbow-1">(</span><span class="code-string">"my_mod"</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_135"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_136"><code class="code-text"><span class="code-keyword">local</span> <span class="code-local-var">my_option</span> <span class="code-token">=</span> <span class="code-local-var">mct_mod</span><span class="code-token">:</span><span class="code-instance-method">add_new_option</span><span class="code-rainbow-1">(</span><span class="code-string">"test_option"</span><span class="code-token">,</span> <span class="code-string">"checkbox"</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_137"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_138"><code class="code-text"><span class="code-local-var">my_option</span><span class="code-token">:</span><span class="code-instance-method">set_text</span><span class="code-rainbow-1">(</span><span class="code-string">"ui_text_replacements_localised_text_my_option_text"</span><span class="code-token">,</span> <span class="code-true">true</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_139"><code class="code-text"><span class="code-local-var">my_option</span><span class="code-token">:</span><span class="code-instance-method">set_tooltip_text</span><span class="code-rainbow-1">(</span><span class="code-string">"ui_text_replacements_localised_text_my_option_tooltip_text"</span><span class="code-token">,</span> <span class="code-true">true</span><span class="code-rainbow-1">)</span></code></li></ol></pre>
+
+
+<h2 id="Extra_Stuff___Sections_and_Logging" class="code-keyword">Extra Stuff - Sections and Logging</h2>
+
+<p>This header is all about less important stuff for functionality that still needs some sort of documentation!</p>
+
+<p>In MCT, you can create sections to group a bunch of options together visually, and those sections can be opened/closed via the user and through some modder interfacing as well. </p>
+
+<p><img src="./doc_img/01.png" alt="Sections"></p>
+
+<p>By default, all MCT options are a part of a default section called, well, "default". This is created automatically. If you're okay with keeping everything in the one category that can open/close on its own, you don't have to do anything at all and can just jump ship to the next header below.</p>
+
+<p>If you'd like a second section, however, you simply use:</p>
+
+<pre class="code-field-class"><ol class="ol-linenum-class"><li class="li-code-field-line-entry row-0" id="line_154"><code class="code-text"><span class="code-keyword">local</span> <span class="code-local-var">mct_mod</span> <span class="code-token">=</span> <span class="code-global-var">mct</span><span class="code-token">:</span><span class="code-instance-method">register_mod</span><span class="code-rainbow-1">(</span><span class="code-string">"my_mod"</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_155"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_156"><code class="code-text"><span class="code-keyword">local</span> <span class="code-local-var">new_section</span> <span class="code-token">=</span> <span class="code-local-var">mct_mod</span><span class="code-token">:</span><span class="code-instance-method">add_new_section</span><span class="code-rainbow-1">(</span><span class="code-string">"my_section"</span><span class="code-rainbow-1">)</span></code></li></ol></pre>
+
+
+<p>And that'll be it! All options added from that point onward will be defaulted to "my_section" instead of "default".</p>
+
+<p>If you'd like to manually add options to specific sections, you can use:</p>
+
+<pre class="code-field-class"><ol class="ol-linenum-class"><li class="li-code-field-line-entry row-0" id="line_172"><code class="code-text"><span class="code-keyword">local</span> <span class="code-local-var">option_a</span> <span class="code-token">=</span> <span class="code-local-var">mct_mod</span><span class="code-token">:</span><span class="code-instance-method">add_new_option</span><span class="code-rainbow-1">(</span><span class="code-string">"option_a"</span><span class="code-token">,</span> <span class="code-string">"dropdown"</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_173"><code class="code-text"><span class="code-keyword">local</span> <span class="code-local-var">new_section</span> <span class="code-token">=</span> <span class="code-local-var">mct_mod</span><span class="code-token">:</span><span class="code-instance-method">add_new_section</span><span class="code-rainbow-1">(</span><span class="code-string">"my_section"</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_174"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-1" id="line_175"><code class="code-text"><span class="code-local-var">option_a</span><span class="code-token">:</span><span class="code-instance-method">set_assigned_section</span><span class="code-rainbow-1">(</span><span class="code-string">"my_section"</span><span class="code-rainbow-1">)</span></code></li></ol></pre>
+
+
+<p>The section has to exist for the option to be added to it, using that function, for the time being.</p>
+
+<p>There are several pretty helpful functions in mct_section's, which can be seen in the page ---@see mct_section.</p>
+
+<p>There's also now some internal functionality to read log files within MCT. An mct_mod can add a logging file using ---@see mct_mod:set_log_file_path. When a log file is added in, there will be an available tab that will straight up just display the lines from that log file.</p>
+
+<p><img src="./doc_img/02.png" alt="Logging"></p>
+
+<h2 id="Hook_Into_Scripts" class="code-keyword">Hook Into Scripts</h2>
+
+<p>The above is enough to get the UI in the frontend and in the campaign to populate, have localisation, and do stuff, but the settings won't change anything on their own! We're gonna take a bit to look into hooking MCT into your scripts, making MCT an optional mod or a required one, and responding to new settings.</p>
+
+<p>In your own .lua files - in <code>script/campaign/mod/</code> or wherever you've got them at - there's a couple functionalities and listeners you can set up to quickly and easily read the currently saved MCT settings.</p>
+
+<p>A good quick example is the file <code>script/_lib/mod/zzz_mct_options.lua</code> in the MCT pack.</p>
+
+<p>The first event that will help a lot is the "MctInitialized" event.</p>
+
+
+<pre class="code-field-class"><ol class="ol-linenum-class"><li class="li-code-field-line-entry row-1" id="line_183"><code class="code-text"><span class="code-global-var">core</span><span class="code-token">:</span><span class="code-instance-method">add_listener</span><span class="code-rainbow-1">(</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_184"><code class="code-text">    <span class="code-string">"bloop"</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_185"><code class="code-text">    <span class="code-string">"MctInitialized"</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_186"><code class="code-text">    <span class="code-true">true</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_187"><code class="code-text">    <span class="code-keyword">function</span><span class="code-rainbow-2">(</span><span class="code-param-var">context</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_188"><code class="code-text">        <span class="code-keyword">local</span> <span class="code-local-var">mct</span> <span class="code-token">=</span> <span class="code-param-var">context</span><span class="code-token">:</span><span class="code-instance-method">mct</span><span class="code-rainbow-2">(</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_189"><code class="code-text">        <span class="code-keyword">local</span> <span class="code-local-var">my_mod</span> <span class="code-token">=</span> <span class="code-local-var">mct</span><span class="code-token">:</span><span class="code-instance-method">get_mod_by_key</span><span class="code-rainbow-2">(</span><span class="code-string">"my_cool_mod"</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_190"><code class="code-text">    <span class="code-keyword">end</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_191"><code class="code-text">    <span class="code-true">true</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_192"><code class="code-text"><span class="code-rainbow-1">)</span></code></li></ol></pre>
+
+
+<p>MctInitialized is triggered <em>pretty</em> early on, fairly before FirstTickAfterWorldCreated, so <strong>do not do model edits</strong> off of this function! It's a great way to quickly read the settings from MCT and pass them locally, though.</p>
+
+
+<pre class="code-field-class"><ol class="ol-linenum-class"><li class="li-code-field-line-entry row-0" id="line_206"><code class="code-text"><span class="code-comment">-- default settings for the mod. If MCT is never enabled, or the player doesn't change settings, then do_thing_one and do_thing_two will remain true!</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_207"><code class="code-text"><span class="code-keyword">local</span> <span class="code-local-var">settings</span> <span class="code-token">=</span> <span class="code-rainbow-1">{</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_208"><code class="code-text">    <span class="code-fields">do_thing_one</span> <span class="code-token">=</span> <span class="code-true">true</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_209"><code class="code-text">    <span class="code-fields">do_thing_two</span> <span class="code-token">=</span> <span class="code-true">true</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_210"><code class="code-text"><span class="code-rainbow-1">}</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_211"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_212"><code class="code-text"><span class="code-comment">-- harmless listener, won't do anything if MCT isn't enabled. Triggered around LoadingGame, *do not to model edits here*</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_213"><code class="code-text"><span class="code-global-var">core</span><span class="code-token">:</span><span class="code-instance-method">add_listener</span><span class="code-rainbow-1">(</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_214"><code class="code-text">    <span class="code-string">"bloop"</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_215"><code class="code-text">    <span class="code-string">"MctInitialized"</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_216"><code class="code-text">    <span class="code-true">true</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_217"><code class="code-text">    <span class="code-keyword">function</span><span class="code-rainbow-2">(</span><span class="code-param-var">context</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_218"><code class="code-text">        <span class="code-comment">-- get the mct object</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_219"><code class="code-text">        <span class="code-keyword">local</span> <span class="code-local-var">mct</span> <span class="code-token">=</span> <span class="code-param-var">context</span><span class="code-token">:</span><span class="code-instance-method">mct</span><span class="code-rainbow-2">(</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_220"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-1" id="line_221"><code class="code-text">        <span class="code-comment">-- get the mct_mod object with the key "my_cool_mod"</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_222"><code class="code-text">        <span class="code-keyword">local</span> <span class="code-local-var">my_mod</span> <span class="code-token">=</span> <span class="code-local-var">mct</span><span class="code-token">:</span><span class="code-instance-method">get_mod_by_key</span><span class="code-rainbow-2">(</span><span class="code-string">"my_cool_mod"</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_223"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_224"><code class="code-text">        <span class="code-comment">-- get the mct_option object with the key "do_thing_one", and its finalized setting - reading from the mct_settings.lua file if it's a new game, or the save game file if it isn't</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_225"><code class="code-text">        <span class="code-keyword">local</span> <span class="code-local-var">do_thing_one</span> <span class="code-token">=</span> <span class="code-local-var">my_mod</span><span class="code-token">:</span><span class="code-instance-method">get_option_by_key</span><span class="code-rainbow-2">(</span><span class="code-string">"do_thing_one"</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_226"><code class="code-text">        <span class="code-keyword">local</span> <span class="code-local-var">do_thing_one_setting</span> <span class="code-token">=</span> <span class="code-local-var">do_thing_one</span><span class="code-token">:</span><span class="code-instance-method">get_finalized_setting</span><span class="code-rainbow-2">(</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_227"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_228"><code class="code-text">        <span class="code-comment">-- ditto</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_229"><code class="code-text">        <span class="code-keyword">local</span> <span class="code-local-var">do_thing_two</span> <span class="code-token">=</span> <span class="code-local-var">my_mod</span><span class="code-token">:</span><span class="code-instance-method">get_option_by_key</span><span class="code-rainbow-2">(</span><span class="code-string">"do_thing_two"</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_230"><code class="code-text">        <span class="code-keyword">local</span> <span class="code-local-var">do_thing_two_setting</span> <span class="code-token">=</span> <span class="code-local-var">do_thing_two</span><span class="code-token">:</span><span class="code-instance-method">get_finalized_setting</span><span class="code-rainbow-2">(</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_231"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_232"><code class="code-text">        <span class="code-comment">-- replace the default settings with the finalized settings through MCT</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_233"><code class="code-text">        <span class="code-local-var">settings</span><span class="code-dot">.</span><span class="code-fields">do_thing_one</span> <span class="code-token">=</span> <span class="code-local-var">do_thing_one_setting</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_234"><code class="code-text">        <span class="code-local-var">settings</span><span class="code-dot">.</span><span class="code-fields">do_thing_two</span> <span class="code-token">=</span> <span class="code-local-var">do_thing_two_setting</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_235"><code class="code-text">    <span class="code-keyword">end</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_236"><code class="code-text">    <span class="code-true">true</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_237"><code class="code-text"><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_238"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-1" id="line_239"><code class="code-text"><span class="code-comment">-- do our model edits when it's safe, on first_tick!</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_240"><code class="code-text"><span class="code-global-var">cm</span><span class="code-token">:</span><span class="code-instance-method">add_first_tick_callback</span><span class="code-rainbow-1">(</span><span class="code-keyword">function</span><span class="code-rainbow-2">(</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_241"><code class="code-text">    <span class="code-comment">-- if the first setting is set to true ...</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_242"><code class="code-text">    <span class="code-rainbow-2">if</span> <span class="code-local-var">settings</span><span class="code-dot">.</span><span class="code-fields">do_thing_one</span> <span class="code-rainbow-2">then</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_243"><code class="code-text">        <span class="code-comment">-- trigger a function for "do thing one", if it's set as true through MCT</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_244"><code class="code-text">    <span class="code-rainbow-2">end</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_245"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_246"><code class="code-text">    <span class="code-comment">-- ditto ...</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_247"><code class="code-text">    <span class="code-rainbow-2">if</span> <span class="code-local-var">settings</span><span class="code-dot">.</span><span class="code-fields">do_thing_two</span> <span class="code-rainbow-2">then</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_248"><code class="code-text">        <span class="code-comment">-- ditto</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_249"><code class="code-text">    <span class="code-rainbow-2">end</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_250"><code class="code-text"><span class="code-keyword">end</span><span class="code-rainbow-1">)</span></code></li></ol></pre>
+
+
+<p>Using the above should be enough for most mods. I recommend, if you don't want the settings to be changed mid-campaign, to use ---@see mct_option:set_read_only() after reading the finalized settings and then responding to them. That way, the user won't be able to edit the settings through MCT, only read them through the UI.</p>
+
+<p>If you want settings changeable mid-campaign, there is one more listener provided for ease-of-use:</p>
+
+
+<pre class="code-field-class"><ol class="ol-linenum-class"><li class="li-code-field-line-entry row-1" id="line_269"><code class="code-text"><span class="code-global-var">core</span><span class="code-token">:</span><span class="code-instance-method">add_listener</span><span class="code-rainbow-1">(</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_270"><code class="code-text">    <span class="code-string">"bloop"</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_271"><code class="code-text">    <span class="code-string">"MctOptionSettingFinalized"</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_272"><code class="code-text">    <span class="code-true">true</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_273"><code class="code-text">    <span class="code-keyword">function</span><span class="code-rainbow-2">(</span><span class="code-param-var">context</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_274"><code class="code-text">        <span class="code-keyword">local</span> <span class="code-local-var">mct</span> <span class="code-token">=</span> <span class="code-param-var">context</span><span class="code-token">:</span><span class="code-instance-method">mct</span><span class="code-rainbow-2">(</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_275"><code class="code-text">        <span class="code-keyword">local</span> <span class="code-local-var">mct_mod</span> <span class="code-token">=</span> <span class="code-param-var">context</span><span class="code-token">:</span><span class="code-instance-method">mod</span><span class="code-rainbow-2">(</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_276"><code class="code-text">        <span class="code-keyword">local</span> <span class="code-local-var">mct_option</span> <span class="code-token">=</span> <span class="code-param-var">context</span><span class="code-token">:</span><span class="code-instance-method">option</span><span class="code-rainbow-2">(</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_277"><code class="code-text">        <span class="code-keyword">local</span> <span class="code-local-var">new_settings</span> <span class="code-token">=</span> <span class="code-param-var">context</span><span class="code-token">:</span><span class="code-instance-method">setting</span><span class="code-rainbow-2">(</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_278"><code class="code-text">    <span class="code-keyword">end</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_279"><code class="code-text">    <span class="code-true">true</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_280"><code class="code-text"><span class="code-rainbow-1">)</span></code></li></ol></pre>
+
+
+<p>This event triggers any time an editable option (not-read-only) is changed through the "Finalize Settings" dialogue within MCT. That allows you to give users way more flexibility within a campaign, if you want that flexibility!</p>
+
+<p>There is also the event, "MctFinalized", that triggers whenever the "Finalize Settings" button is pressed, but triggers like more of a global action rather than the "MctOptionSettingFinalized" event, which triggers only for a single option at a time, and only if it's changed.</p>
+
+
+<pre class="code-field-class"><ol class="ol-linenum-class"><li class="li-code-field-line-entry row-0" id="line_306"><code class="code-text"><span class="code-global-var">core</span><span class="code-token">:</span><span class="code-instance-method">add_listener</span><span class="code-rainbow-1">(</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_307"><code class="code-text">    <span class="code-string">"bloop"</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_308"><code class="code-text">    <span class="code-string">"MctFinalized"</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_309"><code class="code-text">    <span class="code-true">true</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_310"><code class="code-text">    <span class="code-keyword">function</span><span class="code-rainbow-2">(</span><span class="code-param-var">context</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_311"><code class="code-text">        <span class="code-keyword">local</span> <span class="code-local-var">mct</span> <span class="code-token">=</span> <span class="code-param-var">context</span><span class="code-token">:</span><span class="code-instance-method">mct</span><span class="code-rainbow-2">(</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_312"><code class="code-text">        <span class="code-keyword">local</span> <span class="code-local-var">mod</span> <span class="code-token">=</span> <span class="code-local-var">mct</span><span class="code-token">:</span><span class="code-instance-method">get_mod_by_key</span><span class="code-rainbow-2">(</span><span class="code-string">"my_mod"</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_313"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_314"><code class="code-text">        <span class="code-keyword">local</span> <span class="code-local-var">option</span> <span class="code-token">=</span> <span class="code-local-var">mod</span><span class="code-token">:</span><span class="code-instance-method">get_option_by_key</span><span class="code-rainbow-2">(</span><span class="code-string">"my_option"</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_315"><code class="code-text">        <span class="code-keyword">local</span> <span class="code-local-var">setting</span> <span class="code-token">=</span> <span class="code-local-var">option</span><span class="code-token">:</span><span class="code-instance-method">get_finalized_setting</span><span class="code-rainbow-2">(</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_316"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-1" id="line_317"><code class="code-text">    <span class="code-keyword">end</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_318"><code class="code-text">    <span class="code-true">true</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_319"><code class="code-text"><span class="code-rainbow-1">)</span></code></li></ol></pre>
+
+
+<h2 id="Other_Events" class="code-keyword">Other Events</h2>
+
+<p>This section will be expanded a lot more in the near future when events are expanded a lot. Planning on making the mod a lot more event-based, since it's just the easiest way of doing it for me and for y'all.</p>
+
+<p>For now, I have some new ones:</p>
+
+<ul>
+    <li>MctPanelOpened</li>
+    <li>MctPanelPopulated</li>
+    <li>MctSectionVisibilityChanged</li>
+    <li>MctNewOptionCreated</li>
+</ul>
+
+<p>The first is triggered <strong>every time the MCT panel is opened</strong>. The second is triggered <strong>every time a new mod is selected within MCT, including when it is opened and the default MCT page is selected</strong>.</p>
+
+<p>MctPanelOpened has two contexts: <code>context:mct()</code> for the MCT object proper, and <code>context:ui_obj()</code> for the UI object that powers all of MCT's UI. This isn't documented yet in the API, sorry. That'll come soon:tm:</p>
+
+<p>MctPanelPopulated has three contexts: <code>context:mct()</code> (ditto), <code>context:ui_obj()</code> (double ditto), and <code>context:mod()</code> for the mct_mod object that matches the mod selected in the UI.</p>
+
+<p>MctNewOptionCreated is triggered every time ---@see mct_mod:add_new_option is called. This is mostly used for internal stuff, to trigger MCT popups.
+Its contexts are: <code>context:mct()</code>, <code>context:mod()</code>, and <code>context:option()</code>.</p>
+
+<h2 id="Multiplayer" class="code-keyword">Multiplayer</h2>
+
+<p>Multiplayer works! How exciting!</p>
+
+<p>It works by <em>reading which player is the "host" in the frontend</em>. That player's mct_settings.lua file is read on the initial load of the campaign, and the settings decided are sent to the client player to keep everything matched. From then on, only the host can edit settings in the MCT dialogues, and the client can only read the settings; the only exception being local-only settings, which aren't sent through to both players. The host and the client can both have different settings for a local-only setting.</p>
+
+<p><strong>Be very careful with local-only settings. This should be done for very simple stuff that won't cause desyncs - UI settings, script logging, stuff like that.</strong></p>
+
+<p>There is another new field for options, to make them mp-disabled. This straight up disables the option for MP, entirely. It won't show up, or exist in the MCT object, or anything, if the game is in multiplayer.</p>
+
+<p>To make an option local-only:
+<code>option_obj:set_local_only(true)</code></p>
+
+<p>To make an option mp-disabled:
+<code>option_obj:set_mp_disabled(true)</code></p>
+
+<p>And to do the opposite, just use (false) instead!</p>
+
+<p>Aside from the two new fields for options and a different way of loading, MP comes with a single, fairly big change. <strong>The timing is way off for everything.</strong> There's a technical reason that I don't really want to get into it, because I don't fully understand it and it kinda makes me mad, so suffice it to say - MctInitialized triggers <em>way later</em> in multiplayer than it does in singleplayer. MctInitialized triggers on FirstTickAfterWorldCreated, using the <code>cm:add_pre_first_tick_callback()</code> timing, so it should still run before <code>cm:add_first_tick_callback()</code>'s.</p>
+
+<p>This means you can use MctInitialized to do model-edits, however.</p>
+
+<p>Here's an example script I wrote while testing multiplayer, to show the considerations for timing:</p>
+
+<pre class="code-field-class"><ol class="ol-linenum-class"><li class="li-code-field-line-entry row-1" id="line_343"><code class="code-text"><span class="code-comment">-- default value, set to false</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_344"><code class="code-text"><span class="code-keyword">local</span> <span class="code-local-var">def</span> <span class="code-token">=</span> <span class="code-false">false</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_345"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_346"><code class="code-text"><span class="code-comment">-- init() is our startup function, which spawns a Rangerful army in KaK</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_347"><code class="code-text"><span class="code-keyword">local</span> <span class="code-keyword">function</span> <span class="code-local-function">init</span><span class="code-rainbow-1">(</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_348"><code class="code-text">    <span class="code-comment">-- check the default value; if true, go on</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_349"><code class="code-text">    <span class="code-rainbow-1">if</span> <span class="code-local-var">def</span> <span class="code-rainbow-1">then</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_350"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-1" id="line_351"><code class="code-text">        <span class="code-comment">-- get coords</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_352"><code class="code-text">        <span class="code-keyword">local</span> <span class="code-local-var">x</span><span class="code-token">,</span> <span class="code-local-var">y</span> <span class="code-token">=</span> <span class="code-global-var">cm</span><span class="code-token">:</span><span class="code-instance-method">find_valid_spawn_location_for_character_from_settlement</span><span class="code-rainbow-2">(</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_353"><code class="code-text">            <span class="code-string">"wh_main_dwf_dwarfs"</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_354"><code class="code-text">            <span class="code-string">"wh_main_the_silver_road_karaz_a_karak"</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_355"><code class="code-text">            <span class="code-false">false</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_356"><code class="code-text">            <span class="code-true">true</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_357"><code class="code-text">        <span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_358"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-1" id="line_359"><code class="code-text">        <span class="code-comment">-- spawn our army</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_360"><code class="code-text">        <span class="code-global-var">cm</span><span class="code-token">:</span><span class="code-instance-method">create_force</span><span class="code-rainbow-2">(</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_361"><code class="code-text">            <span class="code-string">"wh_main_dwf_dwarfs"</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_362"><code class="code-text">            <span class="code-string">"wh_dlc06_dwf_inf_rangers_0,wh_dlc06_dwf_inf_rangers_0,wh_dlc06_dwf_inf_rangers_0,wh_dlc06_dwf_inf_rangers_0,wh_dlc06_dwf_inf_rangers_0,wh_dlc06_dwf_inf_rangers_0,wh_dlc06_dwf_inf_rangers_0,wh_dlc06_dwf_inf_rangers_0"</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_363"><code class="code-text">            <span class="code-string">"wh_main_the_silver_road_karaz_a_karak"</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_364"><code class="code-text">            <span class="code-local-var">x</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_365"><code class="code-text">            <span class="code-local-var">y</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_366"><code class="code-text">            <span class="code-true">true</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_367"><code class="code-text">            <span class="code-nil">nil</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_368"><code class="code-text">        <span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_369"><code class="code-text">    <span class="code-rainbow-1">end</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_370"><code class="code-text"><span class="code-keyword">end</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_371"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_372"><code class="code-text"><span class="code-comment">-- on FirstTick, in singleplayer, trigger the above startup function</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_373"><code class="code-text"><span class="code-global-var">cm</span><span class="code-token">:</span><span class="code-instance-method">add_first_tick_callback</span><span class="code-rainbow-1">(</span><span class="code-keyword">function</span><span class="code-rainbow-2">(</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_374"><code class="code-text">    <span class="code-global-function">get_mct</span><span class="code-rainbow-2">(</span><span class="code-rainbow-2">)</span><span class="code-token">:</span><span class="code-global-function">log</span><span class="code-rainbow-2">(</span><span class="code-string">"first tick"</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_375"><code class="code-text">    <span class="code-rainbow-2">if</span> <span class="code-global-var">cm</span><span class="code-token">:</span><span class="code-instance-method">is_new_game</span><span class="code-rainbow-3">(</span><span class="code-rainbow-3">)</span> <span class="code-keyword">and</span> <span class="code-keyword">not</span> <span class="code-global-var">cm</span><span class="code-token">:</span><span class="code-instance-method">is_multiplayer</span><span class="code-rainbow-3">(</span><span class="code-rainbow-3">)</span> <span class="code-rainbow-2">then</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_376"><code class="code-text">        <span class="code-local-function"><span class="code-global-function">init</span></span><span class="code-rainbow-3">(</span><span class="code-rainbow-3">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_377"><code class="code-text">    <span class="code-rainbow-2">end</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_378"><code class="code-text"><span class="code-keyword">end</span><span class="code-rainbow-1">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_379"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_380"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-1" id="line_381"><code class="code-text"><span class="code-comment">-- MctInitialized is called shortly after the Lua environment is safe to mess with, in MP</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_382"><code class="code-text"><span class="code-global-var">core</span><span class="code-token">:</span><span class="code-instance-method">add_listener</span><span class="code-rainbow-1">(</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_383"><code class="code-text">    <span class="code-string">"MctModInitialized"</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_384"><code class="code-text">    <span class="code-string">"MctInitialized"</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_385"><code class="code-text">    <span class="code-true">true</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_386"><code class="code-text">    <span class="code-keyword">function</span><span class="code-rainbow-2">(</span><span class="code-param-var">context</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_387"><code class="code-text">        <span class="code-keyword">local</span> <span class="code-local-var">mct</span> <span class="code-token">=</span> <span class="code-param-var">context</span><span class="code-token">:</span><span class="code-instance-method">mct</span><span class="code-rainbow-2">(</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_388"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-1" id="line_389"><code class="code-text">        <span class="code-keyword">local</span> <span class="code-local-var">mod</span> <span class="code-token">=</span> <span class="code-local-var">mct</span><span class="code-token">:</span><span class="code-instance-method">get_mod_by_key</span><span class="code-rainbow-2">(</span><span class="code-string">"mct_mod"</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_390"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-1" id="line_391"><code class="code-text">        <span class="code-keyword">local</span> <span class="code-local-var">option</span> <span class="code-token">=</span> <span class="code-local-var">mod</span><span class="code-token">:</span><span class="code-instance-method">get_option_by_key</span><span class="code-rainbow-2">(</span><span class="code-string">"mct2"</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_392"><code class="code-text">        <span class="code-keyword">local</span> <span class="code-local-var">setting</span> <span class="code-token">=</span> <span class="code-local-var">option</span><span class="code-token">:</span><span class="code-instance-method">get_finalized_setting</span><span class="code-rainbow-2">(</span><span class="code-rainbow-2">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_393"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_394"><code class="code-text">        <span class="code-local-var">def</span> <span class="code-token">=</span> <span class="code-local-var">setting</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_395"><code class="code-text">
+</code></li><li class="li-code-field-line-entry row-0" id="line_396"><code class="code-text">        <span class="code-comment">-- since it's MP, we're running this code *VERY* close to when the add_first_tick_callback() above would be called</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_397"><code class="code-text">        <span class="code-comment">-- which means, it's not guaranteed it will run in the sequence we want it to. It very rarely worked like I wanted it to, through testing</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_398"><code class="code-text">        <span class="code-comment">-- so, I can just call our startup function right in this listener - IF AND ONLY IF it's multiplayer!</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_399"><code class="code-text">        <span class="code-rainbow-2">if</span> <span class="code-param-var">context</span><span class="code-token">:</span><span class="code-instance-method">is_multiplayer</span><span class="code-rainbow-3">(</span><span class="code-rainbow-3">)</span> <span class="code-rainbow-2">then</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_400"><code class="code-text">            <span class="code-local-function"><span class="code-global-function">init</span></span><span class="code-rainbow-3">(</span><span class="code-rainbow-3">)</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_401"><code class="code-text">        <span class="code-rainbow-2">end</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_402"><code class="code-text">    <span class="code-keyword">end</span><span class="code-token">,</span>
+</code></li><li class="li-code-field-line-entry row-1" id="line_403"><code class="code-text">    <span class="code-true">true</span>
+</code></li><li class="li-code-field-line-entry row-0" id="line_404"><code class="code-text"><span class="code-rainbow-1">)</span></code></li></ol></pre>
+
+<h2 id="Further_Updates" class="code-keyword">Further Updates</h2>
+
+<p>As said - this is an early beta, releasing in the state so I can start getting feedback, requests, usage and the like. The program is mostly functional, but there may be bugs, unexpected responses, small things like that. I would very much like to get feedback on how it feels, how it works, and if there's anything I can do to help you make a better mod. If you have specific requests, reach out to me in the C&amp;C Modding Den, in <a href="https://discord.gg/mFQwX4A">#groove_tower</a>.</p>
+
+<p>I have a lot of updates planned for this, but it's currently in a workable enough condition to be fine now:</p>
+
+<ul>
+    <li><p>Incorporate the new option types - text input and multi-buttons (ie. four buttons in a row, give AND|OR operations to them, etc)</p></li>
+    <li><p>Incorporate a "preset" type of option, which changes the setting for other options based on its setting. Y'know, a preset</p></li>
+    <li><p>Rewrite a lot of the foundation of the mod, make it a lot more dynamic for modders and super-usable</p></li>
+    <li><p>Fix up and expand a lot of the UI</p></li>
+    <li><p>Incorporate the SteamAPI, for things like reading Steam patch notes in-MCT</p></li>
+</ul>

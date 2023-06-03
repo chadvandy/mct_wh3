@@ -1,3 +1,8 @@
+---@module MCT UI
+---@description text
+---@internal
+--- Module description
+
 ---- MCT UI Object. INTERNAL USE ONLY.
 
 -- TODO differentiate betterly between "vlib_ui" which is general UI stuff, and "mct_ui" which is stuff specific to, welp.
@@ -6,7 +11,7 @@
 
 local this_path = GLib.ThisPath(...)
 
----@class MCT.UI : Class
+---@class UI_Main
 local UI_Main = {
     -- UICs --
 
@@ -57,10 +62,10 @@ local mct = get_mct()
 -- --- TODO load these elsewhere!
 -- local ui_path = "script/vlib/mct/core/ui/"
 
--- ---@type MCT.UI.Profiles
+-- ---@type UI_Profiles
 -- local UI_Profiles = GLib.LoadModule("profiles", ui_path)
 
--- ---@type MCT.UI.Notifications
+-- ---@type UI_Notifications
 -- local UI_Notifications = GLib.LoadModule("notifications", ui_path)
 
 -- local Registry = mct:get_registry()
@@ -291,8 +296,8 @@ function UI_Main:create_popup(key, text, two_buttons, button_one_callback, butto
 end
 
 --- TODO if no layout object is supplied, assume "Main" page
----@param mod_obj MCT.Mod?
----@param page MCT.Page?
+---@param mod_obj mct_mod?
+---@param page Page?
 function UI_Main:set_selected_mod(mod_obj, page)
 
     local left_panel = self.left_panel
@@ -847,7 +852,7 @@ end
 
 --- TODO move this all into option_obj:populate() which is a Super called by the individual types!
 --- Add a new option row
----@param option_obj MCT.Option
+---@param option_obj mct_option
 ---@param this_layout UIC
 function UI_Main:new_option_row_at_pos(option_obj, this_layout, w, h)
     -- local panel = self.right_side_panel
@@ -996,7 +1001,9 @@ core:add_listener(
 core:add_listener(
     "MCT_EscClosed",
     "UITrigger",
-    function(context) GLib.Log("UI trigger: " .. context.string) return context.string == "mct_panel_closed" end,
+    function(context)
+        GLib.Log("UI trigger: " .. context.string) return context.string == "mct_panel_closed"
+    end,
     function(context)
         GLib.Log("MCT panel closed UI trigger!!")
         UI_Main:close_frame(true)
@@ -1053,7 +1060,7 @@ core:add_listener(
         return context.string == "button_mct_profiles"
     end,
     function(context)
-        -- ---@type MCT.UI.Profiles
+        -- ---@type UI_Profiles
         -- local UI_Profiles = mct:get_system_ui("profiles")
         -- UI_Profiles:open()
     end,

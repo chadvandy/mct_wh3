@@ -1,8 +1,11 @@
+---@module Options
+
 local mct = get_mct()
 local log,logf,err,errf = get_vlog("[mct]")
 local Super = mct:get_mct_option_class()
 
----@class MCT.Option.TextInput
+---@ignore
+---@class TextInput
 local defaults = {
     _template = "ui/common ui/text_box",
 
@@ -10,8 +13,8 @@ local defaults = {
     _validity_callbacks = {}
 }
 
----@class MCT.Option.TextInput : MCT.Option
----@field __new fun():MCT.Option.TextInput
+---@class TextInput : mct_option
+---@field __new fun():TextInput
 local TextInput = Super:extend("MCT.Option.TextInput", defaults)
 
 function TextInput:new(mod_obj, option_key)
@@ -181,7 +184,7 @@ core:add_listener(
         local mod_obj = mct:get_selected_mod()
         local option_key = text_input:GetProperty("mct_option")
 
-        ---@type MCT.Option.TextInput
+        ---@type TextInput
         local option_obj = mod_obj:get_option_by_key(option_key)
 
         if not mct:is_mct_option(option_obj) then

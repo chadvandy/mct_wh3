@@ -1,10 +1,13 @@
+---@module Page
+
 --- Main Page for an MCT Mod.
 -- Includes a description, primary image, author[s], version, patch notes, and the ability to customize for the modder in question.
 
 local MCT = get_mct()
 local Super = MCT:get_mct_page_class()
 
----@class MCT.Page.Main : MCT.Page, Class
+---@ignore
+---@class Main : Page, Class
 local defaults = {
     ---@type string #The type of page this is.
     _type = "main",
@@ -23,11 +26,11 @@ local defaults = {
     _selected_tab = nil,
 }
 
----@class MCT.Page.Main : MCT.Page, Class
+---@class Main : Page
 local Main = Super:extend("MCT.Page.Main", defaults)
 
 --- Constructor for the Main Page.
----@param mod MCT.Mod The mod this page is for.
+---@param mod mct_mod The mod this page is for.
 function Main:new(mod)
     local o = self:__new()
     o:init(mod)
@@ -36,7 +39,7 @@ function Main:new(mod)
 end
 
 --- Initialize the Main Page.
----@param mod MCT.Mod The mod this page is for.
+---@param mod mct_mod The mod this page is for.
 function Main:init(mod)
     Super.init(self, "main", mod)
 

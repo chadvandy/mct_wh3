@@ -1,8 +1,10 @@
+---@module Section
+
 --- TODO change the two different section types - collapsible and not collapsible - to two different classes, the collapsible as a child of the other or whichever
 
 
 ---- Section Object
---- @class MCT.Section
+--- @class mct_section
 
 local mct = get_mct()
 -- local vlib = get_vandy_lib()
@@ -11,7 +13,8 @@ local log,logf,err,errf = get_vlog("[mct]")
 local sort_functions = GLib.LoadModule("options", mct:get_path("helpers", "sort_functions"))
 
 
----@class MCT.Section
+---@ignore
+---@class mct_section
 local mct_section_defaults = {
     ---@type string Identifying key for this section.
     _key = "",
@@ -20,17 +23,17 @@ local mct_section_defaults = {
     _text = "No text assigned",
 
     ---@type string An optional description for this section.
-    ---@see MCT.Section.set_description
+    ---@see Section.set_description
     _description = "",
 
     ---@type string Hovered-on text for this section.
-    ---@see MCT.Section.set_tooltip_text
+    ---@see Section.set_tooltip_text
     _tooltip_text = "",
 
     ---@type UIC UI Object for the header row itself.
     _header = nil,
 
-    ---@type table<string, MCT.Option> Options linked to this section.
+    ---@type table<string, mct_option> Options linked to this section.
     _options = {},
 
     _ordered_options = {},
@@ -43,10 +46,10 @@ local mct_section_defaults = {
     ---@type boolean Whether this full section is hidden in the UI.
     _is_hidden = false,
 
-    ---@type MCT.Mod
+    ---@type mct_mod
     _mod = nil,
 
-    ---@type MCT.Page.Settings TODO link sections to pages
+    ---@type Settings TODO link sections to pages
     _page = nil,
 
     ---@type boolean Whether this section can be collapsed
@@ -58,13 +61,13 @@ local mct_section_defaults = {
     _sort_order_function = sort_functions.index,
 }
 
----@class MCT.Section : Class
----@field __new fun():MCT.Section
+---@class mct_section
+---@field __new fun():mct_section
 local mct_section = GLib.NewClass("MCT.Section", mct_section_defaults)
 
 --- For internal use only. Use @{mct_mod:add_new_section}.
 ---@param key string The key to identify the new mct_section.
----@param mod MCT.Mod The mct_mod this section is a member of.
+---@param mod Mod The mct_mod this section is a member of.
 function mct_section.new(key, mod)
     local o = mct_section:__new()
     
@@ -89,7 +92,7 @@ function mct_section:get_ordered_options()
     return ordered_options, num_total
 end
 
----@param page MCT.Page.Settings
+---@param page Settings
 function mct_section:assign_to_page(page)
     if self._page then
         self._page:unassign_section(self)
@@ -100,7 +103,7 @@ function mct_section:assign_to_page(page)
 end
 
 --- Get this section's page.
----@return MCT.Page.Settings
+---@return Settings
 function mct_section:get_page()
     return self._page
 end
@@ -492,7 +495,7 @@ end
 
 --- Assign an option to this section.
 -- Automatically called through @{mct_option:set_assigned_section}.
----@param option_obj MCT.Option|string The option object to assign into this section.
+---@param option_obj Option|string The option object to assign into this section.
 function mct_section:assign_option(option_obj)
     local current_mod = self:get_mod()
     
@@ -553,7 +556,7 @@ function mct_section:set_is_collapsible(b)
 end
 
 --- Return all the options assigned to the mct_section.
----@return table<string,MCT.Option> #The table of all the options in this mct_section.
+---@return table<string,mct_option> #The table of all the options in this mct_section.
 function mct_section:get_options()
     return self._options
 end

@@ -1,6 +1,7 @@
+---@ignoreFile
 --- TODO a parent class for each interface, to make getting ez
 
----@class Interface.Super : Class
+---@class Interface.Super
 local defaults = {
     ---@type string The key to get this game object.
     _key = "",
@@ -11,7 +12,7 @@ local defaults = {
     _get_func = function() return nil end,
 }
 
----@class Interface.Super : Class
+---@class Interface.Super
 ---@field __new fun():Interface.Super
 InterfaceSuper = GLib.NewClass("InterfaceSuper", defaults)
 

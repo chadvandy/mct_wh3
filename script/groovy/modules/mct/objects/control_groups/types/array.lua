@@ -1,10 +1,13 @@
+---@module ControlGroups
+
 local mct = get_mct()
 
 local Super = mct:get_control_group_class()
 
----@class MCT.ControlGroup.Array : MCT.ControlGroup
+---@ignore
+---@class Array : ControlGroup
 local defaults = {
-    ---@type MCT.Control[]
+    ---@type Control[]
     _controls = {},
 
     _label = nil,
@@ -12,9 +15,9 @@ local defaults = {
     _key = nil,
 }
 
----@class MCT.ControlGroup.Array : MCT.ControlGroup
----@field __new fun(): MCT.ControlGroup.Array
-local Array = Super:extend("MCT.ControlGroup.Array", defaults)
+---@class Array : ControlGroup
+---@field __new fun(): Array
+local Array = Super:extend("Array", defaults)
 
 function Array:new()
     local o = self:__new()
@@ -36,7 +39,7 @@ end
 ]]
 
 --- Add a Control to this ControlGroup.
----@param control MCT.Control # The Control to add.
+---@param control Control # The Control to add.
 ---@param pos number? The position to add the Control to. If nil, it will be added to the end.
 function Array:add_control(control, pos)
     if is_nil(pos) then pos = #self._controls + 1 end

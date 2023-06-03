@@ -1,16 +1,19 @@
+---@module Notification System
+
 --- TODO the full notifications system
 
----@class MCT.NotificationSystem : Class
+---@ignore
+---@class NotificationSystem
 local defaults = {
     --- All saved / unread notifications.
-    ---@type MCT.Notification[]
+    ---@type table<Notification>
     _notifications = {},
 
-    ---@type MCT.UI.Notifications
+    ---@type UI_Notifications
     _UI = nil,
 }
 
----@class MCT.NotificationSystem : Class
+---@class NotificationSystem
 local NotificationSystem = GLib.NewClass("MCT.NotificationSystem", defaults)
 
 
@@ -29,8 +32,8 @@ function NotificationSystem:save()
 end
 
 --- Simply create a new notification and return it to the caller.
----@param notif MCT.Notification
----@return MCT.Notification
+---@param notif Notification
+---@return Notification
 function NotificationSystem:save_notification(notif)
     --- TODO save it internally? Do what?
 
@@ -42,7 +45,7 @@ end
 --- TODO pass forward anything special?
 function NotificationSystem:create_title_and_text_notification()
     local Notification = get_mct():get_notification_class_subtype("title_and_text")
-    ---@cast Notification MCT.Notification.TitleText
+    ---@cast Notification NotificationTitleText
 
     local o = Notification:new()
     self:save_notification(o)
@@ -50,10 +53,10 @@ function NotificationSystem:create_title_and_text_notification()
     return o
 end
 
----@return MCT.Notification.Error
+---@return NotificationError
 function NotificationSystem:create_error_notification()
     local Notification = get_mct():get_notification_class_subtype("error")
-    ---@cast Notification MCT.Notification.Error
+    ---@cast Notification NotificationError
 
     local o = Notification:new()
     self:save_notification(o)
@@ -66,7 +69,7 @@ function NotificationSystem:create_banner_notification()
 end
 
 --- Get all unread notifications.
----@return MCT.Notification[]
+---@return table<Notification>
 function NotificationSystem:get_unread_notifications()
     local unread = {}
     for i,notification in ipairs(self:get_notifications()) do 
@@ -84,7 +87,7 @@ function NotificationSystem:get_unread_notifications_count()
     return #self:get_unread_notifications()
 end
 
----@return MCT.Notification[] #Get all saved and tracked notifications
+---@return table<Notification> #Get all saved and tracked notifications
 function NotificationSystem:get_notifications()
     return self._notifications
 end

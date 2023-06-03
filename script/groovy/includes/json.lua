@@ -21,6 +21,8 @@
 -- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 -- SOFTWARE.
 --
+---@module JSON
+
 
 ---@class json
 local json = { _version = "0.1.2" }
@@ -133,7 +135,9 @@ encode = function(val, stack)
   error("unexpected type '" .. t .. "'")
 end
 
+--- Encode a table into a Json string.
 ---@param val table #Turn a table into a Json string.
+---@return string Returns a Json string.
 function json.encode(val)
   return ( encode(val) )
 end
@@ -375,7 +379,9 @@ parse = function(str, idx)
 end
 
 
+--- Decode JSON string into Lua table.
 ---@param str string String to decode into a table.
+---@return table
 function json.decode(str)
   if type(str) ~= "string" then
     error("expected argument of type string, got " .. type(str))

@@ -1,3 +1,5 @@
+---@module MP Communicator
+
 --- 100% credit to Vanishoxyact. He built this system for easier support of long strings being passed between PC's, because there's a limit to the size of the strings that can be sent. Thanks Vanish!
 
 --- TODO should this be loaded through the main lib?
@@ -6,7 +8,7 @@ if not core:is_campaign() then
     return
 end
 
----@class MP_Communicator
+---@class MultiplayerCommunicator
 MultiplayerCommunicator = {
     __separator = "|",
     __max_str_len = 100,

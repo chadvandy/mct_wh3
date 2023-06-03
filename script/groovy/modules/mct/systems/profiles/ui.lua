@@ -1,3 +1,6 @@
+---@module UIProfiles
+
+
 --- TODO a separate UI object with just all the Profiles systems in them
 
 --- TODO replace a lot of this to enable profiles as they are now.
@@ -8,7 +11,8 @@ local mct = get_mct()
 local Registry = mct:get_registry()
 local UI_Main = mct.ui
 
----@class MCT.UI.Profiles
+---@ignore
+---@class UI_Profiles
 local defaults = {
     ---@type UIC? The currently selected Profile holder.
     selected_holder = nil,
@@ -20,7 +24,7 @@ local defaults = {
     uics = {},
 }
 
----@class MCT.UI.Profiles : Class
+---@class UI_Profiles
 local UI_Profiles = GLib.NewClass("UI_Profiles", defaults)
 
 function UI_Profiles:open()
@@ -334,7 +338,7 @@ function UI_Profiles:populate_main_view()
     )
 end
 
----@param profile MCT.Profile 
+---@param profile Profile
 function UI_Profiles:populate_settings_view(profile)
     self.uics.main_view:SetVisible(false)
     self.uics.settings_view:SetVisible(true)
