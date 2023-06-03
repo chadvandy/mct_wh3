@@ -1,5 +1,8 @@
+---@module GroovyLibrary
+--- Module for the Groovy Library class
+
 --- Create a new class object!
----@type fun(className:string,attr:table) : Class
+---@type fun(className:string, attr:table) : Class
 local new_class = require "script.groovy.includes.30-log"
 
 local path_of_groove = "script/groovy/"
@@ -11,9 +14,10 @@ do
     end
 end
 
----@class GLib : Class
+---@ignore
+---@class GLib
 local defaults = {
-    ---@type table<string, GLib.Log>
+    ---@type table<string, Log>
     logs = {
         -- lib = nil,
     },
@@ -22,13 +26,14 @@ local defaults = {
     _Modules = {},
 }
 
----@class GLib : Class
+---@class GLib
 GLib = new_class("GLib", defaults)
 
 ---@type json
 GLib.Json = require "script.groovy.includes.json"
 
----@class GLib.Log : Class
+---@ignore
+---@class Log
 local log_defaults = {
     prefix = "[lib]",
     show_time = true,
@@ -45,22 +50,27 @@ local log_defaults = {
     file = nil,
 }
 
----@class GLib.Log : Class
----@field __new fun():GLib.Log
+---@class Log
+---@field __new fun():Log
 local Log = new_class("VLib_Log", log_defaults)
 
 --- Create a new Log Object.
 ---@param key string
 ---@param file_name string?
 ---@param prefix string?
+---@return Log
 function Log.new(key, file_name, prefix)
     local o = Log:__new()
-    ---@cast o GLib.Log
+    ---@cast o Log
     o:init(key, file_name, prefix)
 
     return o
 end
 
+---@param key string
+---@param file_name string?
+---@param prefix string?
+--- Initialise a log file
 function Log:init(key, file_name, prefix)
     self.key = key
     self.file_name = file_name or "logging.txt"
@@ -75,6 +85,7 @@ function Log:__call(...)
     self:log(...)
 end
 
+---@return string The current tab amount, in string form.
 function Log:get_tabs()
     local t = ""
     for i = 1,self.current_tab do
@@ -84,6 +95,9 @@ function Log:get_tabs()
     return t
 end
 
+--- Log a string to the log file.
+---@param t string The string to log.
+---@param ... any The varargs to pass to the string.format function.
 function Log:log(t, ...)
     if not self.enabled then return end
 
@@ -118,12 +132,14 @@ function Log:tab_abs(tab_amount)
     self.current_tab = tab_amount
 end
 
+--- Flush the log files.
 function GLib.FlushLogs()
     for _,log in pairs(GLib.logs) do
         log.file:flush()
     end
 end
 
+--- Initialise the GLib class
 function GLib.init()
     --- TODO print
     GLib.logs.lib = GLib.NewLog("lib", "!groove_log.txt")
@@ -170,7 +186,7 @@ end
 
 --- Get the @LogObj with this name.
 ---@param name string? The name of the log object when created. Leave blank to get the default one.
----@return GLib.Log?
+---@return Log?
 function GLib.GetLog(name)
     if not is_string(name) then name = "lib" end
     local t = GLib.logs[name]
@@ -181,14 +197,23 @@ function GLib.GetLog(name)
     GLib.Warn("Tried to get a Log with the name %s but none was found. Returning the default log object.", name)
 end
 
+---@param t string The string to log.
+---@param ... vararg The varargs to pass to the string.format function.
+--- Logs a string.
 function GLib.Log(t, ...)
     GLib.logs.lib:log(t, ...)
 end
 
+---@param t string The string to log.
+---@param ... vararg The varargs to pass to the string.format function.
+--- Logs a warning.
 function GLib.Warn(t, ...)
     GLib.logs.lib:log("WARNING!\n" .. t, ...)
 end
 
+---@param t string The string to log.
+---@param ... vararg The varargs to pass to the string.format function.
+--- Logs an error, and the traceback.
 function GLib.Error(t, ...)
     GLib.logs.lib:log("ERROR!\n" .. t, ...)
     GLib.logs.lib:log(debug.traceback(1))
@@ -435,6 +460,7 @@ function GLib.EnableGameLogging(b)
     end
 end
 
+---@listener Currently does nothing, but support for it will be added
 core:add_listener(
     "MctInitialized",
     "MctInitialized",
@@ -459,6 +485,7 @@ core:add_listener(
     true
 )
 
+---@listener Currently does nothing, but support for it will be added
 core:add_listener(
     "MctFinalized",
     "MctFinalized",

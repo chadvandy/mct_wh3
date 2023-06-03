@@ -1,3 +1,5 @@
+---@module Registry System
+
 --- TODO the system for handling global registry values, context-specific registry values, and campaign-saved registry values
 
 --- TODO the flow should be:
@@ -13,13 +15,14 @@
 local mct = get_mct()
 local log,logf,err,errf = get_vlog("[mct_registry]")
 
----@class MCT.Registry : Class
+---@ignore
+---@class Registry
 local defaults = {
     ---@type string The path to the appdata/scripts/ folder
     appdata_path = string.gsub(common.get_appdata_screenshots_path(), "screenshots\\$", "scripts\\"),
 
     --- TODO
-    ---@type table<string, MCT.Profile>
+    ---@type table<string, Profile>
     __saved_profiles = {},
 
     ---@alias changed_settings {old_value:any,new_value:any}
@@ -41,7 +44,7 @@ local defaults = {
     __profiles_file = "mct_profiles.lua",
 }
 
----@class MCT.Registry : Class
+---@class Registry
 local Registry = GLib.NewClass("MCT.Registry", defaults)
 
 
@@ -238,7 +241,7 @@ function Registry:port_forward()
     self:save()
 end
 
----@param profile MCT.Profile
+---@param profile Profile
 function Registry:apply_profile(profile)
     local settings = profile:get_overridden_settings()
 
@@ -264,7 +267,7 @@ function Registry:clear_changed_settings()
 end
 
 -- this saves the changed-setting, called whenever @{mct_option:set_selected_setting} is called (except for creation).
----@param option_obj MCT.Option
+---@param option_obj mct_option
 ---@param new_value any
 ---@param is_popup_open any
 function Registry:set_changed_setting(option_obj, new_value, is_popup_open)
@@ -318,7 +321,7 @@ function Registry:get_changed_settings(mod_key, option_key)
     return self.__changed_settings
 end
 
----@param option_obj MCT.Option
+---@param option_obj mct_option
 function Registry:get_selected_setting_for_option(option_obj)
     local value
 
@@ -346,7 +349,7 @@ function Registry:get_selected_setting_for_option(option_obj)
     return value
 end
 
--- ---@param option_obj MCT.Option
+-- ---@param option_obj mct_option
 -- function Registry:get_finalized_setting_for_option(option_obj)
 --     local value = self:query_option(option_obj)
 --     return value
@@ -367,7 +370,7 @@ function Registry:clear_changed_settings_for_mod(mod_key)
     self.__changed_settings[mod_key] = nil
 end
 
----@param mod_obj MCT.Mod
+---@param mod_obj Mod
 function Registry:finalize_mod(mod_obj)
     local mod_key = mod_obj:get_key()
     local changed_options = self:get_changed_settings(mod_key)
@@ -566,7 +569,7 @@ function Registry:has_pending_changes()
 end
 
 --- TODO get cached setting!
----@param option MCT.Option
+---@param option mct_option
 function Registry:get_default_setting(option)
     return option:get_default_value()
 end

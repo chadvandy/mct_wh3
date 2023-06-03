@@ -1,3 +1,5 @@
+---@module Options
+
 -- TODO an Action Control.
 -- a button that does something when clicked.
 -- a couple of versions - a text button, and an image button.
@@ -7,7 +9,8 @@ local mct = get_mct()
 local log,logf,err,errf = get_vlog("[mct_option_action]")
 local Super = mct:get_mct_option_class()
 
----@class MCT.Option.Action : MCT.Option
+---@ignore
+---@class Action : mct_option
 local defaults = {
     _template = "ui/templates/square_medium_text_button",
 
@@ -17,8 +20,8 @@ local defaults = {
     _button_text = "",
 }
 
----@class MCT.Option.Action : MCT.Option
----@field __new fun():MCT.Option.Action
+---@class Action : mct_option
+---@field __new fun():Action
 local Action = Super:extend("MCT.Option.Action", defaults)
 
 function Action:new(mod_obj, key)
@@ -49,6 +52,7 @@ function Action:ui_change_state()
     -- do nothing
 end
 
+---@internal
 function Action:ui_create_option(dummy_parent)
     local new_uic = core:get_or_create_component("mct_action_button", self:get_uic_template(), dummy_parent)
     new_uic:SetState("active")
@@ -110,7 +114,7 @@ core:add_listener(
         local option_key = uic:GetProperty("mct_option")
         local option_obj = mod_obj:get_option_by_key(option_key)
 
-        ---@cast option_obj MCT.Option.Action
+        ---@cast option_obj Action
         option_obj:callback()
     end,
     true

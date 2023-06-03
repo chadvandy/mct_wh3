@@ -55,11 +55,11 @@
 -- end
 
 -- -- create an array control group
--- ---@type MCT.ControlGroup.Array
+-- ---@type Array
 -- local array_class = mct:get_object_type("control_groups", "array")
 
 -- local checkbox_class = mct:get_mct_option_class_subtype("checkbox")
--- ---@cast checkbox_class MCT.Option.Checkbox
+-- ---@cast checkbox_class Checkbox
 
 -- local array = array_class:new()
 -- array:set_key("array_test")
@@ -103,7 +103,7 @@
 -- local dummy = mct_mod:add_new_option("dummy", "checkbox")
 -- dummy:set_text("Dummy")
 
--- ---@type MCT.Option.Dropdown
+-- ---@type Dropdown
 -- local test = mct_mod:add_new_option("test_dropdown", "dropdown")
 -- test:add_dropdown_values({
 --     {

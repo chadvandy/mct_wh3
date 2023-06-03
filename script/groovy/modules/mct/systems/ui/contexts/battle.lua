@@ -1,8 +1,12 @@
+---@module MCT UI
+
 local mct = get_mct()
 
+---@ignore
 ---@class MCT.UI
 local ui = mct:get_ui()
 
+---@class UI_Battle
 local UI_Battle = {}
 
 function UI_Battle:init()

@@ -1,9 +1,12 @@
+---@module Controls
+
 local mct = get_mct()
 local log,logf,err,errf = get_vlog("[mct_control]")
 
 local Super = mct:get_mct_control_class()
 
----@class MCT.Control.Checkbox
+---@ignore
+---@class ControlCheckbox
 local defaults = {
     _template = "ui/templates/checkbox_toggle",
 
@@ -15,11 +18,13 @@ local defaults = {
     _type = "Checkbox",
 }
 
----@class MCT.Control.Checkbox : MCT.Control
----@field __new fun():MCT.Control.Checkbox
-local Checkbox = Super:extend("MCT.Control.Checkbox", defaults)
+---@class ControlCheckbox : Control
+---@field __new fun():ControlCheckbox
+local ControlCheckbox = Super:extend("ControlCheckbox", defaults)
 
-function Checkbox:new(mod_obj, control_key)
+--- Creates a new ControlCheckbox instance
+---@return ControlCheckbox
+function ControlCheckbox:new(mod_obj, control_key)
     local o = self:__new()
     Super.init(o, mod_obj, control_key)
     self.init(o)
@@ -27,11 +32,11 @@ function Checkbox:new(mod_obj, control_key)
     return o
 end
 
-function Checkbox:init()
+function ControlCheckbox:init()
     self:set_default_value(false)
 end
 
-function Checkbox:display(parent)
+function ControlCheckbox:display(parent)
     local template = self._template
 
     local new_uic = core:get_or_create_component(self:get_key(), template, parent)
@@ -48,7 +53,7 @@ end
 ---@param value any Tested value.
 --- @return boolean valid Returns true if the value passed is valid, false otherwise.
 --- @return boolean? valid_return If the value passed isn't valid, a second return is sent, for a valid value to replace the tested one with.
-function Checkbox:check_validity(value)
+function ControlCheckbox:check_validity(value)
     if not is_boolean(value) then
         return false, false
     end
@@ -56,7 +61,7 @@ function Checkbox:check_validity(value)
     return true
 end
 
-function Checkbox:change_state()
+function ControlCheckbox:change_state()
     local value = self:current()
     local is_locked = self:is_locked()
 
@@ -79,4 +84,4 @@ function Checkbox:change_state()
     self:get_uic():SetState(state)
 end
 
-return Checkbox
+return ControlCheckbox

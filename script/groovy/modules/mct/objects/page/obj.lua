@@ -1,4 +1,8 @@
----@class MCT.Page : Class
+---@module Page
+--- Insert page module description here Groovy
+
+---@ignore
+---@class Page
 local defaults = {
     ---@type string #The Key identifier for this page.
     _key = "",
@@ -6,22 +10,22 @@ local defaults = {
     ---@type UIComponent #The row header for this Page.
     _row_uic = nil,
 
-    ---@type MCT.Mod #The MCT.Mod this page belongs to.
+    ---@type mct_mod #The MCT.Mod this page belongs to.
     _mod_obj = nil,
 
     ---@type boolean #Whether or not this page is visible.
     _visibility = true,
 }
 
----@class MCT.Page : Class
----@field __new fun():MCT.Page
+---@class Page
+---@field __new fun():Page
 local Page = GLib.NewClass("Layout", defaults)
 
----@param mod MCT.Mod
----@return MCT.Page
+---@param mod mct_mod
+---@return Page
 function Page:new(key, mod)
     local o = self:__new()
-    ---@cast o MCT.Page
+    ---@cast o Page
     o:init(key, mod)
 
     return o

@@ -1,13 +1,16 @@
+---@module MultiPlayer
+
 --- TODO import all MP support systems into here, to keep it easier to navigate!
 
----@class MCT.Sync : Class
+---@ignore
+---@class Sync
 local defaults = {
     local_is_host = false,
 }
 
 local mct = get_mct()
 
----@class MCT.Sync : Class
+---@class Sync
 local Sync = GLib.NewClass("MCT.Sync", defaults)
 
 function Sync:new_frontend()

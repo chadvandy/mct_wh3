@@ -1,4 +1,6 @@
-
+---@ignoreFile
+--- I've set this file to be ignored since it add methods to a class that is not defined in this file.
+--- LuaAutoDoc currently requires all class methods to be defined in the same file as the class itself.
 
 --- TODO handle the formatted auto-names, ie. `mct_mod_[key]_description
 --- Function to handle an optionally localised string.

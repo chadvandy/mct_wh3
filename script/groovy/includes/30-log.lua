@@ -1,3 +1,5 @@
+---@module Class System
+
 local details = {
     _DESCRIPTION = '30 lines library for object orientation in Lua',
     _VERSION     = '30log v1.3.0',
@@ -105,8 +107,10 @@ local function new_obj(self, ...)
 	return instance
 end
 
+---@ignore
 ---@return Class
 _class = function(className, attr)
+	---@ignore
     ---@class Class
 	local c = deep_copy(attr)
 	_classes[c] = tostring(c)
@@ -220,6 +224,7 @@ end
 
 
 return
+	---@ignore
     --- Create a new class object!
     ---@param className string The new class's name.
     ---@param attr table Default attributes for this class.

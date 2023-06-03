@@ -1,14 +1,12 @@
---- The mct_mod object.
---- This holds all of the details for one mod - name, author, available options, UI appearances, etc.
---- @class MCT.Mod
-
+---@module Mod Object
 
 local mct = get_mct()
 
 local log,logf,err,errf = get_vlog("[mct]")
 
+---@ignore
 --- the table.
----@class MCT.Mod
+---@class mct_mod
 local mct_mod_defaults = {
     ---@type string The key for this mod object.
     _key = "",
@@ -19,7 +17,7 @@ local mct_mod_defaults = {
     ---@type number The last patch num viewed by the current user. Saved by MCT.
     _last_viewed_patch = 0,
 
-    ---@type table<string, MCT.Option>
+    ---@type table<string, mct_option>
     _options = {},
 
     _options_by_type = mct:get_valid_option_types_table(),
@@ -48,13 +46,13 @@ local mct_mod_defaults = {
     ---@type string The GitHub ID for this mod. Should be the username/repo format.
     _github_id = "",
 
-    ---@type table<string, MCT.Page> All of the Pages defined for this mod.
+    ---@type table<string, Page> All of the Pages defined for this mod.
     _pages = {},
 
-    ---@type table<number, MCT.Page.Settings> All of the settings pages defined for this mod.
+    ---@type table<number, Settings> All of the settings pages defined for this mod.
     _settings_pages = {},
 
-    ---@type MCT.Page.Main the Main page for this mod, the one that will open on pressing the mod header.
+    ---@type Main the Main page for this mod, the one that will open on pressing the mod header.
     _main_page = nil,
 
     _page_uics = {},
@@ -68,7 +66,7 @@ local mct_mod_defaults = {
     ---@type {value: number, name: string} The current version number of this mod. Used for Notifications, Changelogs, etc.
     _version = {0, ""},
 
-    ---@type MCT.Page.Settings #The default MCT-Created settings page. This is the one that will be used if no settings pages are defined.
+    ---@type Settings #The default MCT-Created settings page. This is the one that will be used if no settings pages are defined.
     _default_page = nil,
 
     ---@type {path:string, width:number, height:number} The info of a main image for this mod, to display where relevant. Optional w/h overrides (they may be clamped lower, but aspect ratio defined here will be kept!) 
@@ -92,13 +90,15 @@ local mct_mod_defaults = {
     _main_page_tabs = {},
 }
 
----@class MCT.Mod : Class
----@field __new fun():MCT.Mod
+--- The mct_mod object.
+--- This holds all of the details for one mod - name, author, available options, UI appearances, etc.
+---@class mct_mod
+---@field __new fun():mct_mod
 local mct_mod = GLib.NewClass("MCT_Mod", mct_mod_defaults)
 
 --- For internal use, called by the MCT Manager. Creates a new mct_mod object.
 ---@param key string The key for the new mct_mod. Has to be unique!
----@return MCT.Mod
+---@return mct_mod
 ---@see mct:register_mod
 function mct_mod:new(key)
     local o = mct_mod:__new()
@@ -115,18 +115,18 @@ function mct_mod:create_default_settings_page()
 end
 
 --- Get the default settings page
----@return MCT.Page.Settings
+---@return Settings
 function mct_mod:get_default_settings_page()
     return self._default_page
 end
 
----@param page MCT.Page.Settings
+---@param page Settings
 function mct_mod:set_default_settings_page(page)
     assert(mct:is_mct_settings_page(page), "mct_mod:set_default_settings_page() - page must be a MCT.Page.Settings object!")
     self._default_page = page
 end
 
----@return MCT.Page.Main
+---@return Main
 function mct_mod:get_main_page()
     if not self._main_page then
         -- self:set_main_page(self:create_settings_page("settings", 2))
@@ -139,20 +139,20 @@ end
 --- TODO automatically create the main page built off of a "Main Page" layout.
 function mct_mod:create_main_page()
     local Page = get_mct():get_mct_page_type("main")
-    ---@cast Page MCT.Page.Main
+    ---@cast Page Main
     Page = Page:new(self)
     
-    ---@cast Page MCT.Page.Main
+    ---@cast Page Main
     -- Page:set_title("Main Page")
     -- Page:set_description("This is the main page for this mod. It's automatically generated, and can be edited in the mod's layout file.")
 
     self._main_page = Page
 end
 
----@return MCT.Page.Settings
+---@return Settings
 function mct_mod:create_settings_page(title, num_columns)
     local PageClass = mct:get_mct_page_type("settings")
-    ---@cast PageClass MCT.Page.Settings
+    ---@cast PageClass Settings
     local Page = PageClass:new(title, self, num_columns)
 
     self._settings_pages[#self._settings_pages+1] = Page
@@ -178,7 +178,7 @@ function mct_mod:get_settings_page_with_key(key)
     -- if none found, return a default page?
 end
 
----@param page MCT.Page.Settings
+---@param page Settings
 function mct_mod:remove_settings_page(page)
     assert(mct:is_mct_settings_page(page), "mct_mod:remove_settings_page() - page must be a MCT.Page.Settings object!")
     for i, p in pairs(self._settings_pages) do
@@ -212,7 +212,7 @@ function mct_mod:get_disabled_reason()
     return self.__strDisabled
 end
 
----@param page MCT.Page.Settings
+---@param page Settings
 function mct_mod:set_main_page(page)
     -- logf("Setting main page of %s to %s", self:get_key(), page:get_key())
     -- self._main_page = page
@@ -263,10 +263,10 @@ end
 --- Create a new MCT Page that's a blank canvas to draw whatever on.
 ---@param key string The key for this Page, to get it later.
 ---@param creation_callback fun(UIC) The creation function run when the Canvas is populated.
----@return MCT.Page.Canvas
+---@return Canvas
 function mct_mod:create_canvas_page(key, creation_callback)
     local page_class = mct:get_mct_page_type("canvas")
-    ---@cast page_class MCT.Page.Canvas
+    ---@cast page_class Canvas
     local page = page_class:new(key, self, creation_callback)
 
     self._pages[key] = page
@@ -276,7 +276,7 @@ end
 
 --- Getter for any @{mct_section}s linked to this mct_mod.
 ---@param section_key string The identifier for the section searched for.
----@return MCT.Section
+---@return mct_section
 function mct_mod:get_section_by_key(section_key)
     if not is_string(section_key) then
         err("get_section_by_key() called on mct_mod ["..self:get_key().."], but the section_key supplied is not a string! Returning the last section.")
@@ -302,7 +302,7 @@ end
 -- mct_option.
 --- @param section_key string The unique identifier for this section.
 --- @param localised_name string? The localised text for this section. You can provide a direct string - "My Section Name" - or a loc key - "`loc_key_example_my_sect ion_name`". If a loc key is provided, it will check first at runtime to see if that localised text exists. If no localised_name is provided, it will default to "No Text Assigned". Can leave this and the other blank, and use @{mct_section:set_localised_text} instead.
---- @return MCT.Section # Returns the mct_section object created from this call.
+--- @return mct_section # Returns the mct_section object created from this call.
 function mct_mod:add_new_section(section_key, localised_name)
     if not is_string(section_key) then
         err("add_new_section() tried on mct_mod with key ["..self:get_key().."], but the section_key supplied was not a string! Returning false.")
@@ -333,7 +333,7 @@ end
 --- Returns a k/v table of `{option_key=option_obj}` for options that are linked to this section.
 -- Shouldn't need to be used externally.
 ---@param section_key string The unique identifier for this section.
----@return table<string, MCT.Option>
+---@return table<string, mct_option>
 function mct_mod:get_options_by_section(section_key)
     if not is_string(section_key) then
         err("get_options_by_section() called on mct_mod with key ["..self:get_key().."], but the section_key provided was not a string! Returning an empty table.")
@@ -363,7 +363,7 @@ end
 
 --- Returns a table of all "sections" within the mct_mod.
 -- These are returned as an array of tables, and each table has two indexes - ["key"] and ["txt"], for internal key and localised name, in that order.
----@return table<string, MCT.Section>
+---@return table<string, mct_section>
 function mct_mod:get_sections()
     return self._sections
 end
@@ -446,7 +446,7 @@ end
 function mct_mod:set_section_sort_function(sort_func)
     for k,v in pairs(self._pages) do
         if v.className == "Settings" then
-            ---@cast v MCT.Page.Settings
+            ---@cast v Settings
             v:set_section_sort_function(sort_func)
         end
     end
@@ -903,7 +903,7 @@ end
 --- Returns a @{mct_option} with the specific key on the mct_mod.
 ---@param option_key string The unique identifier for the desired mct_option.
 ---@param is_test boolean? Whether we're testing for an existing option with this key, to ignore the error when none are found.
----@return MCT.Option?
+---@return Option?
 function mct_mod:get_option_by_key(option_key, is_test)
     if not is_string(option_key) then
         err("Trying `get_option_by_key` for mod ["..self:get_key().."] but key provided ["..tostring(option_key).."] is not a string! Returning nil.")
@@ -922,16 +922,16 @@ end
 
 --- Creates a new @{mct_option} with the specified key, of the desired type.
 --- Use this! It calls an internal function, @{mct_option.new}, but wraps it with error checking and the like.
----@overload fun(self:MCT.Mod, self:MCT.Mod, option_key:string, option_type:"checkbox"):MCT.Option.Checkbox
----@overload fun(self:MCT.Mod, option_key:string, option_type:"dropdown"):MCT.Option.Dropdown
----@overload fun(self:MCT.Mod, option_key:string, option_type:"dropdown_game_object"):MCT.Option.SpecialDropdown
----@overload fun(self:MCT.Mod, option_key:string, option_type:"slider"):MCT.Option.Slider
----@overload fun(self:MCT.Mod, option_key:string, option_type:"text_input"):MCT.Option.TextInput
----@overload fun(self:MCT.Mod, option_key:string, option_type:"dummy"):MCT.Option.Dummy
----@overload fun(self:MCT.Mod, option_key:string, option_type:"radio_button"):MCT.Option.Dummy
+---@overload fun(self:mct_mod, self:mct_mod, option_key:string, option_type:"checkbox"):Checkbox
+---@overload fun(self:mct_mod, option_key:string, option_type:"dropdown"):Dropdown
+---@overload fun(self:mct_mod, option_key:string, option_type:"dropdown_game_object"):SpecialDropdown
+---@overload fun(self:mct_mod, option_key:string, option_type:"slider"):Slider
+---@overload fun(self:mct_mod, option_key:string, option_type:"text_input"):TextInput
+---@overload fun(self:mct_mod, option_key:string, option_type:"dummy"):Dummy
+---@overload fun(self:mct_mod, option_key:string, option_type:"radio_button"):Dummy
 ---@param option_key string The unique identifier for the new mct_option.
 ---@param option_type MCT.OptionType The type for the new mct_option.
----@return MCT.Option?
+---@return mct_option?
 function mct_mod:add_new_option(option_key, option_type)
     logf("Creating a new option %s to mod %s", option_key, self:get_key())
     -- check first to see if an option with this key already exists; if it does, return that one!
@@ -962,7 +962,7 @@ function mct_mod:add_new_option(option_key, option_type)
     end
 
     local option_class = mct:get_option_type(option_type)
-    ---@cast option_class MCT.Option
+    ---@cast option_class mct_option
     local new_option = option_class:new(self, option_key)
 
     self._options[option_key] = new_option
@@ -992,7 +992,7 @@ end
 
 function mct_mod:add_new_action(option_key, button_text, callback)
     local new_option = add_option_to_mod(self, option_key, "action")
-    ---@cast new_option MCT.Option.Action
+    ---@cast new_option Action
 
     new_option:set_text(button_text)
     new_option:set_callback(callback)
@@ -1003,7 +1003,7 @@ end
 function mct_mod:add_new_radio_button(option_key, label, tooltip, options, default)
     local option_type = "radio_button"
     local OptionClass = mct:get_option_type("radio_button")
-    ---@cast OptionClass MCT.Option.RadioButton
+    ---@cast OptionClass RadioButton
 
     local new_option = OptionClass:new(self, option_key)
     self._options[option_key] = new_option

@@ -1,3 +1,10 @@
+---@module Options
+--- Here you can create an overview for the Options module.
+--- Using "---<wbr>@see <code object> you can link to objects both for this module and other modules.\n
+--- You can insert tabs with \\t and newlines with \\n  as if they were a normal string.\n
+--- Though keep in mind that any "<" will be converted to "&amp;lt;" unless they are escaped like this "\\\<"\n
+--- Meaning that any html tags must be on the format "\\<img src="link" alt="alt text">".
+
 --- the abstract class for all individual option types (checkbox, dropdown, etc).
 --- this holds all global information that's valuable to each option type, and is then extended into the individual versions.
 
@@ -5,7 +12,7 @@
 --- TODO enable the "backend-only" type of options.
 
 ---- MCT Option Object
----@class MCT.Option
+---@class mct_option
 ---@field _template string
 
 local mct = get_mct()
@@ -13,9 +20,10 @@ local Registry = mct:get_registry()
 
 local log,logf,err,errf = get_vlog("[mct]")
 
----@class MCT.Option
+---@ignore
+---@class mct_option
 local mct_option_defaults = {
-    ---@type MCT.Mod The owning mod object.
+    ---@type mct_mod The owning mod object.
     _mod = nil,
 
     -- ---@type string The key of the owning mod object.
@@ -82,15 +90,15 @@ local mct_option_defaults = {
     _control_dock_offset = {0, 0} -- the dock position for the control
 }
 
----@class MCT.Option : Class
----@field __new fun():MCT.Option
+---@class mct_option
+---@field __new fun():mct_option
 local mct_option = GLib.NewClass("MCT.Option", mct_option_defaults)
 
 --- Overridden by subtypes!
----@return MCT.Option
+---@return mct_option
 function mct_option:new(...) end
 
----@param mod_obj MCT.Mod
+---@param mod_obj mct_mod
 ---@param option_key string
 function mct_option:init(mod_obj, option_key)
     logf("MCT.Option init on %s", option_key)
@@ -251,7 +259,7 @@ function mct_option:get_assigned_section()
 end
 
 ---- Get the @{mct_mod} object housing this option.
---- @return MCT.Mod @{mct_mod}
+--- @return mct_mod @{mct_mod}
 function mct_option:get_mod()
     return self._mod
 end
@@ -679,7 +687,7 @@ function mct_option:get_position()
 end
 
 function mct_option:is_dropdown()
-    return self:get_type() == "MCT.Option.Dropdown"
+    return self:get_type() == "Dropdown"
 end
 
 function mct_option:is_checkbox()
@@ -766,11 +774,11 @@ end
 
 ---- Internal function to set the option UIC as disabled or enabled, for read-only/mp-disabled.
 --- Use `mct_option:set_uic_locked()` for the external version of this; this just reads the uic_locked boolean and changes the UI.
---- @see mct_option:set_uic_locked
 function mct_option:ui_change_state()
     -- return self:get_wrapped_type():ui_change_state()
 end
 
+---@internal
 --- Creates the UI component in the UI. Shouldn't be used externally!
 ---@param dummy_parent UIC The parent component for the new option.
 ---@return UIC #
@@ -978,11 +986,11 @@ function mct_option:ui_create_option_base(parent, w, h)
         local default_value_text = tostring(default_value)
 
         if self:is_dropdown() then
-            ---@cast self MCT.Option.Dropdown
+            ---@cast self Dropdown
             local value = self:get_option(default_value)
             default_value_text = value.text
         elseif self:is_radiobutton() then
-            ---@cast self MCT.Option.RadioButton
+            ---@cast self RadioButton
             local option = self:get_option(default_value)
             default_value_text = option.text
         end
@@ -1085,15 +1093,15 @@ function mct_option:get_value_for_save(use_default)
 
     -- -- if we're a dropdown or text_input, we need to wrap the value in quotes
     -- if t == "MCT.Option.Dropdown" or t == "MCT.Option.TextInput" then
-    --     ---@cast self MCT.Option.Dropdown | MCT.Option.TextInput
+    --     ---@cast self Option.Dropdown | TextInput
     --     ret = f("%q", val)
     -- -- if we're a checkbox, we need to set the value to "true" or "false"
     -- elseif t == "MCT.Option.Checkbox" then
-    --     ---@cast self MCT.Option.Checkbox
+    --     ---@cast self Checkbox
     --     ret = tostring(val)
     -- -- if we're a slider, we need to use %f or %d and set the precision based on the slider's precision
     -- elseif t == "MCT.Option.Slider" then
-    --     ---@cast self MCT.Option.Slider
+    --     ---@cast self Slider
     --     ret = self:slider_get_precise_value(val, true)
     -- end
 

@@ -1,16 +1,19 @@
+---@module CommandManager
+
 --- TODO command systems
 ---@alias command_table table<string, {text:string, tooltip:string, callback:fun()}>
 
 local this_path = GLib.ThisPath(...)
 
----@class CommandManager : Class
+---@ignore
+---@class CommandManager
 local defaults = {
 
     ---@type table<string, command_table[]>
     commands = {},
 }
 
----@class CommandManager : Class
+---@class CommandManager
 local CommandManager = GLib.NewClass("CommandManager", defaults)
 
 --- TODO handle the UI and call-command systems here
@@ -29,7 +32,6 @@ function CommandManager:init()
         end
     )
 end
-
 
 
 return CommandManager

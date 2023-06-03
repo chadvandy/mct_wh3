@@ -1,13 +1,16 @@
+---@module Page
+
 --- TODO an infobox layout - description, optional image, optional link to workshop, optional patch notes or something that can be collapsed.
 
 local mct = get_mct()
 local Super = mct:get_mct_page_class()
 
----@class MCT.Page.Infobox
+---@ignore
+---@class Infobox
 local defaults = {}
 
----@class MCT.Page.Infobox : MCT.Page, Class
----@field __new fun():MCT.Page.Infobox
+---@class Infobox : Page
+---@field __new fun():Infobox
 local Infobox = Super:extend("Infobox", defaults)
 
 function Infobox:new(key, mod)

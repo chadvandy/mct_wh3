@@ -1,19 +1,23 @@
+---@module ControlGroups
+
 local mct = get_mct()
 
----@class MCT.ControlGroup : Class
+---@ignore
+---@class ControlGroup
 local defaults = {
     ---@type string #The key of this ControlGroup.
     _key = nil,
 
-    ---@type MCT.Mod #The Mod this ControlGroup belongs to.
+    ---@type mct_mod #The Mod this ControlGroup belongs to.
     _mod = nil,
 
     _controls = {},
 }
 
----@class MCT.ControlGroup : Class #The ControlGroup class is used to group Controls together.
----@field __new fun(): MCT.ControlGroup
-local ControlGroup = GLib.NewClass("MCT.ControlGroup", defaults)
+---The ControlGroup class is used to group Controls together.
+---@class ControlGroup
+---@field __new fun(): ControlGroup
+local ControlGroup = GLib.NewClass("ControlGroup", defaults)
 
 function ControlGroup:new()
     local o = self:__new()

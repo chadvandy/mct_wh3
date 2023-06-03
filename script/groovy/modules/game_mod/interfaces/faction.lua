@@ -1,3 +1,4 @@
+---@ignoreFile
 --- TODO a system of game interfaces that links the separate modify and query models of the game in one convenient package.
 
 --- TODO get the Super by doing GLib.LoadModule and returning a previously created module?

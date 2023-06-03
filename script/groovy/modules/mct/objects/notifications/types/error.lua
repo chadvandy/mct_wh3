@@ -1,9 +1,12 @@
+---@module Notification System
+---
 --- TODO a notification type that displays an error code, and a button to copy it to the clipboard, and a button to open the log file, and the option to view further details
 
 local mct = get_mct()
 local Super = mct:get_notification_class()
 
----@class MCT.Notification.Error
+---@ignore
+---@class NotificationError
 local defaults = {
     -- creation_callback = function(canvas) end,
 
@@ -14,23 +17,23 @@ local defaults = {
     _error_text = "",
 }
 
----@class MCT.Notification.Error : MCT.Notification, Class
----@field __new fun():MCT.Notification.Error
----@field new fun():MCT.Notification.Error
-local This = Super:extend("Notification.Error", defaults)
+---@class NotificationError : Notification
+---@field __new fun():NotificationError
+---@field new fun():NotificationError
+local NotificationError = Super:extend("Notification.Error", defaults)
 
-function This:set_error_text(t)
+function NotificationError:set_error_text(t)
     assert(is_string(t), "Error text must be a string!")
     self._error_text = t
 
     return self
 end
 
-function This:get_error_text()
+function NotificationError:get_error_text()
     return self._error_text
 end
 
-function This:trigger_full_popup()
+function NotificationError:trigger_full_popup()
     -- create a panel using ui/vandy_lib/popups/pretty_popup
     local panel = core:get_or_create_component("mct_notification_panel", "ui/vandy_lib/popups/pretty_popup", core:get_ui_root())
 
@@ -146,8 +149,8 @@ function This:trigger_full_popup()
 
 end
 
-function This:save_log_file()
+function NotificationError:save_log_file()
 
 end
 
-return This
+return NotificationError

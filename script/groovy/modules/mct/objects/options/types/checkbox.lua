@@ -1,3 +1,5 @@
+---@module Options
+
 ---- MCT Checkbox Wrapped Type.
 --- @class mct_checkbox
 
@@ -6,13 +8,14 @@ local log,logf,err,errf = get_vlog("[mct]")
 
 local Super = mct:get_mct_option_class()
 
----@type MCT.Option.Checkbox
+---@ignore
+---@type Checkbox
 local defaults = {
     _template = "ui/templates/checkbox_toggle"
 }
 
----@class MCT.Option.Checkbox : MCT.Option
----@field __new fun():MCT.Option.Checkbox
+---@class Checkbox : mct_option
+---@field __new fun():Checkbox
 local Checkbox = Super:extend("MCT.Option.Checkbox", defaults)
 
 function Checkbox:new(mod_obj, option_key)
@@ -113,6 +116,7 @@ function Checkbox:ui_change_state()
     -- text_uic:SetTooltipText(tt, true)
 end
 
+---@internal
 --- Creates the mct_option in the UI. Do not call externally.
 function Checkbox:ui_create_option(dummy_parent)
     local template = self:get_uic_template()

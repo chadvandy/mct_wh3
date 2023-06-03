@@ -1,8 +1,9 @@
+---@ignoreFile
 --- TODO the full independent GameMod module
 
 local sf = string.format
 
----@class GameMod : Class
+---@class GameMod
 local GameModDefaults = {
     _key = "",
     _name = "[ERROR] No name specified [ERROR]",
@@ -20,7 +21,7 @@ local GameModDefaults = {
     _played_factions = {},
 }
 
----@class GameMod : Class
+---@class GameMod
 ---@field __new fun():GameMod
 local GameMod = GLib.NewClass("GameMod", GameModDefaults)
 
@@ -124,4 +125,3 @@ end
 function GameMod:__process_first_tick()
     self:_first_tick_callback()
 end
-

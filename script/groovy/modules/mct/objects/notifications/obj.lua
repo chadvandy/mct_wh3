@@ -1,3 +1,5 @@
+---@module Notification System
+
 --- TODO the individual Notification object
 
 
@@ -8,7 +10,8 @@
     
 ]]
 
----@class MCT.Notification : Class
+---@ignore
+---@class Notification
 local defaults = {
     ---@type boolean Whether this notification will persist after this game session.
     _persistence = false,
@@ -26,8 +29,8 @@ local defaults = {
     _long_text = "",
 }
 
----@class MCT.Notification : Class
----@field __new fun():MCT.Notification
+---@class Notification
+---@field __new fun():Notification
 local Notification = GLib.NewClass("Notification", defaults)
 
 

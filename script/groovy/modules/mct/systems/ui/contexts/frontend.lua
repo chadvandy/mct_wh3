@@ -1,10 +1,13 @@
+---@module MCT UI
+
 --- TODO the systems for the frontend button, the pre-campaign specific menu, etc.
 
 local mct = get_mct()
 
----@class MCT.UI
+---@class UI_Main
 local ui = mct:get_ui()
 
+---@class UI_Frontend
 local UI_Frontend = {}
 
 function UI_Frontend:init()

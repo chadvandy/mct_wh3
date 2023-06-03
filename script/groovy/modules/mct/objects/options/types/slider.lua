@@ -1,3 +1,5 @@
+---@module Options
+
 --- TODO port to the new slider system!
 
 
@@ -6,7 +8,7 @@ local mct = get_mct()
 local log,logf,err,errf = get_vlog("[mct]")
 local Super = mct:get_mct_option_class()
 
----@type MCT.Option.Slider
+---@type Slider
 local defaults = {
     _template = {"ui/templates/cycle_button_arrow_previous", "ui/common ui/text_box", "ui/templates/cycle_button_arrow_next"},
 
@@ -19,7 +21,7 @@ local defaults = {
     }
 }
 
----@class MCT.Option.Slider : MCT.Option A Slider Object.
+---@class Slider : mct_option A Slider Object.
 local Slider = Super:extend("MCT.Option.Slider", defaults)
 
 function Slider:new(mod_obj, option_key)
@@ -429,7 +431,7 @@ core:add_listener(
         local mod_obj = mct:get_selected_mod()
         local option_key = text_input:GetProperty("mct_option")
 
-        ---@type MCT.Option.Slider
+        ---@type Slider
         local option_obj = mod_obj:get_option_by_key(option_key)
 
         if not mct:is_mct_option(option_obj) then
