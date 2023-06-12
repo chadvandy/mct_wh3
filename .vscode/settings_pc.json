@@ -1,0 +1,14 @@
+{
+    "workbench.colorCustomizations": {
+        "activityBar.background": "#342E0C",
+        "titleBar.activeBackground": "#494011",
+        "titleBar.activeForeground": "#FCFAF0"
+    },
+    "Lua.workspace.library" : [
+        "S:/modding/tw_autogen/output/wh3/"
+    ],
+    "Lua.diagnostics.disable": [
+        "lowercase-global",
+        "need-check-nil"
+    ]
+}
