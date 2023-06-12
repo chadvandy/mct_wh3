@@ -196,131 +196,235 @@ function string.endswith(str, pattern, plain)
 end
 
 
-table_printer = {
-    __tab = 0,
-    __linebreak = "\n",
-    __tabbreak = "\t",
+--- @param t table
+--- @param ignored_fields table<string>
+--- @param loop_value number
+--- @return table<string>
+local function inner_loop_fast_print(t, ignored_fields, loop_value)
+    --- @type table<any>
+	local table_string = {'{\n'}
+	--- @type table<any>
+	local temp_table = {}
+    for key, value in pairs(t) do
+        table_string[#table_string + 1] = string.rep('\t', loop_value + 1)
 
-    __str = "",
-    __last = "",
-}
-
---- TODO prevent cyclical references (add a table that's indexed by table pointers, if they're already in there don't do it again?)
---- TODO only allow fields that start with __, only allow fields that don't, etc etc etc
---- TODO exempted indices (ie. don't print anything that does or doesn't match a pattern, etc)
-
-function table_printer:newline(tab_i, override)
-    self.__tab = self.__tab + tab_i
-
-    if override then self.__tab = tab_i end
-
-    local tab = ""
-    for _ = 1, self.__tab do
-        tab = tab .. self.__tabbreak
-    end
-
-    self:concat(self.__linebreak .. tab)
-end
-
-function table_printer:handle_key(key)
-    if self.__ignored_fields[key] then
-        return false
-    end
-
-    if is_number(key) then
-        self:concatf("[%d]", key)
-    elseif is_string(key) then
-        self:concatf("[%q]", key)
-    else
-        return false
-    end
-
-    return true
-end
-
-function table_printer:handle_value(value)
-    if is_table(value) then
-        self:concatf(" = ")
-        self:handle_table(value)
-    elseif is_number(value) then
-        local int,dec = math.modf(value)
-        if dec == 0 then
-            self:concatf(" = %d,", value)
+        if type(key) == "string" then
+            table_string[#table_string + 1] = '["'
+            table_string[#table_string + 1] = key
+            table_string[#table_string + 1] = '"] = '
+        elseif type(key) == "number" then
+            table_string[#table_string + 1] = '['
+            table_string[#table_string + 1] = key
+            table_string[#table_string + 1] = '] = '
         else
-            self:concatf(" = %f,", value)
+            table_string[#table_string + 1] = '['
+            table_string[#table_string + 1] = tostring(key)
+            table_string[#table_string + 1] = '] = '
         end
-    elseif is_string(value) then
-        self:concatf(" = %q,", value)
-    elseif is_boolean(value) then
-        self:concatf(" = %s,", value and "true" or "false")
-    else
+
+		if type(value) == "table" then
+			temp_table = inner_loop_fast_print(value, ignored_fields, loop_value + 1)
+			for i = 1, #temp_table do
+				table_string[#table_string + 1] = temp_table[i]
+			end
+		elseif type(value) == "string" then
+			table_string[#table_string + 1] = '[=['
+			table_string[#table_string + 1] = value
+			table_string[#table_string + 1] = ']=],\n'
+		else
+			table_string[#table_string + 1] = tostring(value)
+			table_string[#table_string + 1] = ',\n'
+		end
+    end
+
+	table_string[#table_string + 1] = string.rep('\t', loop_value)
+    table_string[#table_string + 1] = "},\n"
+
+    return table_string
+end
+
+
+--- @param t table
+--- @param ignored_fields table<string>?
+--- @return string|boolean
+local function fast_print(t, ignored_fields)
+    if not (type(t) == "table") then
         return false
     end
 
-    return true
-end
+    --- @type table<any>
+    local table_string = {'{\n'}
+	--- @type table<any>
+	local temp_table = {}
 
-function table_printer:concatf(str, ...)
-    str = string.format(str, ...)
-    self:concat(str)
-end
+    for key, value in pairs(t) do
 
-function table_printer:remove_last()
-    local len = self.__last:len()
+        table_string[#table_string + 1] = string.rep('\t', 1)
+        if type(key) == "string" then
+            table_string[#table_string + 1] = '["'
+            table_string[#table_string + 1] = key
+            table_string[#table_string + 1] = '"] = '
+        elseif type(key) == "number" then
+            table_string[#table_string + 1] = '['
+            table_string[#table_string + 1] = key
+            table_string[#table_string + 1] = '] = '
+        else
+            --- TODO skip it somehow?
+            table_string[#table_string + 1] = '['
+            table_string[#table_string + 1] = tostring(key)
+            table_string[#table_string + 1] = '] = '
+        end
 
-    self.__str = self.__str:sub(1, -len-1)
-    self.__last = ""
-end
-
-function table_printer:concat(str)
-    if not is_string(str) then print("Not a string! " .. tostring(str)) end
-    self.__str = self.__str .. str
-
-    self.__last = str
-end
-
-function table_printer:handle_table(t, is_first)
-    if not is_table(t) then return end
-
-    self:concat("{")
-    self:newline(1)
-    for k,v in pairs(t) do
-        --- TODO if invalid value then don't save the key!!!
-        if self:handle_key(k) then
-            if self:handle_value(v) then
-                self:newline(0)
-            else
-                print("Invalid value!")
-                self:remove_last()
+        if type(value) == "table" then
+            temp_table = inner_loop_fast_print(value, ignored_fields, 1)
+            for i = 1, #temp_table do
+                table_string[#table_string + 1] = temp_table[i]
             end
+        elseif type(value) == "string" then
+            table_string[#table_string + 1] = '[=['
+            table_string[#table_string + 1] = value
+            table_string[#table_string + 1] = ']=],\n'
+        elseif type(value) == "boolean" or type(value) == "number" then
+            table_string[#table_string + 1] = tostring(value)
+            table_string[#table_string + 1] = ',\n'
         else
-            print("Invalid key!")
+            -- unsupported type, technically.
+            table_string[#table_string+1] = "nil,\n"
         end
     end
 
-    -- remove the last new line
-    self:remove_last()
+    table_string[#table_string + 1] = "}\n"
+
+    return table.concat(table_string)
+end
+
+table_print = fast_print
+
+-- table_printer = {
+--     __tab = 0,
+--     __linebreak = "\n",
+--     __tabbreak = "\t",
+
+--     __str = "",
+--     __last = "",
+-- }
+
+-- --- TODO prevent cyclical references (add a table that's indexed by table pointers, if they're already in there don't do it again?)
+-- --- TODO only allow fields that start with __, only allow fields that don't, etc etc etc
+-- --- TODO exempted indices (ie. don't print anything that does or doesn't match a pattern, etc)
+
+-- function table_printer:newline(tab_i, override)
+--     self.__tab = self.__tab + tab_i
+
+--     if override then self.__tab = tab_i end
+
+--     local tab = ""
+--     for _ = 1, self.__tab do
+--         tab = tab .. self.__tabbreak
+--     end
+
+--     self:concat(self.__linebreak .. tab)
+-- end
+
+-- function table_printer:handle_key(key)
+--     if self.__ignored_fields[key] then
+--         return false
+--     end
+
+--     if is_number(key) then
+--         self:concatf("[%d]", key)
+--     elseif is_string(key) then
+--         self:concatf("[%q]", key)
+--     else
+--         return false
+--     end
+
+--     return true
+-- end
+
+-- function table_printer:handle_value(value)
+--     if is_table(value) then
+--         self:concatf(" = ")
+--         self:handle_table(value)
+--     elseif is_number(value) then
+--         local int,dec = math.modf(value)
+--         if dec == 0 then
+--             self:concatf(" = %d,", value)
+--         else
+--             self:concatf(" = %f,", value)
+--         end
+--     elseif is_string(value) then
+--         self:concatf(" = %q,", value)
+--     elseif is_boolean(value) then
+--         self:concatf(" = %s,", value and "true" or "false")
+--     else
+--         return false
+--     end
+
+--     return true
+-- end
+
+-- function table_printer:concatf(str, ...)
+--     str = string.format(str, ...)
+--     self:concat(str)
+-- end
+
+-- function table_printer:remove_last()
+--     local len = self.__last:len()
+
+--     self.__str = self.__str:sub(1, -len-1)
+--     self.__last = ""
+-- end
+
+-- function table_printer:concat(str)
+--     if not is_string(str) then print("Not a string! " .. tostring(str)) end
+--     self.__str = self.__str .. str
+
+--     self.__last = str
+-- end
+
+-- function table_printer:handle_table(t, is_first)
+--     if not is_table(t) then return end
+
+--     self:concat("{")
+--     self:newline(1)
+--     for k,v in pairs(t) do
+--         --- TODO if invalid value then don't save the key!!!
+--         if self:handle_key(k) then
+--             if self:handle_value(v) then
+--                 self:newline(0)
+--             else
+--                 print("Invalid value!")
+--                 self:remove_last()
+--             end
+--         else
+--             print("Invalid key!")
+--         end
+--     end
+
+--     -- remove the last new line
+--     self:remove_last()
     
-    if is_first then
-        self:newline(0, true)
-        self:concat("}")
-    else
-        self:newline(-1)
-        self:concat("},")
-    end
-end
+--     if is_first then
+--         self:newline(0, true)
+--         self:concat("}")
+--     else
+--         self:newline(-1)
+--         self:concat("},")
+--     end
+-- end
 
---- takes a table and returns the formatted text of its entirety
-function table_printer:print(t, ignored_fields)
-    if not is_table(t) then return false end
+-- --- takes a table and returns the formatted text of its entirety
+-- function table_printer:print(t, ignored_fields)
+--     if not is_table(t) then return false end
 
-    self.__str = ""
-    self.__last = ""
-    self.__tab = 0
+--     self.__str = ""
+--     self.__last = ""
+--     self.__tab = 0
 
-    self.__ignored_fields = is_table(ignored_fields) and ignored_fields or {}
+--     self.__ignored_fields = is_table(ignored_fields) and ignored_fields or {}
 
-    self:handle_table(t, true)
+--     self:handle_table(t, true)
 
-    return self.__str
-end
+--     return self.__str
+-- end

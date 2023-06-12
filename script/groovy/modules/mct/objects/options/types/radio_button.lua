@@ -1,4 +1,3 @@
---- TODO
 --- Select one of a collection of buttons!
 
 local mct = get_mct()

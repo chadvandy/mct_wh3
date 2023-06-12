@@ -103,9 +103,10 @@ function UI_Main:listen_fullscreen_panels()
                 if self.fullscreen_panels[context.string] then
                     -- log("This frontend menu is fullscreen, locking MCT")
                     button:SetState("inactive")
-                    button:SetTooltipText("Cannot use MCT while this panel is opened", true)
+                    button:SetTooltipText(common.get_localised_string("mct_mct_mod_title") ..  "||[[col:red]]Cannot use MCT while this panel is opened[[/col]]", false)
                 else
                     button:SetState("active")
+                    button:SetTooltipText(common.get_localised_string("mct_mct_mod_title"), false)
                 end
             end,
             true
@@ -296,7 +297,7 @@ end
 function UI_Main:set_selected_mod(mod_obj, page)
 
     local left_panel = self.left_panel
-    local scrollbar = find_uicomponent(left_panel, "left_panel_listview", "vslider")
+    local scrollbar = find_uicomponent(left_panel, "list_view", "vslider")
     local handle = find_uicomponent(scrollbar, "handle")
     local handle_x,handle_y = handle:Position()
 
@@ -651,7 +652,7 @@ function UI_Main:create_top_bar(w, h, xo, yo)
     how_it_works_button:SetImagePath("ui/skins/default/icon_question_mark.png", 0)
 
     do
-        if mct:context() == "campaign" then
+        if mct:in_campaign_registry() then
             how_it_works_txt:SetStateText("Campaign Registry")
             how_it_works_button:SetTooltipText("Campaign Registry||MCT is loaded in a .\n\n [[img:mct_campaign]][[/img]]Campaign-specific settings changed in this campaign will have their settings changed in the save, but it won't change for other campaigns or the main menu.\n [[img:mct_registry]]Global settings will have their value changed everywhere.", true)
         else
@@ -665,6 +666,19 @@ function UI_Main:create_top_bar(w, h, xo, yo)
     self:create_profiles_button(buttons_holder)
     self:create_help_button(buttons_holder)
     self:create_save_button(buttons_holder)
+end
+
+function UI_Main:set_how_it_works(text, tooltip)
+    local how_it_works_txt = find_uicomponent(self.top_bar, "how_it_works_holder", "how_it_works_txt")
+    if not is_uicomponent(how_it_works_txt) then return end
+
+    if is_string(text) then
+        how_it_works_txt:SetStateText(text)
+    end
+
+    if is_string(tooltip) then
+       how_it_works_txt:SetTooltipText(tooltip, true)
+    end
 end
 
 -- edit currently_loaded text based on mct:get_mode_text
@@ -755,7 +769,8 @@ function UI_Main:create_left_panel(ew, eh, xo, yo)
     left_panel:SetDockOffset(xo, -yo)
     left_panel:SetCanResizeWidth(true) left_panel:SetCanResizeHeight(true)
     left_panel:Resize(ew - xo* 0.5, eh)
-    -- left_panel_bg:SetVisible(true)
+
+    left_panel:SetImagePath("ui\\skins\\default\\parchment_divider_flush.png")
 
     local w,h = left_panel:Dimensions()
 
@@ -765,6 +780,11 @@ function UI_Main:create_left_panel(ew, eh, xo, yo)
     left_panel_title:Resize(w, left_panel_title:Height())
     left_panel_title:SetDockingPoint(2)
     left_panel_title:SetDockOffset(0,0)
+
+    local filter_holder = core:get_or_create_component("search_filter_holder", "ui/campaign ui/script_dummy", left_panel)
+    filter_holder:Resize(w - 10, 68)
+    filter_holder:SetDockingPoint(7)
+    filter_holder:SetDockOffset(5, -5)
 
     local expand_collapse_button = core:get_or_create_component("button_expand_collapse_mct_mods", "ui/templates/square_small_toggle_plus_minus", left_panel)
     expand_collapse_button:SetDockingPoint(1)
@@ -779,30 +799,49 @@ function UI_Main:create_left_panel(ew, eh, xo, yo)
     expand_collapse_txt:Resize(left_panel_title:Width() * 0.6, expand_collapse_txt:Height())
 
     -- create listview
-    local left_panel_listview = core:get_or_create_component("left_panel_listview", "ui/groovy/layouts/listview", left_panel)
-    left_panel_listview:SetCanResizeWidth(true) left_panel_listview:SetCanResizeHeight(true)
-    left_panel_listview:Resize(w, h-left_panel_title:Height() - expand_collapse_button:Height() - 10) 
-    left_panel_listview:SetDockingPoint(2)
-    left_panel_listview:SetDockOffset(0, left_panel_title:Height() + expand_collapse_button:Height() + 10)
+    local lview = core:get_or_create_component("list_view", "ui/groovy/layouts/listview", left_panel)
+    lview:SetCanResizeWidth(true) lview:SetCanResizeHeight(true)
+    lview:Resize(w, h-left_panel_title:Height() - expand_collapse_button:Height() - filter_holder:Height() - 15) 
+    lview:SetDockingPoint(2)
+    lview:SetDockOffset(0, left_panel_title:Height() + expand_collapse_button:Height() + 5)
 
-    -- local w,h = left_panel_listview:Dimensions()
+    lview:SetCurrentStateImageOpacity(0, 0)
 
-    local lclip = find_uicomponent(left_panel_listview, "list_clip")
-    -- lclip:SetCanResizeWidth(true) lclip:SetCanResizeHeight(true)
-    -- lclip:SetDockingPoint(1)
-    -- lclip:Resize(w,h)
+    local search_text = core:get_or_create_component("search_text", "ui/groovy/text/fe_default", filter_holder)
+    search_text:Resize(filter_holder:Width() * 0.18, filter_holder:Height())
+    local tw,th = search_text:TextDimensionsForText("Filter:")
+    search_text:SetDockingPoint(4)
+    search_text:SetDockOffset(0, 0)
+    search_text:SetTextVAlign("centre")
+    search_text:SetTextHAlign("left")
+    search_text:SetStateText("Filter:")
 
+    search_text:Resize(tw, th)
+
+    local search_how_it_works = core:get_or_create_component("how_it_works_button", "ui/groovy/buttons/icon_button", search_text)
+    search_how_it_works:SetDockingPoint(8)
+    search_how_it_works:SetDockOffset(0, search_text:Height() * 0.5 + 12)
+    search_how_it_works:SetImagePath("ui/skins/default/icon_question_mark.png", 0)
+    search_how_it_works:SetTooltipText("Filter||Filter the mods by the text you provide in the box.\nThe filter will check mod titles, mod authors, and the titles of the pages within an individual mod. The currently selected mod is excluded from filter results!", true)
+
+    local search_box = core:get_or_create_component("search_box", "ui/mct/search_text_box", filter_holder)
+    search_box:Resize(filter_holder:Width() - search_text:Width() - 30, search_box:Height())
+    search_box:SetDockingPoint(4)
+    search_box:SetDockOffset(5 + search_text:Width(), 0)
+
+    local clear_filter_button = core:get_or_create_component("clear_filter_button", "ui/templates/square_small_button", search_box)
+    clear_filter_button:SetImagePath("ui/skins/default/icon_cross_square.png", 0)
+    clear_filter_button:SetDockingPoint(6 + 9)
+    clear_filter_button:SetDockOffset(0, 0)
+    clear_filter_button:SetTooltipText("Clear Filter", true)
+
+    find_uicomponent(clear_filter_button, "icon"):SetVisible(false)
+
+    local lclip = find_uicomponent(lview, "list_clip")
     local lbox = find_uicomponent(lclip, "list_box")
-    -- lbox:SetCanResizeWidth(true) lbox:SetCanResizeHeight(true)
-    -- lbox:SetDockingPoint(1)
-    -- lbox:Resize(w,h)
 
-    -- local vslider = find_uicomponent(left_panel_listview, "vslider")
-    -- local x,y = vslider:GetDockOffset()
-    -- vslider:SetDockOffset(0, y)
-    
     -- save the listview and list box into the obj
-    self.mod_row_list_view = left_panel_listview
+    self.mod_row_list_view = lview
     self.mod_row_list_box = lbox
     self.left_panel = left_panel
 end
@@ -843,6 +882,60 @@ function UI_Main:set_title(mod_obj)
     local title = mod_obj:get_title()
 
     mod_title:SetStateText(title)
+end
+
+function UI_Main:apply_filter_to_mod_list()
+    local search_box = find_uicomponent(self.left_panel, "search_filter_holder", "search_box")
+    local search_str = search_box:GetStateText()
+
+    -- if not is_string(search_str) then
+    --     search_str = ""
+    -- end
+
+    -- loop through all mods and set their visibility based on search string.
+    local mods = mct:get_mods()
+    for mod_key, mod_obj in pairs(mods) do
+        local main_row = mod_obj:get_row_uic()
+        local mod_vis = mct:get_selected_mod_name() == mod_key -- if the mod is selected, then it's visible.
+        local any_page_vis = false
+
+        -- if the search string is empty, show all mods
+        if search_str == "" then
+            mod_vis = true
+        else
+            -- if the search string is not empty, check if the mod's title contains the search string
+            local mod_title = mod_obj:get_title()
+            local mod_author = mod_obj:get_author()
+
+            if string.find(mod_title, search_str) then
+                mod_vis = true
+            end
+
+            if string.find(mod_author, search_str) then
+                mod_vis = true
+            end
+
+            -- search to see if the search string applies to any setting page title.
+            local pages = mod_obj:get_settings_pages()
+
+            for i, page in ipairs(pages) do
+                local page_vis = mod_vis == true -- if the mod is visible, then all pages are visible. 
+                local page_title = page:get_key()
+
+                if not page_vis and string.find(page_title, search_str) then
+                    any_page_vis = true
+                    page_vis = true
+                end
+
+                local page_uic = page:get_row_uic()
+                page_uic:SetVisible(page_vis)
+            end
+
+            if any_page_vis then mod_vis = true end
+        end
+
+        main_row:SetVisible(mod_vis)
+    end
 end
 
 --- TODO move this all into option_obj:populate() which is a Super called by the individual types!
@@ -1004,6 +1097,19 @@ core:add_listener(
     true
 )
 
+core:add_listener(
+    "mct_dropdown_box_option_selected",
+    "ContextTriggerEvent",
+    function(context)
+        return context.string:starts_with("mct_mod_filter_changed")
+    end,
+    function(context)
+        -- apply a filter to the mod list!
+        UI_Main:apply_filter_to_mod_list()
+    end,
+    true
+)
+
 --- TODO move this into Command Manager
 --- TODO hook this up more situationally
 core:add_listener(
@@ -1016,6 +1122,9 @@ core:add_listener(
         local command_string = context.string
         local command_context = string.match(command_string, "([^|]-)|")
         local command_key = string.match(command_string, "|([^|]-)|")
+
+        -- this isn't a context command we're tracking.
+        if not command_context or not command_key then return end
 
         --- TODO multiple params, accept a table here
         local param = string.match(command_string, "|([^|]-)$")

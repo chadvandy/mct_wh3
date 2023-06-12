@@ -1,4 +1,8 @@
 --- TODO the systems for the frontend button, the pre-campaign specific menu, etc.
+--- TODO Next Campaign Registry hook-in
+--- TODO add MCT to the main menu bar on initial load
+--- TODO add MCT to the list of buttons in new campaign
+--- TODO add MCT somewhere in MP campaign. Next to "Game Settings", but trigger popup?
 
 local mct = get_mct()
 
@@ -11,6 +15,52 @@ function UI_Frontend:init()
     core:add_ui_created_callback(function()
         self:ui_created()
     end)
+
+    self._bInCampaign = false
+
+    -- listen for frontend transitions into campaigns
+    core:add_listener(
+        "MCT_NewCampaignSP",
+        "FrontendScreenTransition",
+        function(context)
+            return context.string == "campaign_select_new"
+        end,
+        function(context)
+            self._bInCampaign = true
+            -- self:campaign_new()
+        end,
+        true
+    )
+
+    --- TODO toss in Sync calls here.
+    core:add_listener(
+        "MCT_NewCampaignMP",
+        "FrontendScreenTransition",
+        function(context)
+            return context.string == "mp_grand_campaign"
+        end,
+        function(context)
+            self._bInCampaign = true
+            -- self:campaign_new()
+        end,
+        true
+    )
+
+    -- listen for frontend transitions out of campaigns
+    core:add_listener(
+        "MCT_ExitCampaign",
+        "FrontendScreenTransition",
+        function(context)
+            local s = context.string
+            return self._bInCampaign and
+                (s ~= "campaign_select_new" and s ~= "mp_grand_campaign")
+        end,
+        function(context)
+            self._bInCampaign = false
+            -- self:campaign_exit()
+        end,
+        true
+    )
 end
 
 function UI_Frontend:ui_created()
@@ -22,7 +72,7 @@ function UI_Frontend:ui_created()
     existing:SetVisible(false)
 
     get_mct():create_main_holder(bar)
-    get_mct():get_sync():new_frontend()
+    get_mct():get_sync():init_frontend()
 end
 
 function UI_Frontend:listeners()

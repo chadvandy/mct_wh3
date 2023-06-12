@@ -49,9 +49,15 @@ local mct_option_defaults = {
     _is_locked = false,
     _lock_reason = "",
 
-    -- --- TODO rework these.
-    -- _local_only = false,
-    -- _mp_disabled = false,
+    _mp_settings = {
+        ---@type boolean #Whether this option is completely disabled in MP. If true, the option will be hidden in the UI, unless a forced value and disabled reason are provided - then the option will be shown, but locked.
+        is_disabled = false,
+        forced_value = nil,
+        disabled_reason = "",
+
+        ---@type "unique"|"shared" #Whether this campaign-specific option is unique per user, or shared between all users. 
+        sync_state = "shared",
+    },
 
     -- the UICs linked to this option (the option + the txt)
     _uics = {},
@@ -94,8 +100,8 @@ function mct_option:new(...) end
 ---@param option_key string
 function mct_option:init(mod_obj, option_key)
     logf("MCT.Option init on %s", option_key)
-    assert(mct:verify_key(self, option_key))
     
+    self._key = option_key
     self._mod = mod_obj
     self._text = option_key
 
@@ -168,12 +174,6 @@ end
 ---@return any
 function mct_option:is_global() return self._is_global end
 
----- Read whether this mct_option is available in multiplayer.
---- @return boolean mp_disabled Whether this mct_option is available in multiplayer or completely disabled.
-function mct_option:get_mp_disabled()
-    return self._mp_disabled
-end
-
 --- Set whether this MCT Option is locked (ie. can't be edited). If the option is_global, this lock will be everywhere, otherwise it will be saved within the campaign.
 ---@param is_locked boolean? True for locked, false for unlocked. Defaults to true.
 ---@param lock_reason string? The localised text explaining why it's locked.
@@ -201,20 +201,47 @@ function mct_option:set_context_specific(context)
 
 end
 
+
+
+---- Read whether this mct_option is available in multiplayer.
+--- @return boolean #Whether this mct_option is available in multiplayer or completely disabled.
+function mct_option:get_mp_disabled()
+    return self._mp_settings.is_disabled
+end
+
 ---- Set whether this mct_option exists for MP campaigns.
 --- If set to true, this option is invisible for MP and completely untracked by MCT.
----@param enabled boolean True for MP-disabled, false to MP-enabled
-function mct_option:set_mp_disabled(enabled)
-    if is_nil(enabled) then
-        enabled = true
+---@param disabled boolean #True for MP-disabled, false for MP-enabled
+---@param forced_value any? #If set, this value will be forced for this option in MP.
+---@param disabled_reason string? #The localised text explaining why it's disabled.
+function mct_option:set_mp_disabled(disabled, forced_value, disabled_reason)
+    if is_nil(disabled) then
+        disabled = true
     end
 
-    if not is_boolean(enabled) then
+    if not is_boolean(disabled) then
         err("set_mp_disabled() called for mct_mod ["..self:get_key().."], but the enabled argument passed is not a boolean or nil!")
         return false
     end
 
-    self._mp_disabled = enabled
+    if not is_string(disabled_reason) and disabled then
+        disabled_reason = "Disabled in multiplayer."
+    end
+
+    self._mp_settings.is_disabled = disabled
+
+    if disabled == true then
+        if not is_nil(forced_value) then
+            local ok = self:check_validity(forced_value)
+            if not ok then forced_value = nil end
+        end
+
+        self._mp_settings.forced_value = forced_value
+
+        if is_string(disabled_reason) then
+            self._mp_settings.disabled_reason = disabled_reason
+        end
+    end
 end
 
 --- Read whether this mct_option can be edited or not at the moment.
@@ -464,7 +491,7 @@ function mct_option:load_data(data_table)
         self._lock_reason = (is_string(data_table.lock_reason) and data_table.lock_reason) or ""
     else
         -- if we're not in campaign, we need to set the finalized setting to the global value.
-        if mct:context() ~= "campaign" then
+        if not mct:in_campaign_registry() then
             local g_setting = data_table.global_value
 
             if is_nil(data_table.global_value) then
@@ -930,7 +957,7 @@ function mct_option:ui_create_option_base(parent, w, h)
             )
         else
             local this_tt = "Campaign-Specific Option||This option is campaign-specific."
-            if mct:context() == "campaign" then
+            if mct:in_campaign_registry() then
                 this_tt = this_tt .. " Changing this option will only change it for this ongoing campaign."
             else
                 this_tt = this_tt .. " Changing this opption will only change it for the next campaign you start, and won't apply to any ongoing campaigns."
@@ -1156,7 +1183,7 @@ end
 --- Used when finalizing settings.
 --- @return any val The value set as the selected_setting for this mct_option.
 function mct_option:get_selected_setting()
-    return Registry:get_selected_setting_for_option(self)
+    return (Registry:get_selected_setting_for_option(self))
 end
 
 ---- Getter for the available values for this mct_option - true/false for checkboxes, different stuff for sliders/dropdowns/etc.

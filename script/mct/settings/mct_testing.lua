@@ -1,12 +1,44 @@
 
--- local mct = get_mct()
+local mct = get_mct()
 
--- local mct_mod = mct:register_mod("mct-demo")
+local mct_mod = mct:register_mod("mct-demo")
 
--- mct_mod:set_title("MCT Demo")
--- mct_mod:set_author("Groovy")
+mct_mod:set_title("MCT Demo")
+mct_mod:set_author("Groovy")
 
 -- mct_mod:add_new_action("test_action", "Test Action", function() out("Test Action!") end)
+
+local mp_test = mct_mod:add_new_option("test_mp", "checkbox")
+mp_test:set_text("Are you the host?")
+mp_test:set_default_value(false)
+mp_test:set_is_global(false)
+
+mct_mod:add_new_multibox("test_multibox", "Test Multibox", "Testing!", {
+    {
+        key = "option_1",
+        text = "Option 1",
+        tooltip = "Option 1 Tooltip",
+        default_value = false,
+    },
+    {
+        key = "option_2",
+        text = "Option 2",
+        tooltip = "Option 2 Tooltip",
+        default_value = true,
+    },
+    {
+        key = "option_3",
+        text = "Option 3",
+        tooltip = "Option 3 Tooltip",
+        default_value = true,
+    },
+    {
+        key = "option_4",
+        default_value = true,
+        text = "Option 4",
+        tooltip = "Option 4 Tooltip",
+    }
+})
 
 
 -- local CGClass = mct:get_control_group_class()
@@ -17,8 +49,14 @@
 -- test_cg:set_key("test_cg")
 -- test_cg:set_mod(mct_mod)
 
+-- local vert = test_cg:add_holder(1, "vertical", 1, 5, 5)
+
 -- ---@type MCT.Control.Checkbox
 -- local test_chbx = ChbxClass:new(mct_mod, "test_chbx")
+-- local test_chbx2 = ChbxClass:new(mct_mod, "test_chbx2")
+
+-- test_cg:add_control(test_chbx)
+-- test_cg:add_control(test_chbx2)
 
 -- local new_tab = mct_mod:add_main_page_tab(
 --     "Demo Tab",

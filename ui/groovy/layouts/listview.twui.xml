@@ -532,6 +532,7 @@
 			</states>
 			<LayoutEngine
 				type="List"
+				horizontal_alignment="Center"
 				sizetocontent="false">
 			</LayoutEngine>
 		</list_box>

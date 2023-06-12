@@ -29,7 +29,6 @@ end
 
 
 function Page:init(key, mod)
-    -- assert(get_mct():verify_key(self, key))
     self._key = key
     self._mod_obj = mod
 end

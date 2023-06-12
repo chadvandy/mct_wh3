@@ -107,18 +107,14 @@
 				<component_image
 					this="DF6C6D6A-B632-D47E-74D506634950F7DA"
 					uniqueguid="DF6C6D6A-B632-D47E-74D506634950F7DA"
-					imagepath="ui/vandy_lib/icons/ellipsis_horizontal.png"/>
+					imagepath="ui/skins/default/ellipsis_vertical.png"/>
 			</componentimages>
 			<states>
 				<active
 					this="632AA958-174E-25FE-19043519C7B8CB4F"
 					name="active"
-					width="20"
-					height="20"
-					font_m_size="12"
-					font_m_colour="#FFFFE0FF"
-					font_m_leading="3"
-					fontcat_name="ingame_text_warhammer3"
+					width="10"
+					height="40"
 					interactive="true"
 					uniqueguid="632AA958-174E-25FE-19043519C7B8CB4F"
 					stateeditordisplaypos="40.00,24.00">
@@ -127,10 +123,11 @@
 							this="FFCA6420-3E6E-E1F1-10695B0B83011EC7"
 							uniqueguid="FFCA6420-3E6E-E1F1-10695B0B83011EC7"
 							componentimage="DF6C6D6A-B632-D47E-74D506634950F7DA"
-							width="20"
-							height="20"
-							dockpoint="Center"
-							shader_name="normal_t0"/>
+							width="10"
+							height="40"
+							colour="#FFFFFFFF"
+							shader_name="normal_t0"
+							dockpoint="Center"/>
 					</imagemetrics>
 					<transitionmap>
 						<transition
@@ -142,14 +139,9 @@
 				<down
 					this="AF512B3C-89F6-FFCA-304EF6154FA7A378"
 					name="down"
-					width="20"
-					height="20"
-					font_m_size="12"
-					font_m_colour="#FFFFE0FF"
-					font_m_leading="3"
-					fontcat_name="ingame_text_warhammer3"
+					width="10"
+					height="40"
 					interactive="true"
-					textshadervars="0.30,0.00,0.00,0.00"
 					uniqueguid="AF512B3C-89F6-FFCA-304EF6154FA7A378"
 					stateeditordisplaypos="145.00,219.00">
 					<imagemetrics>
@@ -158,8 +150,8 @@
 							uniqueguid="1454925A-CA33-15D5-C61D7417D832B8CB"
 							componentimage="DF6C6D6A-B632-D47E-74D506634950F7DA"
 							offset="0.00,3.00"
-							width="20"
-							height="20"
+							width="10"
+							height="40"
 							colour="#6E6E6EFF"
 							dockpoint="Center"
 							dock_offset="0.00,3.00"/>
@@ -176,12 +168,8 @@
 				<down_off
 					this="167BB6F4-6DF8-AED7-E42318386410AB1E"
 					name="down_off"
-					width="20"
-					height="20"
-					font_m_size="12"
-					font_m_colour="#FFFFE0FF"
-					font_m_leading="3"
-					fontcat_name="ingame_text_warhammer3"
+					width="10"
+					height="40"
 					interactive="true"
 					uniqueguid="167BB6F4-6DF8-AED7-E42318386410AB1E"
 					stateeditordisplaypos="40.00,319.00">
@@ -190,8 +178,8 @@
 							this="86D045AB-6A36-BE2B-E1CFED4B1048417E"
 							uniqueguid="86D045AB-6A36-BE2B-E1CFED4B1048417E"
 							componentimage="DF6C6D6A-B632-D47E-74D506634950F7DA"
-							width="20"
-							height="20"
+							width="10"
+							height="40"
 							dockpoint="Center"/>
 					</imagemetrics>
 					<transitionmap>
@@ -204,14 +192,9 @@
 				<hover
 					this="2A3FBD50-B378-D2EC-9AC78B820E33F320"
 					name="hover"
-					width="20"
-					height="20"
-					font_m_size="12"
-					font_m_colour="#FFFFE0FF"
-					font_m_leading="3"
-					fontcat_name="ingame_text_warhammer3"
+					width="10"
+					height="40"
 					interactive="true"
-					textshadervars="0.30,0.00,0.00,0.00"
 					uniqueguid="2A3FBD50-B378-D2EC-9AC78B820E33F320"
 					stateeditordisplaypos="137.00,126.00">
 					<imagemetrics>
@@ -219,8 +202,8 @@
 							this="597A73D5-2BC8-D22F-978A3E94E686113F"
 							uniqueguid="597A73D5-2BC8-D22F-978A3E94E686113F"
 							componentimage="DF6C6D6A-B632-D47E-74D506634950F7DA"
-							width="20"
-							height="20"
+							width="10"
+							height="40"
 							dockpoint="Center"
 							shadertechnique_vars="5.00,0.00,0.00,0.00"
 							shader_name="brighten_t0"/>
@@ -239,12 +222,8 @@
 				<inactive
 					this="D67F3EC1-DE91-9603-1A8CEF4CA6E2F479"
 					name="inactive"
-					width="20"
-					height="20"
-					font_m_size="12"
-					font_m_colour="#FFFFE0FF"
-					font_m_leading="3"
-					fontcat_name="ingame_text_warhammer3"
+					width="10"
+					height="40"
 					interactive="true"
 					disabled="true"
 					uniqueguid="D67F3EC1-DE91-9603-1A8CEF4CA6E2F479">
@@ -253,8 +232,9 @@
 							this="1E839E55-63FB-CBA3-097D7508E5548520"
 							uniqueguid="1E839E55-63FB-CBA3-097D7508E5548520"
 							componentimage="DF6C6D6A-B632-D47E-74D506634950F7DA"
-							width="20"
-							height="20"
+							width="10"
+							height="40"
+							shader_name="normal_t0"
 							colour="#FFFFFF46"
 							dockpoint="Center"/>
 					</imagemetrics>

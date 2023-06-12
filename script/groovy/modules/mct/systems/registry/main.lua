@@ -13,7 +13,9 @@
 local mct = get_mct()
 local log,logf,err,errf = get_vlog("[mct_registry]")
 
----@class MCT.Registry : Class
+local table_print = table_print
+
+---@class MCT.RegistryManager : Class
 local defaults = {
     ---@type string The path to the appdata/scripts/ folder
     appdata_path = string.gsub(common.get_appdata_screenshots_path(), "screenshots\\$", "scripts\\"),
@@ -37,19 +39,105 @@ local defaults = {
 
     __campaigns = {},
 
+    __registries = {
+        Global = {},
+    },
+
+    --- The Registry for the "next campaign"; created when the player is in a New Campaign menu, for singleplayer and multiplayer. 
+    __next_campaign = {},
+
     __main_file = "mct_registry.lua",
     __profiles_file = "mct_profiles.lua",
 }
 
----@class MCT.Registry : Class
-local Registry = GLib.NewClass("MCT.Registry", defaults)
+---@class MCT.RegistryManager : Class
+local RegistryManager = GLib.NewClass("MCT.RegistryManager", defaults)
 
+---@alias RegistryData table<string, {settings: table, data: table}>
 
-function Registry:get_file_path(append)
+---@class MCT.RegistryInstance : Class
+---@field data {saved_mods: RegistryData} #The data of all MCT mods and such for this registry.
+---@field __new fun():MCT.RegistryInstance
+--- Individual Registry, for various purposes - holding global values, campaign-specific values each campaign, profile values, etc.
+local Registry = GLib.NewClass(
+    "MCT.Registry",
+    {
+        data = {
+            saved_mods = {},
+        },
+    }
+)
+
+function Registry:new()
+    local o = self:__new()
+    return o
+end
+
+function Registry:initialize_mod_data(mod_key)
+    self.data.saved_mods[mod_key] = {
+        settings = {},
+        data = {},
+    }
+end
+
+function Registry:get_mod_data(mod_key)
+    return self.data.saved_mods[mod_key]
+end
+
+function Registry:get_setting_data(mod_key, option_key)
+    -- return self:get_mod_data(mod_key)
+    if not self:get_mod_data(mod_key) then
+        return
+    end
+
+    return self:get_mod_data(mod_key).settings[option_key]
+end
+
+function Registry:clear_mod_data(mod_key)
+    self.data.saved_mods[mod_key] = nil
+end
+
+function Registry:is_mod_data_empty(mod_key)
+    return next(self:get_mod_data(mod_key).settings) == nil
+end
+
+function Registry:save_setting_value(mod_key, option_key, value)
+    if not self:get_mod_data(mod_key) then
+        self:initialize_mod_data(mod_key)
+    end
+
+    self:get_setting_data(mod_key, option_key).value = value
+end
+
+function Registry:clear_setting_value(mod_key, option_key)
+    if not self:get_mod_data(mod_key) then
+        return
+    end
+
+    if not self:get_setting_data(mod_key, option_key) then
+        return
+    end
+
+    self:get_setting_data(mod_key, option_key).value = nil
+end
+
+function Registry:get_setting_value(mod_key, option_key)
+    if not self:get_mod_data(mod_key) then
+        return
+    end
+
+    if not self:get_setting_data(mod_key, option_key) then
+        return
+    end
+
+    return self:get_setting_data(mod_key, option_key).value
+end
+
+function RegistryManager:get_file_path(append)
     return self.appdata_path .. append
 end
 
-function Registry:new_profile(name)
+function RegistryManager:new_profile(name)
     local Profile = mct:get_profile_class()
 
     local p = Profile:new(name)
@@ -58,117 +146,16 @@ function Registry:new_profile(name)
     return p
 end
 
-function Registry:get_profile(name)
+function RegistryManager:get_profile(name)
     return self.__saved_profiles[name]
 end
 
-function Registry:get_profiles()
+function RegistryManager:get_profiles()
     return self.__saved_profiles
 end
 
---- @param t table
---- @param ignored_fields table<string>
---- @param loop_value number
---- @return table<string>
-local function inner_loop_fast_print(t, ignored_fields, loop_value)
-    --- @type table<any>
-	local table_string = {'{\n'}
-	--- @type table<any>
-	local temp_table = {}
-    for key, value in pairs(t) do
-        table_string[#table_string + 1] = string.rep('\t', loop_value + 1)
 
-        if type(key) == "string" then
-            table_string[#table_string + 1] = '["'
-            table_string[#table_string + 1] = key
-            table_string[#table_string + 1] = '"] = '
-        elseif type(key) == "number" then
-            table_string[#table_string + 1] = '['
-            table_string[#table_string + 1] = key
-            table_string[#table_string + 1] = '] = '
-        else
-            table_string[#table_string + 1] = '['
-            table_string[#table_string + 1] = tostring(key)
-            table_string[#table_string + 1] = '] = '
-        end
-
-		if type(value) == "table" then
-			temp_table = inner_loop_fast_print(value, ignored_fields, loop_value + 1)
-			for i = 1, #temp_table do
-				table_string[#table_string + 1] = temp_table[i]
-			end
-		elseif type(value) == "string" then
-			table_string[#table_string + 1] = '[=['
-			table_string[#table_string + 1] = value
-			table_string[#table_string + 1] = ']=],\n'
-		else
-			table_string[#table_string + 1] = tostring(value)
-			table_string[#table_string + 1] = ',\n'
-		end
-    end
-
-	table_string[#table_string + 1] = string.rep('\t', loop_value)
-    table_string[#table_string + 1] = "},\n"
-
-    return table_string
-end
-
-
---- @param t table
---- @param ignored_fields table<string>?
---- @return string|boolean
-local function fast_print(t, ignored_fields)
-    if not (type(t) == "table") then
-        return false
-    end
-
-    --- @type table<any>
-    local table_string = {'{\n'}
-	--- @type table<any>
-	local temp_table = {}
-
-    for key, value in pairs(t) do
-
-        table_string[#table_string + 1] = string.rep('\t', 1)
-        if type(key) == "string" then
-            table_string[#table_string + 1] = '["'
-            table_string[#table_string + 1] = key
-            table_string[#table_string + 1] = '"] = '
-        elseif type(key) == "number" then
-            table_string[#table_string + 1] = '['
-            table_string[#table_string + 1] = key
-            table_string[#table_string + 1] = '] = '
-        else
-            --- TODO skip it somehow?
-            table_string[#table_string + 1] = '['
-            table_string[#table_string + 1] = tostring(key)
-            table_string[#table_string + 1] = '] = '
-        end
-
-        if type(value) == "table" then
-            temp_table = inner_loop_fast_print(value, ignored_fields, 1)
-            for i = 1, #temp_table do
-                table_string[#table_string + 1] = temp_table[i]
-            end
-        elseif type(value) == "string" then
-            table_string[#table_string + 1] = '[=['
-            table_string[#table_string + 1] = value
-            table_string[#table_string + 1] = ']=],\n'
-        elseif type(value) == "boolean" or type(value) == "number" then
-            table_string[#table_string + 1] = tostring(value)
-            table_string[#table_string + 1] = ',\n'
-        else
-            -- unsupported type, technically.
-            table_string[#table_string+1] = "nil,\n"
-        end
-    end
-
-    table_string[#table_string + 1] = "}\n"
-
-    return table.concat(table_string)
-end
-
-function Registry:port_forward()
+function RegistryManager:port_forward()
     logf("Attempting to port forward.")
     --- read the old Profiles
     local old_file = io.open("mct_save.lua", "r")
@@ -231,7 +218,7 @@ function Registry:port_forward()
 
     local close_file = io.open("mct_save.lua", "w+")
     if close_file then
-        close_file:write("return " .. table_printer:print(content))
+        close_file:write("return " .. table_print(content))
         close_file:close()
     end
 
@@ -239,7 +226,7 @@ function Registry:port_forward()
 end
 
 ---@param profile MCT.Profile
-function Registry:apply_profile(profile)
+function RegistryManager:apply_profile(profile)
     local settings = profile:get_overridden_settings()
 
     for mod_key, mod_data in pairs(settings) do
@@ -255,11 +242,16 @@ function Registry:apply_profile(profile)
     end
 end
 
+function RegistryManager:initialize_unsaved_changes_registry()
+    local UnsavedChanges = Registry:new()
+
+end
+
 --- TODO discard the "changed settings" system, or at least tweak it so it's just used to inform the script about changed settings or something along those lines.
 
 --- TODO handle held-saved-settings (cached settings) somehow someway
 
-function Registry:clear_changed_settings()
+function RegistryManager:clear_changed_settings()
     self.__changed_settings = {}
 end
 
@@ -267,7 +259,7 @@ end
 ---@param option_obj MCT.Option
 ---@param new_value any
 ---@param is_popup_open any
-function Registry:set_changed_setting(option_obj, new_value, is_popup_open)
+function RegistryManager:set_changed_setting(option_obj, new_value, is_popup_open)
     if not mct:is_mct_option(option_obj) then
         GLib.Error("set_changed_setting() called, but the option provided ["..tostring(option_obj).."] is not a valid MCT.Option!")
         return false
@@ -307,7 +299,7 @@ function Registry:set_changed_setting(option_obj, new_value, is_popup_open)
     end
 end
 
-function Registry:get_changed_settings(mod_key, option_key)
+function RegistryManager:get_changed_settings(mod_key, option_key)
     if is_string(mod_key) then
         if is_string(option_key) then
             return self.__changed_settings[mod_key] and self.__changed_settings[mod_key][option_key] and self.__changed_settings[mod_key][option_key]["new_value"]
@@ -319,7 +311,9 @@ function Registry:get_changed_settings(mod_key, option_key)
 end
 
 ---@param option_obj MCT.Option
-function Registry:get_selected_setting_for_option(option_obj)
+---@return any #The selected setting for the option
+---@return "Changed"|"Saved"|"Default" #Where this setting was retrieved from.
+function RegistryManager:get_selected_setting_for_option(option_obj)
     local value
 
     -- logf("Getting selected setting for option %s.%s", option_obj:get_mod_key(), option_obj:get_key())
@@ -343,7 +337,7 @@ function Registry:get_selected_setting_for_option(option_obj)
 
     logf("Selected setting for option %s.%s is %s. Retrieved from %s Settings.", option_obj:get_mod_key(), option_obj:get_key(), tostring(value), pos)
 
-    return value
+    return value, pos
 end
 
 -- ---@param option_obj MCT.Option
@@ -363,12 +357,22 @@ end
 --     return retval
 -- end
 
-function Registry:clear_changed_settings_for_mod(mod_key)
+function RegistryManager:clear_changed_settings_for_mod(mod_key)
     self.__changed_settings[mod_key] = nil
 end
 
+--- Startpoint into creating the "next campaign registry" for a new campaign in the frontend.
+--- Creates a blank registry, assigns all campaign-specific settings to it with their current values.
+function RegistryManager:initialize_next_campaign_registry()
+    local next_campaign_registry = {
+        saved_mods = {},
+    }
+
+
+end
+
 ---@param mod_obj MCT.Mod
-function Registry:finalize_mod(mod_obj)
+function RegistryManager:apply_changes_for_mod(mod_obj)
     local mod_key = mod_obj:get_key()
     local changed_options = self:get_changed_settings(mod_key)
     if not is_table(changed_options) then
@@ -377,7 +381,7 @@ function Registry:finalize_mod(mod_obj)
         return false
     end
 
-    logf("Finalizing settings for mod [%s]", mod_key)
+    logf("Applying changed settings for mod [%s]", mod_key)
 
     for option_key, option_data in pairs(changed_options) do
         local option_obj = mod_obj:get_option_by_key(option_key)
@@ -399,7 +403,7 @@ function Registry:finalize_mod(mod_obj)
 end
 
 ---@return thread
-function Registry:get_save_co()
+function RegistryManager:get_save_co()
     if not type(self.__save_co) == "thread" then
         self.__save_co = coroutine.create(
             function(all_mods)
@@ -452,7 +456,7 @@ function Registry:get_save_co()
                     local this = t.global.saved_mods[mod_key]
                     local this_campaign
             
-                    if mct:context() == "campaign" then
+                    if mct:in_campaign_registry() then
                         if not t.campaigns[self.__this_campaign].saved_mods[mod_key] then
                             t.campaigns[self.__this_campaign].saved_mods[mod_key] = {
                                 options = {},
@@ -474,7 +478,7 @@ function Registry:get_save_co()
             
             
                         -- if this option is global, or it's campaign-specific but we're outside a campaign, save its changes in the global registry
-                        if option_obj:is_global() or not option_obj:is_global() and mct:context() ~= "campaign" then
+                        if option_obj:is_global() or (not option_obj:is_global() and not mct:in_campaign_registry()) then
                             logf("\t\t\tSaving this option as global!")
                             this.options[option_key].setting = option_obj:get_finalized_setting(true)
             
@@ -487,7 +491,7 @@ function Registry:get_save_co()
                         else
                             -- otherwise, this option is campaign-specific and we're in a campaign
                             -- this.options[option_key].setting = 
-                            if mct:context() == "campaign" and not option_obj:is_global() then
+                            if mct:in_campaign_registry() and not option_obj:is_global() then
                                 this_campaign.options[option_key] = {
                                     setting = option_obj:get_finalized_setting(true),
                                 }
@@ -505,7 +509,7 @@ function Registry:get_save_co()
                     this.data.userdata = mod_obj:get_userdata()
                 end
             
-                local t_str = table_printer:print(t)
+                local t_str = table_print(t)
             
                 local file = io.open(self:get_file_path(self.__main_file), "w+")
                 ---@cast file file*
@@ -517,7 +521,7 @@ function Registry:get_save_co()
     return self.__save_co
 end
 
-function Registry:save(is_read)
+function RegistryManager:save(is_read)
     -- only force a save if we have changes, AND we're not calling save from the read functions.
     local has_changes = self:has_pending_changes()
     local force_save = has_changes and not is_read
@@ -528,7 +532,7 @@ function Registry:save(is_read)
         ---@diagnostic disable-next-line: undefined-field
         if not cm.model_is_created then
             logf("Trying to save Registry in campaign before the model is created! Delaying until first tick.")
-            cm:add_first_tick_callback(function() Registry:save(is_read) end)
+            cm:add_first_tick_callback(function() RegistryManager:save(is_read) end)
             return
         end
     end
@@ -536,7 +540,7 @@ function Registry:save(is_read)
     local mods = mct:get_mods()
 
     for key, mod in pairs(mods) do
-        self:finalize_mod(mod)
+        self:apply_changes_for_mod(mod)
         logf("Finalized mod [%s]", key)
     end
 
@@ -554,25 +558,25 @@ function Registry:save(is_read)
 end
 
 --- TODO combine with :finalize()!
-function Registry:local_only_finalize(...)
+function RegistryManager:local_only_finalize(...)
 
 end
 
 --- Check whether there are any pending changes.
 ---@return boolean PendingSettingChanges Whether there's pending changes in the currently selected profile (ie. changing a single setting or more).
-function Registry:has_pending_changes()
+function RegistryManager:has_pending_changes()
     logf("Testing if Registry has pending changes: " .. tostring(next(self.__changed_settings) ~= nil))
     return (next(self.__changed_settings) ~= nil)
 end
 
 --- TODO get cached setting!
 ---@param option MCT.Option
-function Registry:get_default_setting(option)
+function RegistryManager:get_default_setting(option)
     return option:get_default_value()
 end
 
 --- Save every option from every mod into this profile with a default (or cached) setting
-function Registry:save_all_mods()
+function RegistryManager:save_all_mods()
     -- if not self.__data then self.__data = {} end
     
     --- TODO don't do this here or at all tbh
@@ -583,7 +587,7 @@ function Registry:save_all_mods()
             -- logf("checking option %s", option_key)
             -- if not self.__data[mod_key][option_key] then
                 
-                local value = Registry:get_default_setting(option)
+                local value = RegistryManager:get_default_setting(option)
                 -- logf("saving [%s].__mods[%s][%s] = %s", self.__data, mod_key, option_key, tostring(value))
                 -- self.__data[mod_key][option_key] = value
             -- end
@@ -591,7 +595,7 @@ function Registry:save_all_mods()
     end
 end
 
-function Registry:read_profiles_file()
+function RegistryManager:read_profiles_file()
     local file = io.open(self:get_file_path(self.__profiles_file), "r+")
 
     if not file then
@@ -616,7 +620,7 @@ function Registry:read_profiles_file()
     end
 end
 
-function Registry:save_profiles_file()
+function RegistryManager:save_profiles_file()
     local file = io.open(self:get_file_path(self.__profiles_file), "w+")
     if not file then return end
 
@@ -635,7 +639,7 @@ function Registry:save_profiles_file()
 
     local t
     local ok, errmsg = pcall(function()
-        t = table_printer:print(self.__saved_profiles, {["class"] = true})
+        t = table_print(self.__saved_profiles, {["class"] = true})
     end) if not ok then err(errmsg) end
     ModLog("Saved profiles string is " .. tostring(t))
 
@@ -644,7 +648,7 @@ function Registry:save_profiles_file()
 end
 
 --- TODO split this up into a few sub functions so it's easier to call externally
-function Registry:read_registry_file()
+function RegistryManager:read_registry_file()
     local file = io.open(self:get_file_path(self.__main_file), "r+")
 
     if not file then self:save_file_with_defaults() return self:read_registry_file() end
@@ -700,10 +704,9 @@ function Registry:read_registry_file()
 end
 
 --- TODO load new Profiles file
-function Registry:load()
-    logf("MCT Load is being called.")
-
+function RegistryManager:load()
     local con = mct:context()
+    logf("MCT Load is being called in context %s.", con)
 
     -- self:save_all_mods()
     if not cm then
@@ -737,7 +740,7 @@ function Registry:load()
 
         cm:add_saving_game_callback(function(context) self:save_game(context) end)
 
-    elseif mct:context() == "campaign" and not cm then
+    elseif con == "campaign_battle" then
         --- We're in a campaign battle - pull the info from the campaign registry!
         self:load_campaign_battle()
 
@@ -755,7 +758,7 @@ function Registry:load()
     end
 end
 
-function Registry:save_file_with_defaults()
+function RegistryManager:save_file_with_defaults()
     local file = io.open(self:get_file_path(self.__main_file), "w+")
     ---@cast file file*
     
@@ -798,14 +801,13 @@ function Registry:save_file_with_defaults()
     end
 
 
-    local t_str = table_printer:print(t)
+    local t_str = table_print(t)
 
     file:write("return " .. t_str)
     file:close()
-
 end
 
-function Registry:save_registry_file()
+function RegistryManager:save_registry_file()
     local old = io.open(self:get_file_path(self.__main_file), "r+")
     ---@cast old file*
     local str = old:read("*a")
@@ -930,22 +932,22 @@ function Registry:save_registry_file()
         this.data.userdata = mod_obj:get_userdata()
     end
 
-    local et = os.clock() - st
+    -- local et = os.clock() - st
 
-    local st2 = os.clock()
+    -- local st2 = os.clock()
     -- local t_str = table_printer:print(t)
-    local t_str = fast_print(t)
+    local t_str = table_print(t)
     -- local t_str = GLib.Json.encode(t)
-    local et2 = os.clock() - st2
+    -- local et2 = os.clock() - st2
 
-    local st3 = os.clock()
+    -- local st3 = os.clock()
 
     local file = io.open(self:get_file_path(self.__main_file), "w+")
     ---@cast file file*
     file:write("return " .. t_str)
     file:close()
 
-    local et3 = os.clock() - st3
+    -- local et3 = os.clock() - st3
 
     -- logf("Time to build table: %dms", et * 1000)
     -- logf("Time to build string: %dms", et2 * 1000)
@@ -953,17 +955,17 @@ function Registry:save_registry_file()
 end
 
 --- TODO save the info of this campaign into a registry file so we can get the options and settings in the Frontend easily.
-function Registry:save_campaign_info()
+function RegistryManager:save_campaign_info()
 
 end
 
 --- TODO read the info of a previously saved campaign savegame
-function Registry:read_campaign_info(save_index)
+function RegistryManager:read_campaign_info(save_index)
 
 end
 
 --- if we're in a campaign battle, read the SVR String to get the campaign's index and pull the settings therein.
-function Registry:load_campaign_battle()
+function RegistryManager:load_campaign_battle()
     local this_campaign_str = core:get_svr():LoadString("mct_registry_campaign_index")
     local this_campaign_index = tonumber(this_campaign_str)
     if not this_campaign_index then
@@ -996,7 +998,7 @@ end
 
 --- save the settings info into this campaign's SaveGameHeader
 --- for the first time through, this will save the last-used settings in the frontend.
-function Registry:save_game(context)
+function RegistryManager:save_game(context)
     local t = {
         ["saved_mods"] = {}, 
         ["this_campaign_index"] = self.__this_campaign
@@ -1036,7 +1038,7 @@ function Registry:save_game(context)
 end
 
 --- load the settings for this campaign into memory
-function Registry:load_game(context)
+function RegistryManager:load_game(context)
     local registry_data = cm:load_named_value("mct_registry", {}, context)
     ---@cast registry_data table
 
@@ -1074,10 +1076,7 @@ function Registry:load_game(context)
     end
 
     self.__this_campaign = registry_data.this_campaign_index
-
-    --- TODO isn't this going to decriment the index if you load an old save?
-        --- ^ isn't that the point?
     core:get_svr():SaveString("mct_registry_campaign_index", tostring(self.__this_campaign))
 end
 
-return Registry
+return RegistryManager

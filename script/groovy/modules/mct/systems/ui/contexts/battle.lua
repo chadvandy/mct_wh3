@@ -1,6 +1,5 @@
 local mct = get_mct()
 
----@class MCT.UI
 local ui = mct:get_ui()
 
 local UI_Battle = {}

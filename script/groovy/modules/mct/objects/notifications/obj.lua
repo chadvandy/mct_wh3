@@ -44,7 +44,7 @@ function Notification:new(key, type, title, text, is_persistent, is_immediate)
 end
 
 function Notification:init(key, type, title, text, is_persistent, is_immediate)
-    -- assert(get_mct():verify_key(self, key))
+
 
 end
 

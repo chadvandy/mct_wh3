@@ -31,7 +31,7 @@ local function bind(f, v)
 end
 
 local default_filter = function() return true end
-	
+
 local function deep_copy(t, dest, aType)
 	t = t or {}
 	local r = dest or {}

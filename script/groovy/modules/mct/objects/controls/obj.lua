@@ -51,7 +51,7 @@ function Control:init(mod_obj, key)
     self._key = key
 end
 
-function Control:display()
+function Control:display(parent)
 
 end
 

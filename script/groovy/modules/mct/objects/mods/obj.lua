@@ -4,6 +4,7 @@
 
 
 local mct = get_mct()
+local table_print = table_print
 
 local log,logf,err,errf = get_vlog("[mct]")
 
@@ -83,6 +84,9 @@ local mct_mod_defaults = {
     ---@type boolean Whether or not the mod's subrows are open. If true, the mod's subrows are visible.
     __bRowsOpen = false,
 
+    ---@type boolean #Whether this mod is visible. If false, the mod will not be shown in the MCT UI.
+    __bIsVisible = true,
+
     ---@type boolean #Whether the subrows were automatically opened on clicking the main page. If true, the subrows will be closed when the main page is closed.
     __bRowsOpenedOnMainPage = false,
 
@@ -102,8 +106,8 @@ local mct_mod = GLib.NewClass("MCT_Mod", mct_mod_defaults)
 ---@see mct:register_mod
 function mct_mod:new(key)
     local o = mct_mod:__new()
-    assert(mct:verify_key(o, key))
 
+    o._key = key
     o:create_default_settings_page()
 
     return o
@@ -218,7 +222,7 @@ function mct_mod:set_main_page(page)
     -- self._main_page = page
 end
 
----@param version_num number #The version number, as a number. 1.0.0 would be 1, probably. 
+---@param version_num number|string #The version number, as a number. 1.0.0 would be 1, probably. 
 ---@param version_name string #The version name, as a string. 1.0.0 would be "1.0.0".
 function mct_mod:set_version(version_num, version_name)
     -- assert(is_string(version_name), string.format("Version [%s] for mod %s is not a string!", tostring(version_name), self:get_key()))
@@ -469,7 +473,7 @@ end
 ---@return table|string
 function mct_mod:get_userdata(as_string)
     if is_boolean(as_string) and as_string == true then
-        return table_printer:print(self._userdata)
+        return table_print(self._userdata)
     end
 
     return self._userdata
@@ -996,6 +1000,27 @@ function mct_mod:add_new_action(option_key, button_text, callback)
 
     new_option:set_text(button_text)
     new_option:set_callback(callback)
+
+    return new_option
+end
+
+---comment
+---@param control_key string
+---@param label string
+---@param tooltip string
+---@param options MCT.Control.Multibox.Option[]
+---@return MCT.Option.Multibox
+function mct_mod:add_new_multibox(control_key, label, tooltip, options)
+    local new_option = add_option_to_mod(self, control_key, "multibox")
+    ---@cast new_option MCT.Option.Multibox
+
+    new_option:set_text(label)
+    if is_string(tooltip) then
+        new_option:set_tooltip_text(tooltip)
+    end
+
+    new_option:set_options(options)
+    -- new_option:set_default_value(default)
 
     return new_option
 end

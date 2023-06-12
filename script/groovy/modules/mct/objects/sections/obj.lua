@@ -67,9 +67,9 @@ local mct_section = GLib.NewClass("MCT.Section", mct_section_defaults)
 ---@param mod MCT.Mod The mct_mod this section is a member of.
 function mct_section.new(key, mod)
     local o = mct_section:__new()
-    
-    assert(mct:verify_key(o, key))
 
+
+    o._key = key
     o._mod = mod
 
     return o
@@ -556,6 +556,13 @@ end
 ---@return table<string,MCT.Option> #The table of all the options in this mct_section.
 function mct_section:get_options()
     return self._options
+end
+
+---comment
+---@param optional string?
+---@param default any
+function test(default, optional)
+
 end
 
 return mct_section

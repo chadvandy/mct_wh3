@@ -81,7 +81,7 @@ function mct:get_version_number()
     return self._version[1]
 end
 
----@return MCT.Registry
+---@return MCT.RegistryManager
 function mct:get_registry() return self:get_system("registry") end
 ---@return MCT.NotificationSystem
 function mct:get_notification_system() return self:get_system("notifications") end
@@ -417,9 +417,10 @@ function mct:finalize(bForce)
         -- check if it's the host
         if cm:get_local_faction_name(true) == cm:get_saved_value("mct_host") then
             -- Send finalized settings to all clients (including self to keep models synced!)
-            self:get_sync():distribute_finalized_settings()
+            self:get_sync():distribute_finalized_settings_from_host()
             self:get_registry():local_only_finalize(true)
         else
+            -- Save any local changes for the local player, for non-synced settings.
             self:get_registry():local_only_finalize(false)
         end
     else
@@ -511,11 +512,16 @@ function mct:context(test_context)
         if bm:get_campaign_key() == "" then
             return "battle"
         else
-            return "campaign"
+            return "campaign_battle"
         end
     end
 
     return "frontend"
+end
+
+--- Test if MCT has loaded a campaign registry.
+function mct:in_campaign_registry()
+    return self:context() == "campaign" or self:context() == "campaign_battle"
 end
 
 --- Get the current state of MCT - if we're in view or edit mode, which registry is open, and what parts of that registry are available.
@@ -577,15 +583,15 @@ end
 ---@return boolean #False if invalid, true if fine.
 ---@return string? #Error message!
 function mct:verify_key(obj, key)
-    -- Search for spaces.
-    if key:match("%s") then
-        return false, "You can't have any spaces in MCT keys!"
-    end
+    -- -- Search for spaces.
+    -- if key:match("%s") then
+    --     return false, "You can't have any spaces in MCT keys!"
+    -- end
 
-    -- Search for anything BUT (^) alphanumeric characters (%w), hyphens (-) and underscores (_)
-    if key:match("[^%w_%-]") then
-        return false, "Only alphanumerical characters, hyphens and underscores are allowed in MCT keys!"
-    end
+    -- -- Search for anything BUT (^) alphanumeric characters (%w), hyphens (-) and underscores (_)
+    -- if key:match("[^%w_%-]") then
+    --     return false, "Only alphanumerical characters, hyphens and underscores are allowed in MCT keys!"
+    -- end
 
     obj._key = key
     return true
