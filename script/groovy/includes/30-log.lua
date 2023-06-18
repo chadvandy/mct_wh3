@@ -114,8 +114,9 @@ _class = function(className, attr)
 	c.__tostring = baseMt.__tostring
 	c.__call = baseMt.__call
 
-	---@param self Class
-	---@return Class
+	---@generic T
+	---@param self T
+	---@return T
 	c.__new = function(self)
 		local o = new_obj(self)
 		return o

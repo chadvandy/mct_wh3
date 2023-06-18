@@ -9,6 +9,14 @@
 ]]
 
 --- TODO view/edit, campaign/global, client/host
+--- TODO unique Registry objects loaded for each registry, call/edit them as needed
+    -- TODO a "for next campaign" registry
+    -- "default values" registry
+    -- "global values" registry, for hotkeys and such
+    -- "saved values" for each campaign
+    -- unsaved changes
+
+local this_path = GLib.ThisPath(...)
 
 local mct = get_mct()
 local log,logf,err,errf = get_vlog("[mct_registry]")
@@ -53,85 +61,8 @@ local defaults = {
 ---@class MCT.RegistryManager : Class
 local RegistryManager = GLib.NewClass("MCT.RegistryManager", defaults)
 
----@alias RegistryData table<string, {settings: table, data: table}>
 
----@class MCT.RegistryInstance : Class
----@field data {saved_mods: RegistryData} #The data of all MCT mods and such for this registry.
----@field __new fun():MCT.RegistryInstance
---- Individual Registry, for various purposes - holding global values, campaign-specific values each campaign, profile values, etc.
-local Registry = GLib.NewClass(
-    "MCT.Registry",
-    {
-        data = {
-            saved_mods = {},
-        },
-    }
-)
-
-function Registry:new()
-    local o = self:__new()
-    return o
-end
-
-function Registry:initialize_mod_data(mod_key)
-    self.data.saved_mods[mod_key] = {
-        settings = {},
-        data = {},
-    }
-end
-
-function Registry:get_mod_data(mod_key)
-    return self.data.saved_mods[mod_key]
-end
-
-function Registry:get_setting_data(mod_key, option_key)
-    -- return self:get_mod_data(mod_key)
-    if not self:get_mod_data(mod_key) then
-        return
-    end
-
-    return self:get_mod_data(mod_key).settings[option_key]
-end
-
-function Registry:clear_mod_data(mod_key)
-    self.data.saved_mods[mod_key] = nil
-end
-
-function Registry:is_mod_data_empty(mod_key)
-    return next(self:get_mod_data(mod_key).settings) == nil
-end
-
-function Registry:save_setting_value(mod_key, option_key, value)
-    if not self:get_mod_data(mod_key) then
-        self:initialize_mod_data(mod_key)
-    end
-
-    self:get_setting_data(mod_key, option_key).value = value
-end
-
-function Registry:clear_setting_value(mod_key, option_key)
-    if not self:get_mod_data(mod_key) then
-        return
-    end
-
-    if not self:get_setting_data(mod_key, option_key) then
-        return
-    end
-
-    self:get_setting_data(mod_key, option_key).value = nil
-end
-
-function Registry:get_setting_value(mod_key, option_key)
-    if not self:get_mod_data(mod_key) then
-        return
-    end
-
-    if not self:get_setting_data(mod_key, option_key) then
-        return
-    end
-
-    return self:get_setting_data(mod_key, option_key).value
-end
+RegistryManager.RegistryInstance = GLib.LoadModule("obj", this_path .. "instance/")
 
 function RegistryManager:get_file_path(append)
     return self.appdata_path .. append
@@ -243,7 +174,7 @@ function RegistryManager:apply_profile(profile)
 end
 
 function RegistryManager:initialize_unsaved_changes_registry()
-    local UnsavedChanges = Registry:new()
+    local UnsavedChanges = self.RegistryInstance:new()
 
 end
 

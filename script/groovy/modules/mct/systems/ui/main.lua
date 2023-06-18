@@ -666,6 +666,31 @@ function UI_Main:create_top_bar(w, h, xo, yo)
     self:create_profiles_button(buttons_holder)
     self:create_help_button(buttons_holder)
     self:create_save_button(buttons_holder)
+    self:create_multiplayer_holder()
+end
+
+--- Create the Multiplayer Holder UIComponent
+--- It handles mulitplayer information (host/etc), and allows for importing/exporting settings in frontend.
+function UI_Main:create_multiplayer_holder()
+    local bar = self.top_bar
+
+    local holder = core:get_or_create_component("multiplayer_holder", "ui/campaign ui/script_dummy", bar)
+    holder:SetDockingPoint(4)
+    holder:SetDockOffset(12, 0)
+    holder:Resize(holder:Width(), bar:Height() * .95)
+
+    --- TODO host name
+    local name_tx = core:get_or_create_component("txt_host_name", "ui/groovy/text/fe_bold", holder)
+    name_tx:SetDockingPoint(2)
+    name_tx:SetStateText("Host's name goes here")
+    name_tx:Resize(holder:Width() * .9, name_tx:Height())
+
+    --- TODO import/export settings for campaign
+    local share_settings = core:get_or_create_component("button_share_settings", "ui/templates/square_small_button", holder)
+    share_settings:SetDockingPoint(8)
+    share_settings:SetDockOffset(0, -10)
+
+    share_settings:SetTooltipText("Share Settings||Either import or export the settings depending on who you are!", true)
 end
 
 function UI_Main:set_how_it_works(text, tooltip)
@@ -829,7 +854,7 @@ function UI_Main:create_left_panel(ew, eh, xo, yo)
     search_box:SetDockingPoint(4)
     search_box:SetDockOffset(5 + search_text:Width(), 0)
 
-    local clear_filter_button = core:get_or_create_component("clear_filter_button", "ui/templates/square_small_button", search_box)
+    local clear_filter_button = core:get_or_create_component("button_mct_clear_filter", "ui/templates/square_small_button", search_box)
     clear_filter_button:SetImagePath("ui/skins/default/icon_cross_square.png", 0)
     clear_filter_button:SetDockingPoint(6 + 9)
     clear_filter_button:SetDockOffset(0, 0)
@@ -1054,6 +1079,23 @@ core:add_listener(
     end,
     function(context)
         UI_Main:open_frame()
+    end,
+    true
+)
+
+core:add_listener(
+    "mct_clear_filter",
+    "ComponentLClickUp",
+    function(context)
+        return context.string == "button_mct_clear_filter"
+    end,
+    function(context)
+        local btn = UIComponent(context.component)
+        -- parent is the text box.
+        local parent = UIComponent(btn:Parent())
+        parent:SetStateText("")
+
+        UI_Main:apply_filter_to_mod_list()
     end,
     true
 )

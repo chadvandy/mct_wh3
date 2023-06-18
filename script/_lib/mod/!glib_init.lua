@@ -144,12 +144,13 @@ function GLib.init()
 end
 
 --- Create a new Class object, which can be used to simulate OOP systems.
+---@generic T
 ---@param key string The name of the Class object.
----@param params table? An optional table of defaults to assign to the Class and every Instance of it.
----@return Class
-function GLib.NewClass(key, params)
-    if not params then params = {} end
-    return new_class(key, params)
+---@param obj `T` An optional table of defaults to assign to the Class and every Instance of it.
+---@return T
+function GLib.NewClass(key, obj)
+    if not obj then obj = {} end
+    return new_class(key, obj)
 end
 
 --- Create a new Log Object.
