@@ -44,9 +44,22 @@ local defaults = {
 ---@class MCT.Registry : Class
 local Registry = GLib.NewClass("MCT.Registry", defaults)
 
+---@return file*
+function Registry:get_file(file_name, open_style)
+    local appdata_path = self.appdata_path
+    local game_path = ""
 
-function Registry:get_file_path(append)
-    return self.appdata_path .. append
+    local file = io.open(appdata_path .. file_name, open_style)
+    if is_nil(file) then
+        -- we were unable to get a file handle - default to the game path
+        file = io.open(game_path .. file_name, open_style)
+    end
+
+    if is_nil(file) then
+        errf("Trying to get file %s but it doesn't exist in either the appdata path or the game path!", file_name)
+    end
+
+    return file
 end
 
 function Registry:new_profile(name)
@@ -403,8 +416,8 @@ function Registry:get_save_co()
     if not type(self.__save_co) == "thread" then
         self.__save_co = coroutine.create(
             function(all_mods)
-                local old = io.open(self:get_file_path(self.__main_file), "r+")
-                ---@cast old file*
+                local old = self:get_file(self.__main_file, "r+")
+
                 local str = old:read("*a")
                 local t = loadstring(str)()
             
@@ -507,8 +520,7 @@ function Registry:get_save_co()
             
                 local t_str = table_printer:print(t)
             
-                local file = io.open(self:get_file_path(self.__main_file), "w+")
-                ---@cast file file*
+                local file = self:get_file(self.__main_file, "w+")
                 file:write("return " .. t_str)
                 file:close()
             end
@@ -592,7 +604,7 @@ function Registry:save_all_mods()
 end
 
 function Registry:read_profiles_file()
-    local file = io.open(self:get_file_path(self.__profiles_file), "r+")
+    local file = self:get_file(self.__profiles_file, "r+")
 
     if not file then
         return
@@ -617,7 +629,7 @@ function Registry:read_profiles_file()
 end
 
 function Registry:save_profiles_file()
-    local file = io.open(self:get_file_path(self.__profiles_file), "w+")
+    local file = self:get_file(self.__profiles_file, "w+")
     if not file then return end
 
     ModLog("Saved profiles table is " .. tostring(self.__saved_profiles))
@@ -645,7 +657,7 @@ end
 
 --- TODO split this up into a few sub functions so it's easier to call externally
 function Registry:read_registry_file()
-    local file = io.open(self:get_file_path(self.__main_file), "r+")
+    local file = self:get_file(self.__main_file, "r+")
 
     if not file then self:save_file_with_defaults() return self:read_registry_file() end
 
@@ -756,8 +768,7 @@ function Registry:load()
 end
 
 function Registry:save_file_with_defaults()
-    local file = io.open(self:get_file_path(self.__main_file), "w+")
-    ---@cast file file*
+    local file = self:get_file(self.__main_file, "w+")
     
     logf("Saving registry file with defaults.")
 
@@ -806,8 +817,7 @@ function Registry:save_file_with_defaults()
 end
 
 function Registry:save_registry_file()
-    local old = io.open(self:get_file_path(self.__main_file), "r+")
-    ---@cast old file*
+    local old = self:get_file(self.__main_file, "r+")
     local str = old:read("*a")
     local t = loadstring(str)()
 
@@ -940,7 +950,7 @@ function Registry:save_registry_file()
 
     local st3 = os.clock()
 
-    local file = io.open(self:get_file_path(self.__main_file), "w+")
+    local file = self:get_file(self.__main_file, "w+")
     ---@cast file file*
     file:write("return " .. t_str)
     file:close()
@@ -971,7 +981,7 @@ function Registry:load_campaign_battle()
         return false
     end
 
-    local file = io.open(self:get_file_path(self.__main_file), "r+")
+    local file = self:get_file(self.__main_file, "r+")
     if file then
         local t = loadstring(file:read("*a"))()
         local this_campaign = t.campaigns[this_campaign_index]
