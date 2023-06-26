@@ -27,7 +27,7 @@ local defaults = {
 
     get values from controls
 
-    
+    combine the concept of Sections w/ Control Groups.
 ]]
 
 ---@class MCT.ControlGroup : Class #The ControlGroup class is used to group Controls together.

@@ -49,6 +49,9 @@ local defaults = {
 
     __registries = {
         Global = {},
+        Campaigns = {},
+        Cache = {},
+        NextCampaign = {},
     },
 
     --- The Registry for the "next campaign"; created when the player is in a New Campaign menu, for singleplayer and multiplayer. 
@@ -61,7 +64,7 @@ local defaults = {
 ---@class MCT.RegistryManager : Class
 local RegistryManager = GLib.NewClass("MCT.RegistryManager", defaults)
 
-
+---@type MCT.RegistryInstance
 RegistryManager.RegistryInstance = GLib.LoadModule("obj", this_path .. "instance/")
 
 function RegistryManager:get_file_path(append)
@@ -680,6 +683,7 @@ function RegistryManager:load()
         core:trigger_custom_event("MctInitialized", {["mct"] = mct, ["is_multiplayer"] = false})
     else
         if con == "frontend" then
+            self:new_frontend()
             mct:set_mode("global", true)
         elseif con == "battle" then
             mct:set_mode("global", false)
@@ -893,6 +897,52 @@ end
 --- TODO read the info of a previously saved campaign savegame
 function RegistryManager:read_campaign_info(save_index)
 
+end
+
+function RegistryManager:new_frontend()
+    --listener for on sp_grand_campaign or mp_grand_campaign, setup_next_campaign_registry
+    core:add_listener(
+        "NewCampaign",
+        "FrontendScreenTransition",
+        function(context)
+            return context.string == "sp_grand_campaign" or context.string == "mp_grand_campaign"
+        end,
+        function(context)
+            self:setup_next_campaign_registry()
+        end,
+        true
+    )
+end
+
+--- Load up the next campaign registry in the background, and save a pointer to it.
+--- We'll then apply all saved values from the Global Registry into this transient registry, and save it to file after any changes.
+--- If the user doesn't begin a new campaign before this registry is used, it'll be deleted.
+function RegistryManager:setup_next_campaign_registry()
+    local ncr = self.RegistryInstance:new()
+    self.__registries.NextCampaign = ncr
+
+    local all_mods = mct:get_mods()
+
+    for mod_key, mod_obj in pairs(all_mods) do
+        local this_mod_data = ncr:get_saved_mod_data(mod_key)
+        if is_table(this_mod_data) then
+            ncr:load_data(this_mod_data)
+            for option_key, option_obj in pairs(mod_obj:get_options()) do
+                logf("Searching for saved settings for %s.%s", mod_key, option_key)
+
+                local this_option_data = this_mod_data.options[option_key]
+                option_obj:load_data(this_option_data)
+            end
+            
+            if this_mod_data.data then
+                if this_mod_data.data.userdata then
+                    mod_obj:set_userdata(this_mod_data.data.userdata)
+                end
+            end
+        else
+            logf("Can't find any saved information for mod %s", mod_key)
+        end
+    end
 end
 
 --- if we're in a campaign battle, read the SVR String to get the campaign's index and pull the settings therein.

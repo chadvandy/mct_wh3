@@ -8,6 +8,8 @@
 ---@class MCT.Option
 ---@field _template string
 
+---@alias mp_sync "shared"|"unique"|"local_only"
+
 local mct = get_mct()
 local Registry = mct:get_registry()
 
@@ -55,7 +57,7 @@ local mct_option_defaults = {
         forced_value = nil,
         disabled_reason = "",
 
-        ---@type "unique"|"shared" #Whether this campaign-specific option is unique per user, or shared between all users. 
+        ---@type mp_sync #Whether this campaign-specific option is unique per user, or shared between all users, or not communicated across PCs.
         sync_state = "shared",
     },
 
@@ -168,6 +170,11 @@ function mct_option:set_is_global(b)
     if not is_boolean(b) then return false end
 
     self._is_global = b
+
+    -- default global options to being local_only
+    if b == true then
+        self:set_multiplayer_sync_type("local_only")
+    end
 end
 
 --- Whether this Option is globally editable or on a campaign-basis.
@@ -242,6 +249,35 @@ function mct_option:set_mp_disabled(disabled, forced_value, disabled_reason)
             self._mp_settings.disabled_reason = disabled_reason
         end
     end
+end
+
+--- Set the multiplayer sync type for this option.
+---@param this_sync mp_sync "shared" will define one value that everyone's PC shares; "unique" will define one value PER-USER that everyone's PC knows; "local_only" will define one value per-user that IS NOT SYNCED.
+function mct_option:set_multiplayer_sync_type(this_sync)
+    local syncs = {
+        shared = true,
+        unique = true,
+        local_only = true,
+    }
+
+    if not is_string(this_sync) then
+        -- gimme an error
+
+        return
+    end
+
+    if not syncs[this_sync] then
+
+        return
+    end
+
+    self._mp_settings.sync_state = this_sync
+end
+
+--- Get the multiplayer sync type for this option.
+---@return mp_sync
+function mct_option:get_multiplayer_sync_type()
+    return self._mp_settings.sync_state
 end
 
 --- Read whether this mct_option can be edited or not at the moment.

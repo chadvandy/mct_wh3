@@ -50,14 +50,14 @@ local function deep_copy(t, dest, aType)
 end
 
 --- Create a new subclass from an existing class.
----@param super Class
+---@generic T: Class
+---@param super T
 ---@param className string
 ---@param extra_params table
----@return Class
+---@return T
 local function extend(super, className, extra_params)
 	assert_call_from_class(super, 'extend(...)')
 
-	---@type Class
 	local heir = {}
 	_classes[heir] = tostring(heir)
 	super.__subclasses[heir] = true
@@ -65,7 +65,6 @@ local function extend(super, className, extra_params)
 	heir.className    = extra_params and extra_params.className or className
 	heir.__index = heir
 
-	---@type Class
 	heir.super   = super
 	heir.mixins = {}
 	return setmetatable(heir,super)

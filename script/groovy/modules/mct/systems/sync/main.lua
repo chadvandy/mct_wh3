@@ -85,6 +85,18 @@ function Sync:handle_mp_disable(is_exit)
 
 end
 
+--- TODO handle import/export settings in Frontend
+function Sync:export_settings()
+    -- go through all settings in the Next-Campaign-Registry and save them to a file to send to the other players
+    -- mind mp-sync-type of each control
+    -- if the host edits settings, have something to call out that settings have not yet been synced
+end
+
+function Sync:import_settings()
+    -- callout that the user hasn't synced until they import
+    -- check for file on disk, and if it exists, load it in overtop the Next-Campaign-Registry.
+end
+
 -- [[ Campaign-only calls. ]]
 
 --- on first load, get the host and then sync the settings on LoadingGame
@@ -217,7 +229,7 @@ function Sync:get_mct_data_from_local_user(is_initial_sync)
         local all_options = mod_obj:get_options()
 
         for option_key, option_obj in pairs(all_options) do
-            if not option_obj:is_global() then
+            if option_obj:get_multiplayer_sync_type() == "shared" then
                 local selected_setting, changed_state = mct:get_registry():get_selected_setting_for_option(option_obj)
 
                 if is_initial_sync then
