@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<layout
+    version="137"
+    comment="This is an overwrite file for the frontend menu panel"
+    precache_condition="">
+    <hierarchy>
+		<root this="08C17F21-5B86-B8C9-E900EAD30CA3A14F">
+            <holder this="2728685B-5019-4B83-273397019025A190"/>
+        </root>
+    </hierarchy>
+    <components>
+		<root
+			this="08C17F21-5B86-B8C9-E900EAD30CA3A14F"
+			id="root"
+			tooltipslocalised="true"
+			uniqueguid="08C17F21-5B86-B8C9-E900EAD30CA3A14F"
+			currentstate="4ED45E6E-48D2-DEB7-D470AA311B898DD7"
+			defaultstate="4ED45E6E-48D2-DEB7-D470AA311B898DD7">
+			<componentimages>
+				<component_image
+					this="212ECE06-533E-8127-63562730560052F0"
+					uniqueguid="212ECE06-533E-8127-63562730560052F0"/>
+			</componentimages>
+			<states>
+				<newstate
+					this="4ED45E6E-48D2-DEB7-D470AA311B898DD7"
+					name="NewState"
+					width="1600"
+					height="900"
+					interactive="true"
+					uniqueguid="4ED45E6E-48D2-DEB7-D470AA311B898DD7">
+					<imagemetrics>
+						<image
+							this="D015FB30-A4D5-170C-7BFBF2DD6F20D607"
+							uniqueguid="D015FB30-A4D5-170C-7BFBF2DD6F20D607"
+							componentimage="212ECE06-533E-8127-63562730560052F0"
+							width="1600"
+							height="900"
+							colour="#282828FF"/>
+					</imagemetrics>
+				</newstate>
+			</states>
+		</root>
+        <holder
+			this="2728685B-5019-4B83-273397019025A190"
+			id="holder"
+			offset="0.00,0.00"
+			docking="Center"
+			dock_offset="0.00,0.00"
+			component_anchor_point="0.50,0.50"
+			priority="100"
+			tooltipslocalised="true"
+			uniqueguid="2728685B-5019-4B83-273397019025A190"
+			currentstate="646197B0-013D-7967-40BC3C7FF3D31BA1"
+			defaultstate="646197B0-013D-7967-40BC3C7FF3D31BA1">
+			<states>
+				<default
+					this="646197B0-013D-7967-40BC3C7FF3D31BA1"
+					name="default"
+					width="754"
+					height="200"
+					texthbehaviour="Never split"
+					uniqueguid="646197B0-013D-7967-40BC3C7FF3D31BA1"/>
+			</states>
+			<LayoutEngine
+				type="List"
+				is_listview_lookup_enabled="false"
+				horizontal_alignment="Center"
+                itemsperrow="2"
+                >
+			</LayoutEngine>
+		</holder>
+    </components>
+</layout>

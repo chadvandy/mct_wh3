@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<layout
+	version="137"
+	comment=""
+	precache_condition="">
+	<hierarchy>
+		<root this="19CEC4C5-F299-409E-9483CF14F5E68FFF">
+			<text this="345A7C15-9AF4-46A2-A317E69DCAE9E2FF"/>
+		</root>
+	</hierarchy>
+	<components>
+		<root
+			this="19CEC4C5-F299-409E-9483CF14F5E68FFF"
+			id="root"
+			tooltipslocalised="true"
+			uniqueguid="19CEC4C5-F299-409E-9483CF14F5E68FFF"
+			currentstate="0565E253-6194-48AD-B67168E20BCEEE8D"
+			defaultstate="0565E253-6194-48AD-B67168E20BCEEE8D">
+			<componentimages>
+				<component_image
+					this="2A597118-2C0C-4D48-B1C18F30B46CB51A"
+					uniqueguid="2A597118-2C0C-4D48-B1C18F30B46CB51A"/>
+			</componentimages>
+			<states>
+				<newstate
+					this="0565E253-6194-48AD-B67168E20BCEEE8D"
+					name="NewState"
+					width="1600"
+					height="900"
+					texthbehaviour="Never split"
+					interactive="true"
+					uniqueguid="0565E253-6194-48AD-B67168E20BCEEE8D">
+					<imagemetrics>
+						<image
+							this="94645C86-22A2-4F36-BDF83386E7725F30"
+							uniqueguid="94645C86-22A2-4F36-BDF83386E7725F30"
+							componentimage="2A597118-2C0C-4D48-B1C18F30B46CB51A"
+							width="1600"
+							height="900"
+							colour="#F0F0F0FF"/>
+					</imagemetrics>
+				</newstate>
+			</states>
+		</root>
+		<text
+			this="345A7C15-9AF4-46A2-A317E69DCAE9E2FF"
+			id="text"
+			offset="0.00,0.00"
+			allowhorizontalresize="true"
+			allowverticalresize="true"
+			priority="42"
+			tooltipslocalised="true"
+			uniqueguid="345A7C15-9AF4-46A2-A317E69DCAE9E2FF"
+			currentstate="82190DAB-1375-4F75-B160B37EEF67313D"
+			defaultstate="82190DAB-1375-4F75-B160B37EEF67313D">
+			<states>
+				<active
+					this="82190DAB-1375-4F75-B160B37EEF67313D"
+					name="active"
+					width="80"
+					height="16"
+                    text=""
+					textxoffset="0.00,0.00"
+					textyoffset="0.00,0.00"
+					texthbehaviour="Slip by character"
+					font_m_size="12"
+					font_m_colour="#FFF8D7FF"
+					font_m_leading="1"
+					fontcat_name="fe_default_text"
+					uniqueguid="82190DAB-1375-4F75-B160B37EEF67313D">
+				</active>
+			</states>
+		</text>
+	</components>
+</layout>

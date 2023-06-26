@@ -1,0 +1,110 @@
+<!-- Empty TWUI file for quick copy-pasta -->
+<?xml version="1.0"?>
+<layout
+	version="137"
+	comment=""
+	precache_condition="">
+	<hierarchy>
+		<root this="19CEC4C5-F299-409E-9483CF14F5E68FFF">
+            <label_num this="7CF6C580-8F1D-7DE8-C1DE883F6DFB82BE"/>
+		</root>
+	</hierarchy>
+	<components>
+		<root
+			this="19CEC4C5-F299-409E-9483CF14F5E68FFF"
+			id="root"
+			tooltipslocalised="true"
+			uniqueguid="19CEC4C5-F299-409E-9483CF14F5E68FFF"
+			currentstate="0565E253-6194-48AD-B67168E20BCEEE8D"
+			defaultstate="0565E253-6194-48AD-B67168E20BCEEE8D">
+			<componentimages>
+				<component_image
+					this="2A597118-2C0C-4D48-B1C18F30B46CB51A"
+					uniqueguid="2A597118-2C0C-4D48-B1C18F30B46CB51A"/>
+			</componentimages>
+			<states>
+				<newstate
+					this="0565E253-6194-48AD-B67168E20BCEEE8D"
+					name="NewState"
+					width="1600"
+					height="900"
+					texthbehaviour="Never split"
+					interactive="true"
+					uniqueguid="0565E253-6194-48AD-B67168E20BCEEE8D">
+					<imagemetrics>
+						<image
+							this="94645C86-22A2-4F36-BDF83386E7725F30"
+							uniqueguid="94645C86-22A2-4F36-BDF83386E7725F30"
+							componentimage="2A597118-2C0C-4D48-B1C18F30B46CB51A"
+							width="1600"
+							height="900"
+							colour="#F0F0F0FF"/>
+					</imagemetrics>
+				</newstate>
+			</states>
+		</root>
+		<label_num
+			this="7CF6C580-8F1D-7DE8-C1DE883F6DFB82BE"
+			id="label_num"
+			offset="27.00,-22.00"
+			allowhorizontalresize="false"
+			allowverticalresize="false"
+			docking="Center"
+			dock_offset="21.00,-29.00"
+			component_anchor_point="0.50,0.50"
+			componentleveltooltip="Number||Label number!"
+            tooltiplabel="label_bloodlines_count_Tooltip_560045"
+			uniqueguid="7CF6C580-8F1D-7DE8-C1DE883F6DFB82BE"
+			currentstate="FFE06215-CF50-8C88-7886E98D6215F3C2"
+			defaultstate="FFE06215-CF50-8C88-7886E98D6215F3C2">
+			<!-- <userproperties>
+				<property
+					name="dynamic_child"
+					value="1"/>
+				<property
+					name="dynamic_child_parent"
+					value="notification_button"/>
+			</userproperties> -->
+			<componentimages>
+				<component_image
+					this="2D75F595-4ABC-DF1B-36952BDF70525608"
+					uniqueguid="2D75F595-4ABC-DF1B-36952BDF70525608"
+					imagepath="ui/skins/default/spell_dial_grudges_display.png"/>
+			</componentimages>
+			<states>
+				<newstate
+					this="FFE06215-CF50-8C88-7886E98D6215F3C2"
+					name="NewState"
+					width="42"
+					height="41"
+					text="0"
+					textvalign="Center"
+					texthalign="Center"
+					texthbehaviour="Never split"
+                    textlocalised="true"
+					textlabel="StateText_16ec5837"
+					font_m_colour="#FFF8D7FF"
+					font_m_leading="1"
+					fontcat_name="fe_text_small"
+					interactive="true"
+					disabled="true"
+					pixelcollision="true"
+					text_shader_name="drop_shadow_t0"
+					textshadervars="0.00,1.00,2.00,0.00"
+					uniqueguid="FFE06215-CF50-8C88-7886E98D6215F3C2">
+					<imagemetrics>
+						<image
+							this="AE04F3A3-8011-26AC-17ED8405E0F54ADC"
+							uniqueguid="AE04F3A3-8011-26AC-17ED8405E0F54ADC"
+							componentimage="2D75F595-4ABC-DF1B-36952BDF70525608"
+							offset="0.00,-1.00"
+							width="42"
+							height="41"
+							dockpoint="Center"
+							dock_offset="0.00,-1.00"/>
+					</imagemetrics>
+				</newstate>
+			</states>
+		</label_num>
+	</components>
+</layout>

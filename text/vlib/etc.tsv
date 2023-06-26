@@ -1,4 +1,0 @@
-key	text	tooltip
-#Loc PackedFile;1;text/vlib/etc.loc		
-vlib_popup_confirm	Confirm	true
-vlib_popup_cancel	Cancel	true

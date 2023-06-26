@@ -1,0 +1,106 @@
+<!-- Empty TWUI file for quick copy-pasta -->
+<?xml version="1.0"?>
+<layout
+	version="137"
+	comment=""
+	precache_condition="">
+	<hierarchy>
+		<root this="19CEC4C5-F299-409E-9483CF14F5E68FFF">
+		    <holder this="EDF6B49F-33E7-4FA4-8E9439F258061C89"/>
+		</root>
+	</hierarchy>
+	<components>
+		<root
+			this="19CEC4C5-F299-409E-9483CF14F5E68FFF"
+			id="root"
+			tooltipslocalised="true"
+			uniqueguid="19CEC4C5-F299-409E-9483CF14F5E68FFF"
+			currentstate="0565E253-6194-48AD-B67168E20BCEEE8D"
+			defaultstate="0565E253-6194-48AD-B67168E20BCEEE8D">
+			<componentimages>
+				<component_image
+					this="2A597118-2C0C-4D48-B1C18F30B46CB51A"
+					uniqueguid="2A597118-2C0C-4D48-B1C18F30B46CB51A"/>
+			</componentimages>
+			<states>
+				<newstate
+					this="0565E253-6194-48AD-B67168E20BCEEE8D"
+					name="NewState"
+					width="1600"
+					height="900"
+					texthbehaviour="Never split"
+					interactive="true"
+					uniqueguid="0565E253-6194-48AD-B67168E20BCEEE8D">
+					<imagemetrics>
+						<image
+							this="94645C86-22A2-4F36-BDF83386E7725F30"
+							uniqueguid="94645C86-22A2-4F36-BDF83386E7725F30"
+							componentimage="2A597118-2C0C-4D48-B1C18F30B46CB51A"
+							width="1600"
+							height="900"
+							colour="#F0F0F0FF"/>
+					</imagemetrics>
+				</newstate>
+			</states>
+		</root>
+		<holder
+			this="EDF6B49F-33E7-4FA4-8E9439F258061C89"
+			id="holder"
+			offset="315.00,0.00"
+			allowverticalresize="false"
+			docking="Center"
+			component_anchor_point="0.50,0.50"
+			tooltipslocalised="true"
+			uniqueguid="EDF6B49F-33E7-4FA4-8E9439F258061C89"
+			currentstate="A2C488A9-4E91-4633-AB0AD7AF9DD278B4"
+			defaultstate="A2C488A9-4E91-4633-AB0AD7AF9DD278B4">
+			<componentimages>
+				<component_image
+					this="698DD573-DEB7-41A7-BC437EB63DC3D5DA"
+					uniqueguid="698DD573-DEB7-41A7-BC437EB63DC3D5DA"
+					imagepath="ui/skins/default/city_chain_frame.png"/>
+				<component_image
+					this="A2B96A2F-A46C-4824-9DE02039292A9949"
+					uniqueguid="A2B96A2F-A46C-4824-9DE02039292A9949"
+					imagepath="ui/skins/default/panel_back_top.png"/>
+			</componentimages>
+			<states>
+				<newstate
+					this="A2C488A9-4E91-4633-AB0AD7AF9DD278B4"
+					name="NewState"
+					width="319"
+					height="60"
+					texthbehaviour="Never split"
+					interactive="true"
+					uniqueguid="A2C488A9-4E91-4633-AB0AD7AF9DD278B4">
+					<imagemetrics>
+						<image
+							this="F14B5049-B57F-4C98-B0F043A84992AFDD"
+							uniqueguid="F14B5049-B57F-4C98-B0F043A84992AFDD"
+							componentimage="A2B96A2F-A46C-4824-9DE02039292A9949"
+							width="319"
+							height="60"
+							colour="#FFFFFF80"
+                            tile="true"
+                            margin="15.00,15.00,15.00,15.00"
+                            />
+						<image
+							this="304021B5-D798-481E-92C490FCC8E3A865"
+							uniqueguid="304021B5-D798-481E-92C490FCC8E3A865"
+							componentimage="698DD573-DEB7-41A7-BC437EB63DC3D5DA"
+							width="319"
+							height="60"
+							tile="true"
+							margin="16.00,16.00,16.00,16.00"/>
+					</imagemetrics>
+				</newstate>
+			</states>
+			<!-- <LayoutEngine
+				type="HorizontalList"
+                sizetocontent="false"
+                spacing="5.00,5.00"
+                vertical_alignment="Center"
+                /> -->
+		</holder>
+	</components>
+</layout>

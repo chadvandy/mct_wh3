@@ -1,0 +1,13 @@
+key	text	tooltip
+#Loc;1;text/vlib/mct/ui.loc		
+mct_settings_tab_active	Settings||Open the settings tab for this mod.	false
+mct_settings_tab_selected	Settings||The various settings for this mod.	false
+mct_settings_tab_inactive		false
+mct_logging_tab_active	Logging||Open the log file for this mod.	false
+mct_logging_tab_selected	Logging||The log file system for this mod.	false
+mct_logging_tab_inactive	[[col:red]]Logging[[/col]]||	false
+mct_patch_notes_tab_active	Patch Notes||Open the patch notes available for this mod.	false
+mct_patch_notes_tab_selected	Patch Notes||Patch notes for this mod.	false
+mct_patch_notes_tab_inactive	[[col:red]]Patch Notes[[/col]]||	false
+uied_component_texts_localised_string_StateText_607fc144	MOD SETTINGS	false
+uied_component_texts_localised_string_StateText_d7eed06	Mod Configuration Tool	false

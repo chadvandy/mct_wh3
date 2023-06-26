@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<layout
+    version="137"
+    comment="This is an overwrite file for the frontend menu panel"
+    precache_condition="">
+    <hierarchy>
+		<root this="60627039-D2AE-1FEB-3C829C6BE8B33148">
+            <holder this="8812CB70-E52D-EB3E-48A4DA5E4FED103A"/>
+        </root>
+    </hierarchy>
+    <components>
+		<root
+			this="60627039-D2AE-1FEB-3C829C6BE8B33148"
+			id="root"
+			tooltipslocalised="true"
+			uniqueguid="60627039-D2AE-1FEB-3C829C6BE8B33148"
+			currentstate="AF548E61-57BF-0EDE-5CDECFBE9E42B8E6"
+			defaultstate="AF548E61-57BF-0EDE-5CDECFBE9E42B8E6">
+			<componentimages>
+				<component_image
+					this="FF5C95A5-4BE0-45E3-F943564622636A56"
+					uniqueguid="FF5C95A5-4BE0-45E3-F943564622636A56"/>
+			</componentimages>
+			<states>
+				<newstate
+					this="AF548E61-57BF-0EDE-5CDECFBE9E42B8E6"
+					name="NewState"
+					width="1600"
+					height="900"
+					interactive="true"
+					uniqueguid="AF548E61-57BF-0EDE-5CDECFBE9E42B8E6">
+					<imagemetrics>
+						<image
+							this="A44F3E99-4C4D-40F6-764E9B0F46D3163E"
+							uniqueguid="A44F3E99-4C4D-40F6-764E9B0F46D3163E"
+							componentimage="FF5C95A5-4BE0-45E3-F943564622636A56"
+							width="1600"
+							height="900"
+							colour="#282828FF"/>
+					</imagemetrics>
+				</newstate>
+			</states>
+		</root>
+        <holder
+			this="8812CB70-E52D-EB3E-48A4DA5E4FED103A"
+			id="holder"
+			offset="0.00,0.00"
+			docking="Center"
+			dock_offset="0.00,0.00"
+			component_anchor_point="0.50,0.50"
+			priority="100"
+			tooltipslocalised="true"
+			uniqueguid="8812CB70-E52D-EB3E-48A4DA5E4FED103A"
+			currentstate="41109699-3984-EE8D-B0C4173FCB55DB65"
+			defaultstate="41109699-3984-EE8D-B0C4173FCB55DB65">
+			<states>
+				<default
+					this="41109699-3984-EE8D-B0C4173FCB55DB65"
+					name="default"
+					width="754"
+					height="500"
+					texthbehaviour="Never split"
+					uniqueguid="41109699-3984-EE8D-B0C4173FCB55DB65"/>
+			</states>
+			<LayoutEngine
+				type="List"
+				sizetocontent="true"
+				is_listview_lookup_enabled="false"
+				horizontal_alignment="Center">
+			</LayoutEngine>
+		</holder>
+    </components>
+</layout>

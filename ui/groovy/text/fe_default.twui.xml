@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<layout
+	version="137"
+	comment=""
+	precache_condition="">
+	<hierarchy>
+		<root this="E8FED8D0-D3EE-9FEE-9C2297CC6CC4A4EA">
+			<text this="60600AAB-C38A-988C-331874D8FBB6092C"/>
+		</root>
+	</hierarchy>
+	<components>
+		<root
+			this="E8FED8D0-D3EE-9FEE-9C2297CC6CC4A4EA"
+			id="root"
+			tooltipslocalised="true"
+			uniqueguid="E8FED8D0-D3EE-9FEE-9C2297CC6CC4A4EA"
+			currentstate="6DDAD11C-1FE2-C0FD-11A32610F0ED4B6C"
+			defaultstate="6DDAD11C-1FE2-C0FD-11A32610F0ED4B6C">
+			<componentimages>
+				<component_image
+					this="394FA965-C290-E057-C5DF6F41A2B4A3CB"
+					uniqueguid="394FA965-C290-E057-C5DF6F41A2B4A3CB"/>
+			</componentimages>
+			<states>
+				<newstate
+					this="6DDAD11C-1FE2-C0FD-11A32610F0ED4B6C"
+					name="NewState"
+					width="1600"
+					height="900"
+					texthbehaviour="Never split"
+					interactive="true"
+					uniqueguid="6DDAD11C-1FE2-C0FD-11A32610F0ED4B6C">
+					<imagemetrics>
+						<image
+							this="00C7267C-481A-4F03-B344B9468F500EDB"
+							uniqueguid="00C7267C-481A-4F03-B344B9468F500EDB"
+							componentimage="394FA965-C290-E057-C5DF6F41A2B4A3CB"
+							width="1600"
+							height="900"
+							colour="#F0F0F0FF"/>
+					</imagemetrics>
+				</newstate>
+			</states>
+		</root>
+		<text
+			this="60600AAB-C38A-988C-331874D8FBB6092C"
+			id="text"
+			offset="0.00,0.00"
+			allowhorizontalresize="true"
+			allowverticalresize="true"
+			priority="42"
+			tooltipslocalised="true"
+			component_anchor_point="0.50,0.50"
+			uniqueguid="60600AAB-C38A-988C-331874D8FBB6092C"
+			currentstate="43AC485C-F8FE-647B-968CCCCD58C22845"
+			defaultstate="43AC485C-F8FE-647B-968CCCCD58C22845">
+			<states>
+				<active
+					this="43AC485C-F8FE-647B-968CCCCD58C22845"
+					name="active"
+					width="80"
+					height="16"
+                    text=""
+					textxoffset="0.00,0.00"
+					textyoffset="0.00,0.00"
+					texthbehaviour="Slip by character"
+					font_m_size="12"
+					font_m_colour="#FFF8D7FF"
+					font_m_leading="1"
+					fontcat_name="fe_default_text"
+					uniqueguid="43AC485C-F8FE-647B-968CCCCD58C22845">
+				</active>
+			</states>
+		</text>
+	</components>
+</layout>
