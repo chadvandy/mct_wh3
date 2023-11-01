@@ -11,7 +11,7 @@
 ---@param root UIC
 ---@return UIC
 local function create_dummy(root)
-	local name = "VandyDummy"
+	local name = "script_dummy"
 	local path = "ui/campaign ui/script_dummy"
 
 	local dummy = core:get_or_create_component(name, path, root)

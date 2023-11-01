@@ -796,30 +796,9 @@
                     context_object_id="CcoScriptObject"
                     context_function_id="Join(Join(this.TableValue.Value).Filter(Key == &quot;values&quot;).FirstContext.Value).Sort(ValueForKey(&quot;sort_order&quot;), true)">
 					<child_m_user_properties>
-						<!-- <property
-							name="dont_recreate"
-							value=""/> -->
-						<!-- <property
-							name="event0"
-							value="CampaignAncillaryAssigned"/> -->
-						<!-- <property
-							name="event4"
-							value="AncillaryAddedToPool"/> -->
 						<property
 							name="refresh_if_not_visible"
 							value=""/>
-						<!-- <property
-							name="hide_if_empty"
-							value=""/> -->
-						<!-- <property
-							name="list_init_self"
-							value=""/> -->
-						<!-- <property
-							name="sort_desc"
-							value=""/> -->
-						<!-- <property
-							name="sort_func"
-							value="AncillaryRecordContext.UniquenessScore"/> -->
 					</child_m_user_properties>
                 </callback_with_context>
 			</callbackwithcontextlist>
