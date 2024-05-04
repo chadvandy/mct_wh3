@@ -489,10 +489,10 @@
 		<dy_title
 			this="77E6B934-1E3B-40E5-BC14C7F643672167"
 			id="dy_title"
-			offset="37.00,4.00"
+			offset="0.00,0.00"
 			docking="Center Left"
-			dock_offset="37.00,0.00"
-			component_anchor_point="0.00,0.50"
+			dock_offset="12.00,0.00"
+			component_anchor_point="0.00,0.00"
 			priority="45"
 			tooltipslocalised="true"
 			uniqueguid="77E6B934-1E3B-40E5-BC14C7F643672167"
@@ -502,15 +502,15 @@
 				<newstate
 					this="473D6FD9-90DF-41A6-82EC682C54EDFF89"
 					name="NewState"
-					width="210"
+					width="258"
 					height="26"
-					text="dy_category"
+					text=""
 					textvalign="Center"
-					texthbehaviour="Never split"
-					font_m_font_name="la_gioconda_uppercase"
-					font_m_size="14"
-					font_m_colour="#000000FF"
-					fontcat_name="parchment_header_small"
+					texthbehaviour="Slip by character"
+					font_m_size="12"
+					font_m_colour="#FFF8D7FF"
+					font_m_leading="1"
+                    fontcat_name="fe_default_text"
 					uniqueguid="473D6FD9-90DF-41A6-82EC682C54EDFF89"/>
 			</states>
 		</dy_title>

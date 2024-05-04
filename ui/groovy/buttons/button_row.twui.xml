@@ -381,14 +381,14 @@
 					name="NewState"
 					width="210"
 					height="26"
-					text="dy_category"
+					text=""
 					textvalign="Center"
                     texthalign="Left"
-					texthbehaviour="Never split"
-					font_m_font_name="la_gioconda_uppercase"
+					texthbehaviour="Slip by character"
 					font_m_size="14"
-					font_m_colour="#000000FF"
-					fontcat_name="parchment_header_small"
+					font_m_colour="#FFF8D7FF"
+					font_m_leading="1"
+					fontcat_name="fe_paragraph_heading"
 					uniqueguid="EBC9015A-04E5-FD77-8A78503E3A7CBDA7"/>
 			</states>
 		</dy_title>
