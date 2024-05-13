@@ -39,6 +39,7 @@ local defaults = {
 
     __main_file = "mct_registry.lua",
     __profiles_file = "mct_profiles.lua",
+    __mp_cache_file = "mp_settings.lua",
 }
 
 ---@class MCT.Registry : Class
@@ -603,6 +604,45 @@ function Registry:save_all_mods()
     end
 end
 
+---@return boolean #IsHost - are we the host.
+---@return mct_data #Saved setting values for the host.
+function Registry:read_host_settings()
+    local file = self:get_file(self.__mp_cache_file, "r+")
+
+    if not file then
+        return false, {}
+    end
+
+    local str = file:read("*a")
+    file:close()
+
+    local t = loadstring(str)()
+
+    if not is_table(t) then return false, {} end
+
+    local is_host = t.is_host
+    local settings = t.settings
+
+    return is_host, settings
+end
+
+function Registry:save_host_settings(bIsHost, settings)
+    local file = self:get_file(self.__mp_cache_file, "w+")
+
+    if not file then
+        return
+    end
+
+    local t = {
+        is_host = bIsHost,
+        settings = settings,
+    }
+
+    file:write(table_printer:print(t))
+    -- file:flush()
+    file:close()
+end
+
 function Registry:read_profiles_file()
     local file = self:get_file(self.__profiles_file, "r+")
 
@@ -740,7 +780,7 @@ function Registry:load()
                 self:read_registry_file()
                 self:read_profiles_file()
 
-                self:load_game(context)
+                self:load_game(context, is_mp)
 
                 logf("Trigger MctInitialized")
                 core:trigger_custom_event("MctInitialized", {["mct"] = mct, ["is_multiplayer"] = is_mp})
@@ -1046,7 +1086,7 @@ function Registry:save_game(context)
 end
 
 --- load the settings for this campaign into memory
-function Registry:load_game(context)
+function Registry:load_game(context, is_mp)
     local registry_data = cm:load_named_value("mct_registry", {}, context)
     ---@cast registry_data table
 

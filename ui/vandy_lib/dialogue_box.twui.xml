@@ -989,7 +989,7 @@
 					textxoffset="14.00,14.00"
 					textlabel="DY_text_NewState_Text_75002a"
 					font_m_size="12"
-					font_m_colour="#000000FF"
+					font_m_colour="#FFF8D7FF"
 					font_m_leading="3"
 					fontcat_name="ingame_text_faded"
 					interactive="true"
