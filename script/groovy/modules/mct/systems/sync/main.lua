@@ -1,28 +1,25 @@
-    --[[
-        TODO a quick refresh/rewrite for how MP sync works.
+--[[
+    The Sync Module, in charge of multiplayer settings communications.
+    
+    Some assumptions we have laid out:
+        - There is only a single "host", whose main purpose is to determine what settings are going to be used when starting up a new campaign, and is in charge of changing settings in an ongoing campaign, for now, for simplicity's sake.
+        - Settings are cached in the frontend menu, before starting an MP campaign, and slotted into the new campaign very early on. After that point, they are saved in the save game and available to all players.
+        - The "sync" behavior for starting a new campaign, in order to reduce the size and complexity of applying the settings to each user, sends only non-default values between users. So if option A, B, and C are default, we won't inform the other PC's; but if option D is a non-default value, we'll send that new value to all PC's.
+    
+    This module sets up the majority of the behaviors that follow those constraints and designs. We designate the host/client behaviors herein, we generate the "cache" files that have all the non-default values, and we send those values through the clients at an early point in the save.
 
-            In frontend:
-                Clear the MCT register cache on joining new MP campaign.
-                The "Host" selects the settings they want to set.
-                    LATER: A way to share them here - maybe a file they can send over and load locally.
-                The Host's settings are temporarily saved in an MCT register cache, w/ "new_mp_campaign" or something as its tag.
-                That's pretty much it.
-            Starting campaign:
-                The users' PCs all check the local new_mp_campaign registry cache, and query if they're the host or not.
-                Save on each PC the host's faction key.
-                As early as possible, send from host to each user the list of NON-DEFAULT SETTINGS ONLY.
-                    Set the saved values for each setting to the host-set values.
-                Save these settings into the save game.
-            Continuing:
-                Read/Write is done through the save game at this point; locality doesn't matter anymore.
-                Leave changing settings for Host only, for simplicity.
+    Some behaviors are also found in the Registry class, which handles all of the saving/loading of settings from disk and save-game.
+]]
 
-    ]]
-
+-- TODO pull in the UI-locking-stuff into this module, to keep it all in one file.
+-- TODO better frontend UX; something in the panel to share who the host is and how it works.
+-- TODO first-time-mp tutorial; shine the button, walk through the panel and inform how it works in detail.
+--- TODO multiple-sync (probably later)
 
 ---@class MCT.Sync : Class
 local defaults = {
     local_is_host = false,
+    host_faction_key = "",
 }
 
 local mct = get_mct()
@@ -30,9 +27,18 @@ local mct = get_mct()
 ---@class MCT.Sync : Class
 local Sync = GLib.NewClass("MCT.Sync", defaults)
 
-function Sync:new_frontend()
-    self.local_is_host = false
 
+--[[
+    ======
+    Frontend Section
+    ======
+--]]
+function Sync:new_frontend()
+    -- We are loading up the game in the frontend; we have to prepare all of our listeners to handle syncing in the frontend.
+    self.local_is_host = false
+    local is_in_mp_grand_campaign = false
+
+    -- Listen for a transition into the MP Grand Campaign screen, to kick off a "refreshed" sync context.
     core:add_listener(
         "MCTSyncHost",
         "FrontendScreenTransition",
@@ -40,8 +46,10 @@ function Sync:new_frontend()
             return context.string == "mp_grand_campaign"
         end,
         function(context)
-            self:clear_mp_cache()
+            -- Refresh a lot of the Sync status - clear the Registry mp-cache-file, figure out who the host is, inform the users, and start up the behaviors therein.
+            is_in_mp_grand_campaign = true
 
+            self:clear_mp_cache()
             local panel = find_uicomponent("mp_grand_campaign")
 
             core:get_tm():repeat_real_callback(function()
@@ -49,8 +57,10 @@ function Sync:new_frontend()
                 if ready_button and ready_button:Visible(true) then
                     core:get_tm():remove_real_callback("mct_sync_host_test")
 
-                    self:set_is_host(common.get_context_value("CcoFrontendRoot", "", "CampaignLobbyContext.IsLocalPlayerHost"))
+                    -- Begin the procedures for our local host; keep track of who they are, save a registry bool, and start tracking their settings.
+                    self:set_host_status_and_events()
 
+                    -- UX to inform the players who the host is.
                     self:trigger_popup_in_frontend()
                 end
             end, 10, "mct_sync_host_test")
@@ -58,13 +68,17 @@ function Sync:new_frontend()
         true
     )
 
+    -- Reset the Sync details and close up the listeners.
     core:add_listener(
         "MCTSyncHostExit",
         "FrontendScreenTransition",
         function(context)
-            return context.string ~= "mp_grand_campaign"
+            -- We only want to trigger this when we're leaving the mp_grand_campaign screen.
+            return is_in_mp_grand_campaign == true and context.string ~= "mp_grand_campaign"
         end,
         function(context)
+            is_in_mp_grand_campaign = false
+
             if self.local_is_host == true then
                 self.local_is_host = false
 
@@ -76,22 +90,18 @@ function Sync:new_frontend()
     )
 end
 
-function Sync:clear_mp_cache()
-    mct:get_registry():save_host_settings(false, {})
-end
+-- Initialization for our host player; watch their values, and save in the game's registry that they are the host.
+function Sync:set_host_status_and_events()
+    -- Grab if the host is local, and save the host's current faction key.
+    local this_is_host = common.get_context_value("CcoFrontendRoot", "", "CampaignLobbyContext.IsLocalPlayerHost")
+    local host_faction_key = common.get_context_value("CcoFrontendRoot", "", "HostSlotContext.FactionRecordContextKey")
 
-function Sync:save_mp_cache()
-    local ok, err = pcall(function()
-    local settings = self:get_mct_data_from_local_user()
-    mct:get_registry():save_host_settings(true, settings)
-    end) if not ok then vlog(err) end
-end
+    -- TODO we need to track the host_faction_key if it changes at any point during the frontend menu, which it certainly will.
+    self.local_is_host = this_is_host
+    self.host_faction_key = host_faction_key
+    core:svr_save_bool("mct_local_is_host", this_is_host)
 
-function Sync:set_is_host(bIsHost)
-    self.local_is_host = bIsHost
-    core:svr_save_bool("mct_local_is_host", bIsHost)
-
-    if bIsHost then
+    if this_is_host then
         self:save_mp_cache()
 
         -- start up a listener to save the MP cache for this person if they change any settings
@@ -105,17 +115,12 @@ function Sync:set_is_host(bIsHost)
             end,
             true
         )
+    else
+        self:clear_mp_cache()
     end
 end
 
-function Sync:load_mp_cache()
-    local is_host, settings = mct:get_registry():read_host_settings()
-
-    if is_host then
-        return settings
-    end
-end
-
+-- Popup to trigger in the frontend, telling the players how it works and who the Big Boss is.
 function Sync:trigger_popup_in_frontend()
     core:get_tm():real_callback(function()
         local text = ""
@@ -129,14 +134,63 @@ function Sync:trigger_popup_in_frontend()
     end, 100)
 end
 
---- TODO multiple-sync (probably later)
---- TODO save campaign data in global registry, w/ bool for "is_multiplayer" and faction key for "mct_host" (if needed)
+--[[
+    ==================
+    MP_Cache Section
+    ==================
 
---- on first load, get the host and then sync the settings on LoadingGame
+    Handles our mp_cache, the local file in the AppData folder that pushes data from our frontend host into the new campaign. We're only loading up the changes from default values here, as a way to reduce the size of the string passed between PCs.
+--]]
+
+-- Empty out the local "mp_cache" file in the Registry, which is simply to push data from the frontend into a new campaign.
+function Sync:clear_mp_cache()
+    mct:get_registry():save_host_settings(false, {})
+end
+
+-- Load up our host's settings and save them to the mp_cache Registry file.
+function Sync:save_mp_cache(is_host)
+    -- local ok, err = pcall(function()
+    local settings = self:get_mct_data_from_local_user()       
+    mct:get_registry():save_host_settings(true, settings)
+    -- end) if not ok then vlog(err) end
+end
+
+---@return mct_data
+---@return boolean
+function Sync:load_mp_cache()
+    local is_host, settings = mct:get_registry():read_host_settings()
+
+    if is_host then
+        return settings, is_host
+    end
+end
+
+function Sync:is_host()
+    local is_host, settings = mct:get_registry():read_host_settings()
+    return is_host
+end
+
+--[[
+    ==================
+    Campaign Section
+    ==================
+
+    Handle our in-campaign synchronization - initial load up, and mid-game changes.
+
+    The Host is the only person, in this version, who can edit the settings of an MP campaign. 
+--]]
+
+-- On our first load inside of a campaign, figure out who the host is and trigger all of the listeners and callbacks 
+-- we need to worry about between the players.
 function Sync:init_campaign()
     GLib.Log("Calling Sync.init_campaign!")
+
     --- Get the current host and distribute that knowledge to each PC
     if not cm:get_saved_value("mct_mp_init") then
+        -- Pass the values between the players.
+            -- We can tell which is the host by querying their MCT MP cache file.
+        self:new_campaign()
+
         cm:add_pre_first_tick_callback(function()
             MultiplayerCommunicator:RegisterForEvent(
                 "MctMpHostDistribution",
@@ -145,9 +199,6 @@ function Sync:init_campaign()
                     GLib.Log("[SYNC] Saving host faction key as %s", context.host_faction_key)
                     self.host_faction_key = context.host_faction_key
                     cm:set_saved_value("mct_host", self.host_faction_key)
-
-                    --- Then, run through new_campaign which will distribute the current settings to each PC
-                    self:new_campaign()
                 end
             )
 
@@ -169,12 +220,13 @@ end
 --- -> on their PC, get their settings
 --- -> then use MultiplayerCommunicator to send it to all others
 function Sync:new_campaign()
+    GLib.Log("== NEW CAMPAIGN SETTINGS SYNC ==")
     MultiplayerCommunicator:RegisterForEvent(
         "MctMpInitialLoad",
         "MctMpInitialLoad",
         ---@param mct_data table<string, table<string, any>>
         function(mct_data)
-            GLib.Log("MctMpInitialLoad triggered!")
+            GLib.Log("MctMpInitialLoad triggered. Applying host's data to current user.")
 
             self:apply_mct_data_to_local_user(mct_data)
 
@@ -182,9 +234,9 @@ function Sync:new_campaign()
         end
     )
 
-    local is_host, t = self:load_mp_cache()
+    local mct_data, is_host = self:load_mp_cache()
     if is_host == true then
-        MultiplayerCommunicator:TriggerEvent("MctMpInitialLoad", 0, t)
+        MultiplayerCommunicator:TriggerEvent("MctMpInitialLoad", 0, mct_data)
     end
 
     -- if cm.game_interface:model():faction_is_local(host_faction_key) then
@@ -193,6 +245,8 @@ function Sync:new_campaign()
 end
 
 ---@alias mct_data table<string, table<string, any>>
+
+
 
 --- RegisterForEvent for clients
 function Sync:listen_to_assign_settings_from_host()

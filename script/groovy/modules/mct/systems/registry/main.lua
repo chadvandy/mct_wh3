@@ -780,7 +780,7 @@ function Registry:load()
                 self:read_registry_file()
                 self:read_profiles_file()
 
-                self:load_game(context, is_mp)
+                self:load_game(context)
 
                 logf("Trigger MctInitialized")
                 core:trigger_custom_event("MctInitialized", {["mct"] = mct, ["is_multiplayer"] = is_mp})
@@ -1086,7 +1086,7 @@ function Registry:save_game(context)
 end
 
 --- load the settings for this campaign into memory
-function Registry:load_game(context, is_mp)
+function Registry:load_game(context)
     local registry_data = cm:load_named_value("mct_registry", {}, context)
     ---@cast registry_data table
 
@@ -1114,7 +1114,7 @@ function Registry:load_game(context, is_mp)
                     logf("Loading saved setting for %s.%s as %s", mod_key, option_key, tostring(option_data.setting))
                     option_obj:set_finalized_setting(option_data.setting, true)
 
-                    if option_data.is_locked then
+                    if option_data.is_locked == true then
                         option_obj._is_locked = true
                         option_obj._lock_reason = option_data.lock_reason
                     end
