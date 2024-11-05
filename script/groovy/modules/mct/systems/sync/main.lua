@@ -190,15 +190,80 @@ function Sync:init_campaign()
 
     --- Get the current host and distribute that knowledge to each PC
     if not cm:get_saved_value("mct_mp_init") then
-        -- Pass the values between the players.
-            -- We can tell which is the host by querying their MCT MP cache file.
-        self:new_campaign()
+
+
+        -- -- Pass the values between the players.
+        --     -- We can tell which is the host by querying their MCT MP cache file.
+        -- self:new_campaign()
+
+        -- TODO Lock the ability to read/write anything internally until the MCT 
+        -- synchronization is completed.
+        -- Set MCT to campaign mode and prevent the ability to edit.
+            -- TODO Make this a backend requirement as well!
+        mct:set_mode("campaign", false)
 
         cm:add_pre_first_tick_callback(function()
+            -- Cache a table w/ all of the player faction keys to note when they've been synchronized.
+            local synced_factions = {}
+
+            local human_factions = cm:get_human_factions()
+            for i = 1, #human_factions do
+                synced_factions[human_factions[i]] = false
+            end
+
+            MultiplayerCommunicator:RegisterForEvent(
+                "MctClientSync",
+                "listen_for_others",
+                function(context)            
+                    -- TODO Unlock the ability to read/write the internals of MCT.
+                    -- TODO Trigger an event to inform any developers that MCT is available for edits.
+                    synced_factions[context.faction_key] = true
+                    
+                    -- TODO Confirm that all of the data between the users has been properly synchronized.
+                    -- If this is the last faction that needs to sync, open up the world for viewing/editing
+                    -- and trigger an event for developers.
+                        -- NOTE: table.contains() is a CA-added supplementary Lua method, not a base Lua method.
+                    if table.contains(synced_factions, false) == false then
+                        -- This is the last faction to be synced!
+                        
+                        -- Reenable read/write functionality.
+                            -- TODO That's probably not what this does right now; need to set that up propa.
+                        mct:set_mode("campaign", true)
+
+                        -- TODO Trigger an event that will run MctModelAvailable callbacks.
+                    end
+                end
+            )
+
+            -- Pull in the data to load up the details of the host's settings.
+            MultiplayerCommunicator:RegisterForEvent(
+                "MctMpInitialLoad",
+                "MctMpInitialLoad",
+                function(context)
+                    GLib.Log("[SYNC] MctMpInitialLoad triggered. Applying host's data to current user.")
+                    
+                    Sync:apply_mct_data_to_local_user(context.mct_data)
+                    Sync.host_faction_key = context.host_faction_key
+                    
+                    cm:set_saved_value("mct_host", Sync.host_faction_key)
+                    cm:set_saved_value("mct_mp_init", true)
+
+                    -- Inform the rest of the clients that we're done syncing for this player's computer.
+                    MultiplayerCommunicator:TriggerEvent("MctClientSync", 0, {faction_key = cm:get_local_faction(true)})
+                end
+            )
+
+            -- Synchronize all of the data between the users on FirstTick.
             if core:svr_load_bool("mct_local_is_host") == true then
                 mct:set_mode("campaign", true)
                 GLib.Log("Local is host!")
                 local this_faction = cm:get_local_faction_name(true)
+
+                local mct_data, is_host = self:load_mp_cache()
+                if is_host == true then
+                    GLib.Log("[SYNC] Local player is host. Sending MP cache to all users:\n%s", table_printer:print(mct_data))
+                    MultiplayerCommunicator:TriggerEvent("MctMpInitialLoad", 0, {host_faction_key = this_faction, mct_data = mct_data})
+                end
 
                 MultiplayerCommunicator:TriggerEvent("MctMpHostDistribution", 0, {host_faction_key = this_faction})
             end
@@ -245,23 +310,6 @@ function Sync:init_campaign_listeners()
             core:trigger_custom_event("MctFinalized", {["mct"] = mct, ["mp_sent"] = false})
         end
     )
-end
-
---- TODO a way to get the current host 
---- -> on their PC, get their settings
---- -> then use MultiplayerCommunicator to send it to all others
-function Sync:new_campaign()
-    GLib.Log("== NEW CAMPAIGN SETTINGS SYNC ==")
-
-    local mct_data, is_host = self:load_mp_cache()
-    if is_host == true then
-        GLib.Log("[SYNC] Local player is host. Sending MP cache to all users:\n%s", table_printer:print(mct_data))
-        MultiplayerCommunicator:TriggerEvent("MctMpInitialLoad", 0, mct_data)
-    end
-
-    -- if cm.game_interface:model():faction_is_local(host_faction_key) then
-    --     -- local t = self:get_mct_data_from_local_user()
-    -- end
 end
 
 ---@alias mct_data table<string, table<string, any>>
