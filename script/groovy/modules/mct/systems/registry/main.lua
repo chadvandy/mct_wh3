@@ -610,15 +610,25 @@ function Registry:read_host_settings()
     local file = self:get_file(self.__mp_cache_file, "r+")
 
     if not file then
+        GLib.Error("[SYNC] Couldn't find the MP cache file!")
         return false, {}
     end
 
-    local str = file:read("*a")
+    local contents = file:read("*a")
     file:close()
 
-    local t = loadstring(str)()
+    local fn, err = loadstring(contents)
 
-    if not is_table(t) then return false, {} end
+    if not is_function(fn) then
+        GLib.Error("[SYNC] Issue while loading the MCT host settings file!\n\t%s", err)
+    end
+
+    local t = fn()
+
+    if not is_table(t) then
+        GLib.Error("[SYNC] Issue while returning the data from the MCT host settings file!")
+        return false, {}
+    end
 
     local is_host = t.is_host
     local settings = t.settings
@@ -638,7 +648,7 @@ function Registry:save_host_settings(bIsHost, settings)
         settings = settings,
     }
 
-    file:write(table_printer:print(t))
+    file:write("return " .. table_printer:print(t))
     -- file:flush()
     file:close()
 end

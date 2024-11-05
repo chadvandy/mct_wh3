@@ -18,7 +18,7 @@
 
 ---@class MCT.Sync : Class
 local defaults = {
-    local_is_host = false,
+    local_is_frontend_host = false,
     host_faction_key = "",
 }
 
@@ -28,6 +28,7 @@ local mct = get_mct()
 local Sync = GLib.NewClass("MCT.Sync", defaults)
 
 
+
 --[[
     ======
     Frontend Section
@@ -35,7 +36,7 @@ local Sync = GLib.NewClass("MCT.Sync", defaults)
 --]]
 function Sync:new_frontend()
     -- We are loading up the game in the frontend; we have to prepare all of our listeners to handle syncing in the frontend.
-    self.local_is_host = false
+    self.local_is_frontend_host = false
     local is_in_mp_grand_campaign = false
 
     -- Listen for a transition into the MP Grand Campaign screen, to kick off a "refreshed" sync context.
@@ -79,8 +80,8 @@ function Sync:new_frontend()
         function(context)
             is_in_mp_grand_campaign = false
 
-            if self.local_is_host == true then
-                self.local_is_host = false
+            if self.local_is_frontend_host == true then
+                self.local_is_frontend_host = false
 
                 self:clear_mp_cache()
                 core:remove_listener("MCTSync_FrontendHostSettingsChanged")
@@ -97,7 +98,7 @@ function Sync:set_host_status_and_events()
     local host_faction_key = common.get_context_value("CcoFrontendRoot", "", "HostSlotContext.FactionRecordContextKey")
 
     -- TODO we need to track the host_faction_key if it changes at any point during the frontend menu, which it certainly will.
-    self.local_is_host = this_is_host
+    self.local_is_frontend_host = this_is_host
     self.host_faction_key = host_faction_key
     core:svr_save_bool("mct_local_is_host", this_is_host)
 
@@ -124,7 +125,7 @@ end
 function Sync:trigger_popup_in_frontend()
     core:get_tm():real_callback(function()
         local text = ""
-        if self.local_is_host then
+        if self.local_is_frontend_host then
             text = string.format("Mod Configuration Tool\n\n\nYou are the host, which means your settings will be used for the duration of the campaign. You can set them now, or edit them at any point during the campaign to apply them to other players.")
         else
             text = string.format("Mod Configuration Tool\n\n\n%s is the host, which means their settings will be used for the duration of the campaign. Confirm with them what settings you all would like, if any, before starting a new game. You will not be able to see their settings until you load the campaign, and only the host can edit.", common.get_context_value("CcoFrontendRoot", "", "HostSlotContext.Name"))
@@ -148,8 +149,9 @@ function Sync:clear_mp_cache()
 end
 
 -- Load up our host's settings and save them to the mp_cache Registry file.
-function Sync:save_mp_cache(is_host)
+function Sync:save_mp_cache()
     -- local ok, err = pcall(function()
+    GLib.Log("[SYNC] Saving the MP cache for local host!")
     local settings = self:get_mct_data_from_local_user()       
     mct:get_registry():save_host_settings(true, settings)
     -- end) if not ok then vlog(err) end
@@ -158,11 +160,10 @@ end
 ---@return mct_data
 ---@return boolean
 function Sync:load_mp_cache()
+    GLib.Log("[SYNC] Loading the MP cache for local user!")
     local is_host, settings = mct:get_registry():read_host_settings()
-
-    if is_host then
-        return settings, is_host
-    end
+    GLib.Log("\tLocal user is host: %s", tostring(is_host))
+    return settings, is_host
 end
 
 function Sync:is_host()
@@ -185,6 +186,8 @@ end
 function Sync:init_campaign()
     GLib.Log("Calling Sync.init_campaign!")
 
+    self:init_campaign_listeners()
+
     --- Get the current host and distribute that knowledge to each PC
     if not cm:get_saved_value("mct_mp_init") then
         -- Pass the values between the players.
@@ -192,16 +195,6 @@ function Sync:init_campaign()
         self:new_campaign()
 
         cm:add_pre_first_tick_callback(function()
-            MultiplayerCommunicator:RegisterForEvent(
-                "MctMpHostDistribution",
-                "MctMpHostDistribution",
-                function(context)
-                    GLib.Log("[SYNC] Saving host faction key as %s", context.host_faction_key)
-                    self.host_faction_key = context.host_faction_key
-                    cm:set_saved_value("mct_host", self.host_faction_key)
-                end
-            )
-
             if core:svr_load_bool("mct_local_is_host") == true then
                 mct:set_mode("campaign", true)
                 GLib.Log("Local is host!")
@@ -211,9 +204,47 @@ function Sync:init_campaign()
             end
         end)
     end
+end
 
-    --- Trigger the listeners for pulling in the new settings from the host.
-    self:listen_to_assign_settings_from_host()
+function Sync:init_campaign_listeners()
+    MultiplayerCommunicator:RegisterForEvent(
+        "MctMpHostDistribution",
+        "MctMpHostDistribution",
+        function(context)
+            GLib.Log("[SYNC] Saving host faction key as %s", context.host_faction_key)
+            Sync.host_faction_key = context.host_faction_key
+            cm:set_saved_value("mct_host", Sync.host_faction_key)
+        end
+    )
+
+    --- TODO settle if the following two need to check if the crrent player is host or not. Shouldn't impact things.
+    MultiplayerCommunicator:RegisterForEvent(
+        "MctMpInitialLoad",
+        "MctMpInitialLoad",
+        ---@param mct_data table<string, table<string, any>>
+        function(mct_data)
+            GLib.Log("[SYNC] MctMpInitialLoad triggered. Applying host's data to current user.")
+
+            Sync:apply_mct_data_to_local_user(mct_data)
+
+            cm:set_saved_value("mct_mp_init", true)
+        end
+    )
+
+    MultiplayerCommunicator:RegisterForEvent(
+        "MctMpFinalized",
+        "MctMpFinalized",
+        ---@param mct_data mct_data
+        function(mct_data)
+            GLib.Log("MctMpFinalized called, saving settings from host!")
+
+            Sync:apply_mct_data_to_local_user(mct_data)
+
+            GLib.Log("Proper settings retrieved from host, saving and finalizing!")
+            mct:get_registry():save()
+            core:trigger_custom_event("MctFinalized", {["mct"] = mct, ["mp_sent"] = false})
+        end
+    )
 end
 
 --- TODO a way to get the current host 
@@ -221,21 +252,10 @@ end
 --- -> then use MultiplayerCommunicator to send it to all others
 function Sync:new_campaign()
     GLib.Log("== NEW CAMPAIGN SETTINGS SYNC ==")
-    MultiplayerCommunicator:RegisterForEvent(
-        "MctMpInitialLoad",
-        "MctMpInitialLoad",
-        ---@param mct_data table<string, table<string, any>>
-        function(mct_data)
-            GLib.Log("MctMpInitialLoad triggered. Applying host's data to current user.")
-
-            self:apply_mct_data_to_local_user(mct_data)
-
-            cm:set_saved_value("mct_mp_init", true)
-        end
-    )
 
     local mct_data, is_host = self:load_mp_cache()
     if is_host == true then
+        GLib.Log("[SYNC] Local player is host. Sending MP cache to all users:\n%s", table_printer:print(mct_data))
         MultiplayerCommunicator:TriggerEvent("MctMpInitialLoad", 0, mct_data)
     end
 
@@ -247,25 +267,6 @@ end
 ---@alias mct_data table<string, table<string, any>>
 
 
-
---- RegisterForEvent for clients
-function Sync:listen_to_assign_settings_from_host()
-    MultiplayerCommunicator:RegisterForEvent(
-        "MctMpFinalized",
-        "MctMpFinalized",
-        ---@param mct_data mct_data
-        function(mct_data)
-            GLib.Log("MctMpFinalized called, saving settings from host!")
-
-            self:apply_mct_data_to_local_user(mct_data)
-
-            GLib.Log("Proper settings retrieved from host, saving and finalizing!")
-            mct:get_registry():save()
-            core:trigger_custom_event("MctFinalized", {["mct"] = mct, ["mp_sent"] = false})
-        end
-    )
-end
-
 --- TriggerEvent from host
 function Sync:distribute_finalized_settings()
     -- communicate to both clients that this is happening!
@@ -275,23 +276,32 @@ end
 
 ---@param mct_data mct_data
 function Sync:apply_mct_data_to_local_user(mct_data)
+    GLib.Log("[SYNC] Applying sent data to local user.")
     local all_mods = mct:get_mods()
     local all_options
     local mod_data, option_data
+    local option_val
 
     for mod_key, mod_obj in pairs(all_mods) do
         all_options = mod_obj:get_options()
         mod_data = mct_data[mod_key]
 
+        GLib.Log("\tOverriding settings for mod [%s]", mod_key)
+
         for option_key, option_obj in pairs(all_options) do
             if not option_obj:is_global() and not option_obj:get_mp_disabled() then
                 option_data = not is_nil(mod_data) and mod_data[option_key]
 
+                GLib.Log("\t\tApplying value for option [%s]", option_key)
+
                 if not is_nil(option_data) then
-                    option_obj:set_finalized_setting(option_data, true)
+                    option_val = option_data
                 else
-                    option_obj:set_finalized_setting(option_obj:get_default_value(false), true)
+                    option_val = option_obj:get_default_value(false)
                 end
+
+                GLib.Log("\t\t\tValue: [%s]", tostring(option_val))
+                option_obj:set_finalized_setting(option_val, true)
             end
         end
     end
