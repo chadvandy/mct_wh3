@@ -187,7 +187,7 @@ function Registry:port_forward()
     --- read the old Profiles
     local old_file = io.open("mct_save.lua", "r")
     if not old_file then
-        logf("Can't find the old file to port forward!")
+        -- logf("Can't find the old file to port forward!")
         --- No old profiles to port - all good!
         return
     end
@@ -205,7 +205,7 @@ function Registry:port_forward()
 
     if content.__has_been_ported then
         -- We've already done this, stop!!!!
-        return 
+        return
     end
     
     local old_profiles = content.__profiles
@@ -761,7 +761,6 @@ function Registry:read_registry_file()
     self:save(true)
 end
 
---- TODO load new Profiles file
 function Registry:load()
     logf("MCT Load is being called.")
 

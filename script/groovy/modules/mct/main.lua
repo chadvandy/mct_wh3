@@ -2,7 +2,7 @@
 ---@alias MCT.System {_Types : {}, _Object : {}, _UI : {}, }
 
 ---@alias MCT.SelectedMod {[1]: MCT.Mod, [2]: MCT.Page}
----@alias MCT.Mode {context:'"global"'|'"campaign"', edit: boolean} #The current mode we're in.
+-- -@alias MCT.Mode {context:'"global"'|'"campaign"', edit: boolean} #The current mode we're in.
 
 --- (...) convert the full path of this file (ie. script/folder/folders/this_file.lua) to just the path leading to specifically this file (ie. script/folder/folders/), to grab subfolders easily while still allowing me to restructure this entire mod four times a year!
 local this_path = string.gsub( (...) , "[^/]+$", "")
@@ -24,10 +24,25 @@ local mct_defaults = {
 
     _Objects = {},
 
-    ---@type MCT.Mode
+    ---@class MCT.Mode
     __mode = {
         context = "global",
         edit = false,
+
+        ---@type boolean #Whether MCT is fully synchronized. Synchronization is required for any
+        --- settings that need to share their values on multiple computers. Due to the stringent
+        --- nature of multiplayer synchronization, this is deferred until shortly after
+        --- the first tick after world created.
+        --- 
+        --- 
+        ---@see MCT.Mode.initialized #If no synchronization is required.
+        synchronized = false,
+
+        ---@type boolean #Whether MCT has been fully initialized. After initialization, MCT
+        --- can be used to read and write any settings that do not require synchronization.
+        --- 
+        ---@see MCT.Mode.synchronized #If synchronization is required.
+        initialized = false,
     },
 }
 
@@ -37,9 +52,6 @@ local load_modules = GLib.LoadModules
 ---@class ModConfigurationTool : Class
 local mct = GLib.NewClass("ModConfigurationTool", mct_defaults)
 
---- TODO figure out how to get "this path" w/ the way loadfile is being done 
--- local this_path = (...):gsub("\\", "/")
-
 --- Initial creation and loading of MCT, and all the individual MCT Mods.
 function mct:init()
     ModLog("MCT.Init")
@@ -47,7 +59,6 @@ function mct:init()
         self:load_modules()
         self:load_mods()
     end) if not ok then ModLog(err) end
-
 
     ModLog("Done loading mods!")
 
@@ -268,8 +279,8 @@ function mct:get_option_type(key)
 end
 
 function mct:load_and_start()
-    self._initialized = true
     self:get_registry():load()
+    self._initialized = true
 end
 
 function mct:load_mods()
@@ -475,7 +486,6 @@ end
 function mct:register_mod(mod_name)
     vlogf("Registering mod %s", mod_name)
 
-
     -- get info about where this function was called from, to save that Lua file as a part of the mod obj
     local filename = GLib.CurrentlyLoadingFile.name
 
@@ -542,6 +552,18 @@ end
 function mct:get_mode()
     return self.__mode
 end
+
+--- Whether MCT is synchronized - meaning all of the PCs in a multiplayer game
+--- agree on what everyone's settings are.
+--- 
+--- This is always true in a singleplayer game, after loading settings.
+---@return boolean
+function mct:is_synchronized() return self.__mode.synchronized end
+
+--- Set the sync status of MCT.
+---@protected Internal only!
+---@param b boolean
+function mct:set_synchronization(b) self.__mode.synchronized = b end
 
 function mct:get_mode_text()
     local mode = self:get_mode()

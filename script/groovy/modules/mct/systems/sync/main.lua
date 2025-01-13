@@ -223,7 +223,7 @@ function Sync:init_campaign()
                     -- If this is the last faction that needs to sync, open up the world for viewing/editing
                     -- and trigger an event for developers.
                         -- NOTE: table.contains() is a CA-added supplementary Lua method, not a base Lua method.
-                    if table.contains(synced_factions, false) == false then
+                    if not table.contains(synced_factions, false) then
                         -- This is the last faction to be synced!
                         
                         -- Reenable read/write functionality.
