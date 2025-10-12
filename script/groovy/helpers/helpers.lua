@@ -89,7 +89,7 @@ function GLib.TriggerPopup(popup_key, text, use_two_buttons, button_one_callback
         return false
     end
 
-    local parent = is_uicomponent(opt_parent) and opt_parent or core:get_ui_root()
+    local parent = (is_uicomponent(opt_parent) and opt_parent) or core:get_ui_root()
 
     if not is_function(button_one_callback) then button_one_callback = function() end end
     if not is_function(button_two_callback) then button_two_callback = function() end end
@@ -163,16 +163,16 @@ function GLib.TriggerPopup(popup_key, text, use_two_buttons, button_one_callback
         end
 
         -- grab and set the text
-        local tx = find_uicomponent(popup, "DY_text")
+        -- local tx = find_uicomponent(popup, "DY_text")
 
-        local w,h = tx:TextDimensionsForText(text)
-        tx:ResizeTextResizingComponentToInitialSize(w,h)
+        local w,h = DY_text:TextDimensionsForText(text)
+        DY_text:ResizeTextResizingComponentToInitialSize(w,h)
 
-        tx:SetStateText(text)
+        DY_text:SetStateText(text)
 
-        tx:Resize(ow,oh)
+        DY_text:Resize(ow,oh)
         --w,h = tx:TextDimensionsForText(text)
-        tx:ResizeTextResizingComponentToInitialSize(ow,oh)
+        DY_text:ResizeTextResizingComponentToInitialSize(ow,oh)
 
         if is_function(creation_callback) then
             creation_callback(popup)
@@ -187,7 +187,7 @@ function GLib.TriggerPopup(popup_key, text, use_two_buttons, button_one_callback
             end,
             function(context)
                 -- close the popup
-				local ok, er = pcall(function() 
+				local ok, er = pcall(function()
                     delete_component(popup)
 
                     if context.string == "button_tick" then
