@@ -183,7 +183,6 @@ end
 
 function GLib.Log(t, ...)
     if ... then t = string.format(t, ...) end
-    out("GLib: " .. t)
     GLib.logs.lib:log(t, ...)
 end
 

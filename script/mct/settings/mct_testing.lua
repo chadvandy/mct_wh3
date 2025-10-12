@@ -1,26 +1,10 @@
-local mct = get_mct()
 
-local mct_mod = mct:register_mod("mct-mp-demo")
+-- local mct = get_mct()
 
-mct_mod:set_title("MCT MP Testing")
-mct_mod:set_author("Groovy")
+-- local mct_mod = mct:register_mod("mct-demo")
 
-mct_mod:set_description("Hi thanks for testing!\n\nPlease confirm that this demo branch works by loading up an MP campaign lobby with 2+ players. The host should go through and check all of the checkboxes, and they should set all of the dropdown values to 'The Host Rules'.\nNon-host players, please go through and make sure all of the checkboxes are set to unchecked, and set every dropdown to 'Nasty Rat'.\n\nOnce that is done and the values are confirmed, create a new game and confirm that the checkboxes are all checked and that the dropdowns all say 'The Host Rules'.\nFinal step, save and exit out of that campaign, have everyone change the settings to their default values in the main menu using the default values button, and then reload into the campaign and confirm that all of the values are still what we expect them to be as before.\nThen just let me know that it works, and if not, at what step it didn't work.\nThanks!")
-
-for i = 1, 10 do
-    local cb = mct_mod:add_new_option("checkbox_" .. i, 'checkbox')
-    cb:set_default_value(false)
-    cb:set_text("Host - Set to True")
-end
-
-for i = 1, 5 do
-    local dd = mct_mod:add_new_option("dropdown_"..i, 'dropdown')
-    ---@cast dd MCT.Option.Dropdown
-    dd:add_dropdown_value("default", "Default Value", "", true)
-    dd:add_dropdown_value("client", "Nasty Rat", "", false)
-    dd:add_dropdown_value("mp", "The Host Rules", "", false)
-    dd:set_text("Host - Set to 'The Host Rules'")
-end
+-- mct_mod:set_title("MCT Demo")
+-- mct_mod:set_author("Groovy")
 
 -- mct_mod:add_new_action("test_action", "Test Action", function() out("Test Action!") end)
 
