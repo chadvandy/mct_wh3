@@ -94,7 +94,7 @@ end
 function Sync:set_host_status_and_events()
     -- Grab if the host is local, and save the host's current faction key.
     local this_is_host = common.get_context_value("CcoFrontendRoot", "", "CampaignLobbyContext.IsLocalPlayerHost")
-    local host_faction_key = common.get_context_value("CcoFrontendRoot", "", "HostSlotContext.FactionRecordContextKey")
+    local host_faction_key = common.get_context_value("CcoFrontendRoot", "", "CampaignLobbyContext.HostSlotContext.FactionRecordContextKey")
 
     -- TODO we need to track the host_faction_key if it changes at any point during the frontend menu, which it certainly will.
     self.local_is_host = this_is_host
@@ -127,7 +127,7 @@ function Sync:trigger_popup_in_frontend()
         if self.local_is_host then
             text = string.format("Mod Configuration Tool\n\n\nYou are the host, which means your settings will be used for the duration of the campaign. You can set them now, or edit them at any point during the campaign to apply them to other players.")
         else
-            text = string.format("Mod Configuration Tool\n\n\n%s is the host, which means their settings will be used for the duration of the campaign. Confirm with them what settings you all would like, if any, before starting a new game. You will not be able to see their settings until you load the campaign, and only the host can edit.", common.get_context_value("CcoFrontendRoot", "", "HostSlotContext.Name"))
+            text = string.format("Mod Configuration Tool\n\n\n%s is the host, which means their settings will be used for the duration of the campaign. Confirm with them what settings you all would like, if any, before starting a new game. You will not be able to see their settings until you load the campaign, and only the host can edit.", common.get_context_value("CcoFrontendRoot", "", "CampaignLobbyContext.HostSlotContext.Name"))
         end
 
         GLib.TriggerPopup("mct_sync_popup", text, false)
@@ -317,8 +317,8 @@ function Sync:get_mct_data_from_local_user()
             if not option_obj:is_global() and not option_obj:get_mp_disabled() then
                 vlog("Looping through option obj ["..option_key.."]")
 
-                -- saved_value = mct:get_registry():get_selected_setting_for_option(option_obj)
-                saved_value = option_obj:get_finalized_setting(true)
+                saved_value = mct:get_registry():get_selected_setting_for_option(option_obj)
+                -- saved_value = option_obj:get_finalized_setting(true)
                 default_value = option_obj:get_default_value(false)
 
                 vlog(string.format("\tCurrently finalized setting is %s\n\tDefault value is %s", tostring(saved_value), tostring(default_value)))
