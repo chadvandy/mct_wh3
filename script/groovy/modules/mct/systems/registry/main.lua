@@ -610,13 +610,27 @@ function Registry:read_host_settings()
     local file = self:get_file(self.__mp_cache_file, "r+")
 
     if not file then
+        -- err("Error while loading the host's settings file!\nNo cache file found on the local computer.")
         return false, {}
     end
 
     local str = file:read("*a")
     file:close()
 
-    local t = loadstring(str)()
+    -- Add the return statement to the saved table so we can load
+    -- this string as a Lua block of code and pull the table into
+    -- this function's chunk.
+    str = "return " .. str
+
+    local fn, errmsg = loadstring(str)
+
+    if not is_function(fn) then
+        err("Error while loading the host's settings file!\n" .. errmsg)
+        log("Host settings file: " .. str)
+        return false, {}
+    end
+
+    local t = fn()
 
     if not is_table(t) then return false, {} end
 

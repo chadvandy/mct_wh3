@@ -19,3 +19,5 @@ game_logging:set_default_value(false)
 game_logging:set_text("Logging: Base Game")
 game_logging:set_tooltip_text("Allows the base game to print a log file to the game's directory. [[col:red]]Base game logging can slow down the game, and is recommended for debugging and crashes only.[[/col]]")
 game_logging:set_is_global(true)
+
+--[[ Adding in random text to change checksum so I can upload an update for 7.0! ]]
