@@ -39,7 +39,6 @@ local defaults = {
 
     __main_file = "mct_registry.lua",
     __profiles_file = "mct_profiles.lua",
-    __mp_cache_file = "mp_settings.lua",
 }
 
 ---@class MCT.Registry : Class
@@ -604,59 +603,6 @@ function Registry:save_all_mods()
     end
 end
 
----@return boolean #IsHost - are we the host.
----@return mct_data #Saved setting values for the host.
-function Registry:read_host_settings()
-    local file = self:get_file(self.__mp_cache_file, "r+")
-
-    if not file then
-        -- err("Error while loading the host's settings file!\nNo cache file found on the local computer.")
-        return false, {}
-    end
-
-    local str = file:read("*a")
-    file:close()
-
-    -- Add the return statement to the saved table so we can load
-    -- this string as a Lua block of code and pull the table into
-    -- this function's chunk.
-    str = "return " .. str
-
-    local fn, errmsg = loadstring(str)
-
-    if not is_function(fn) then
-        err("Error while loading the host's settings file!\n" .. errmsg)
-        log("Host settings file: " .. str)
-        return false, {}
-    end
-
-    local t = fn()
-
-    if not is_table(t) then return false, {} end
-
-    local is_host = t.is_host
-    local settings = t.settings
-
-    return is_host, settings
-end
-
-function Registry:save_host_settings(bIsHost, settings)
-    local file = self:get_file(self.__mp_cache_file, "w+")
-
-    if not file then
-        return
-    end
-
-    local t = {
-        is_host = bIsHost,
-        settings = settings,
-    }
-
-    file:write(table_printer:print(t))
-    -- file:flush()
-    file:close()
-end
-
 function Registry:read_profiles_file()
     local file = self:get_file(self.__profiles_file, "r+")
 
@@ -1128,7 +1074,7 @@ function Registry:load_game(context)
                     logf("Loading saved setting for %s.%s as %s", mod_key, option_key, tostring(option_data.setting))
                     option_obj:set_finalized_setting(option_data.setting, true)
 
-                    if option_data.is_locked == true then
+                    if option_data.is_locked then
                         option_obj._is_locked = true
                         option_obj._lock_reason = option_data.lock_reason
                     end
