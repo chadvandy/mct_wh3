@@ -39,6 +39,12 @@ local defaults = {
 
     __main_file = "mct_registry.lua",
     __profiles_file = "mct_profiles.lua",
+
+    ---@type table? The registry file's contents, kept after reading so each save doesn't re-read and re-parse the whole file.
+    __file_data = nil,
+
+    ---@type number? The registry file's size on disk when `__file_data` was last read or written. A different size means it changed.
+    __file_size = nil,
 }
 
 ---@class MCT.Registry : Class
@@ -79,106 +85,111 @@ function Registry:get_profiles()
     return self.__saved_profiles
 end
 
---- @param t table
---- @param ignored_fields table<string>
---- @param loop_value number
---- @return table<string>
-local function inner_loop_fast_print(t, ignored_fields, loop_value)
-    --- @type table<any>
-	local table_string = {'{\n'}
-	--- @type table<any>
-	local temp_table = {}
-    for key, value in pairs(t) do
-        table_string[#table_string + 1] = string.rep('\t', loop_value + 1)
+--- Cached indent strings, so deep tables don't rebuild them for every line.
+---@type table<number, string>
+local indents = {}
 
-        if type(key) == "string" then
-            table_string[#table_string + 1] = '["'
-            table_string[#table_string + 1] = key
-            table_string[#table_string + 1] = '"] = '
-        elseif type(key) == "number" then
-            table_string[#table_string + 1] = '['
-            table_string[#table_string + 1] = key
-            table_string[#table_string + 1] = '] = '
-        else
-            table_string[#table_string + 1] = '['
-            table_string[#table_string + 1] = tostring(key)
-            table_string[#table_string + 1] = '] = '
-        end
-
-		if type(value) == "table" then
-			temp_table = inner_loop_fast_print(value, ignored_fields, loop_value + 1)
-			for i = 1, #temp_table do
-				table_string[#table_string + 1] = temp_table[i]
-			end
-		elseif type(value) == "string" then
-			table_string[#table_string + 1] = '[=['
-			table_string[#table_string + 1] = value
-			table_string[#table_string + 1] = ']=],\n'
-		else
-			table_string[#table_string + 1] = tostring(value)
-			table_string[#table_string + 1] = ',\n'
-		end
+--- Get `n` tabs as a string.
+---@param n number
+---@return string
+local function indent(n)
+    local s = indents[n]
+    if not s then
+        s = string.rep('\t', n)
+        indents[n] = s
     end
-
-	table_string[#table_string + 1] = string.rep('\t', loop_value)
-    table_string[#table_string + 1] = "},\n"
-
-    return table_string
+    return s
 end
 
+--- Append a table key, as `["key"] = ` or `[key] = `, to `buf` after index `n`.
+---@param buf string[]
+---@param n number The last used index in `buf`.
+---@param key any
+---@return number #The new last used index.
+local function write_key(buf, n, key)
+    if type(key) == "string" then
+        buf[n+1] = '["'
+        buf[n+2] = key
+        buf[n+3] = '"] = '
+    else
+        buf[n+1] = '['
+        buf[n+2] = type(key) == "number" and key or tostring(key)
+        buf[n+3] = '] = '
+    end
+    return n + 3
+end
 
+--- Append a nested table to `buf` after index `n`. Everything goes into one buffer, so nested values are never copied between tables.
+---@param buf string[]
+---@param n number The last used index in `buf`.
+---@param t table
+---@param depth number How deep `t` is, for the indent.
+---@return number #The new last used index.
+local function write_table(buf, n, t, depth)
+    buf[n+1] = '{\n'
+    n = n + 1
+
+    for key, value in pairs(t) do
+        buf[n+1] = indent(depth + 1)
+        n = write_key(buf, n + 1, key)
+
+        if type(value) == "table" then
+            n = write_table(buf, n, value, depth + 1)
+        elseif type(value) == "string" then
+            buf[n+1] = '[=['
+            buf[n+2] = value
+            buf[n+3] = ']=],\n'
+            n = n + 3
+        else
+            buf[n+1] = tostring(value)
+            buf[n+2] = ',\n'
+            n = n + 2
+        end
+    end
+
+    buf[n+1] = indent(depth)
+    buf[n+2] = "},\n"
+    return n + 2
+end
+
+--- Turn a table into Lua source that `loadstring` reads back.
 --- @param t table
---- @param ignored_fields table<string>?
+--- @param ignored_fields table<string>? Unused, kept for the old signature.
 --- @return string|boolean
 local function fast_print(t, ignored_fields)
     if not (type(t) == "table") then
         return false
     end
 
-    --- @type table<any>
-    local table_string = {'{\n'}
-	--- @type table<any>
-	local temp_table = {}
+    ---@type string[]
+    local buf = {'{\n'}
+    local n = 1
 
     for key, value in pairs(t) do
-
-        table_string[#table_string + 1] = string.rep('\t', 1)
-        if type(key) == "string" then
-            table_string[#table_string + 1] = '["'
-            table_string[#table_string + 1] = key
-            table_string[#table_string + 1] = '"] = '
-        elseif type(key) == "number" then
-            table_string[#table_string + 1] = '['
-            table_string[#table_string + 1] = key
-            table_string[#table_string + 1] = '] = '
-        else
-            --- TODO skip it somehow?
-            table_string[#table_string + 1] = '['
-            table_string[#table_string + 1] = tostring(key)
-            table_string[#table_string + 1] = '] = '
-        end
+        buf[n+1] = '\t'
+        n = write_key(buf, n + 1, key)
 
         if type(value) == "table" then
-            temp_table = inner_loop_fast_print(value, ignored_fields, 1)
-            for i = 1, #temp_table do
-                table_string[#table_string + 1] = temp_table[i]
-            end
+            n = write_table(buf, n, value, 1)
         elseif type(value) == "string" then
-            table_string[#table_string + 1] = '[=['
-            table_string[#table_string + 1] = value
-            table_string[#table_string + 1] = ']=],\n'
+            buf[n+1] = '[=['
+            buf[n+2] = value
+            buf[n+3] = ']=],\n'
+            n = n + 3
         elseif type(value) == "boolean" or type(value) == "number" then
-            table_string[#table_string + 1] = tostring(value)
-            table_string[#table_string + 1] = ',\n'
+            buf[n+1] = tostring(value)
+            buf[n+2] = ',\n'
+            n = n + 2
         else
             -- unsupported type, technically.
-            table_string[#table_string+1] = "nil,\n"
+            buf[n+1] = "nil,\n"
+            n = n + 1
         end
     end
 
-    table_string[#table_string + 1] = "}\n"
+    buf[n+1] = "}\n"
 
-    return table.concat(table_string)
+    return table.concat(buf)
 end
 
 function Registry:port_forward()
@@ -655,25 +666,114 @@ function Registry:save_profiles_file()
     file:close()
 end
 
---- TODO split this up into a few sub functions so it's easier to call externally
-function Registry:read_registry_file()
-    local file = self:get_file(self.__main_file, "r+")
+--- Get the registry file's contents. They're kept after the first read, and only read again if the file's size on disk changed.
+---@return table? #The contents, or nil if the file is missing or can't be read.
+function Registry:get_file_data()
+    local file = self:get_file(self.__main_file, "r")
+    if not file then return nil end
 
-    if not file then self:save_file_with_defaults() return self:read_registry_file() end
+    local size = file:seek("end")
+    if self.__file_data and size == self.__file_size then
+        file:close()
+        return self.__file_data
+    end
 
+    file:seek("set", 0)
     local str = file:read("*a")
     file:close()
 
-    local t, t_err = loadstring(str)
-
-    if not t then
-        --- Don't read - set values to default and save immediately.
-        errf("Error while reading MCT.Registry file: " .. tostring(t_err))
-        self:save_file_with_defaults()
-        return self:read_registry_file()
+    local chunk, load_err = loadstring(str)
+    if not chunk then
+        errf("Error while reading MCT.Registry file: " .. tostring(load_err))
+        return nil
     end
 
-    t = t()
+    local t = chunk()
+    if not is_table(t) then return nil end
+
+    self:move_campaigns_to_files(t, str)
+
+    self.__file_data = t
+    self.__file_size = size
+    return t
+end
+
+--- Get the file name holding one campaign's settings.
+---@param index number The campaign's index.
+---@return string
+function Registry:get_campaign_file_name(index)
+    return string.format("mct_registry_campaign_%d.lua", index)
+end
+
+--- Read a file next to the registry file, without logging an error when it doesn't exist.
+---@param file_name string
+---@return string? #The file's text, or nil if it doesn't exist.
+function Registry:read_optional_file(file_name)
+    local file = io.open(self.appdata_path .. file_name, "r") or io.open(file_name, "r")
+    if not file then return nil end
+
+    local str = file:read("*a")
+    file:close()
+    return str
+end
+
+--- Write a table as a Lua file next to the registry file.
+---@param file_name string
+---@param t table
+function Registry:write_lua_file(file_name, t)
+    local file = self:get_file(file_name, "w+")
+    if not file then return end
+
+    file:write("return " .. fast_print(t))
+    file:close()
+end
+
+--- Read one campaign's settings from its own file.
+---@param index number The campaign's index.
+---@return {saved_mods: table}? #The campaign's settings, or nil if there's no readable file for it.
+function Registry:read_campaign_file(index)
+    local str = self:read_optional_file(self:get_campaign_file_name(index))
+    if not str then return nil end
+
+    local chunk = loadstring(str)
+    local t = chunk and chunk()
+    return is_table(t) and t or nil
+end
+
+--- Move the campaigns in an older registry file into one file each, so a save only rewrites the campaign being played.
+--- The original file is backed up once first, so nothing is lost if an older MCT is used again.
+---@param t table The registry file's contents. Its `campaigns` are emptied.
+---@param str string The registry file's text, for the backup.
+function Registry:move_campaigns_to_files(t, str)
+    if not is_table(t.campaigns) or next(t.campaigns) == nil then return end
+
+    local backup_name = "mct_registry_backup_before_campaign_split.lua"
+    if not self:read_optional_file(backup_name) then
+        local backup = self:get_file(backup_name, "w+")
+        if backup then
+            backup:write(str)
+            backup:close()
+        end
+    end
+
+    local moved = 0
+    for index, campaign in pairs(t.campaigns) do
+        -- index 0 only ever held settings saved outside a campaign, and nothing reads it
+        if is_number(index) and index > 0 and is_table(campaign) then
+            self:write_lua_file(self:get_campaign_file_name(index), campaign)
+            moved = moved + 1
+        end
+    end
+
+    -- kept as an empty table so older MCT versions can still read the file
+    t.campaigns = {}
+
+    logf("Moved %d campaigns out of the registry file into their own files.", moved)
+end
+
+--- TODO split this up into a few sub functions so it's easier to call externally
+function Registry:read_registry_file()
+    local t = self:get_file_data()
 
     if not t or not t.global then
         --- Don't read - set values to default and save immediately.
@@ -769,7 +869,11 @@ end
 
 function Registry:save_file_with_defaults()
     local file = self:get_file(self.__main_file, "w+")
-    
+
+    -- the file is being replaced, so the kept contents are out of date
+    self.__file_data = nil
+    self.__file_size = nil
+
     logf("Saving registry file with defaults.")
 
     local t = {
@@ -817,11 +921,7 @@ function Registry:save_file_with_defaults()
 end
 
 function Registry:save_registry_file()
-    local old = self:get_file(self.__main_file, "r+")
-    local str = old:read("*a")
-    local t = loadstring(str)()
-
-    old:close()
+    local t = self:get_file_data()
 
     local st = os.clock()
 
@@ -848,8 +948,10 @@ function Registry:save_registry_file()
         t.campaigns = {}
     end
 
-    if not t.campaigns[self.__this_campaign] then
-        t.campaigns[self.__this_campaign] = {saved_mods = {}}
+    -- the campaign being played is saved to its own file, so saving doesn't rewrite every campaign
+    local campaign_data
+    if mct:context() == "campaign" and self.__this_campaign > 0 then
+        campaign_data = self:read_campaign_file(self.__this_campaign) or {saved_mods = {}}
     end
 
     logf("Saving the MCT.Registry!")
@@ -868,14 +970,14 @@ function Registry:save_registry_file()
         local this = t.global.saved_mods[mod_key]
         local this_campaign
 
-        if mct:context() == "campaign" then
-            if not t.campaigns[self.__this_campaign].saved_mods[mod_key] then
-                t.campaigns[self.__this_campaign].saved_mods[mod_key] = {
+        if campaign_data then
+            if not campaign_data.saved_mods[mod_key] then
+                campaign_data.saved_mods[mod_key] = {
                     options = {},
                 }
             end
 
-            this_campaign = t.campaigns[self.__this_campaign].saved_mods[mod_key]
+            this_campaign = campaign_data.saved_mods[mod_key]
         end
 
         for option_key, option_obj in pairs(mod_obj:get_options()) do
@@ -953,7 +1055,15 @@ function Registry:save_registry_file()
     local file = self:get_file(self.__main_file, "w+")
     ---@cast file file*
     file:write("return " .. t_str)
+
+    -- remember what was written, so the next save can skip reading the file back
+    self.__file_data = t
+    self.__file_size = file:seek("cur")
     file:close()
+
+    if campaign_data then
+        self:write_lua_file(self:get_campaign_file_name(self.__this_campaign), campaign_data)
+    end
 
     local et3 = os.clock() - st3
 
@@ -981,11 +1091,9 @@ function Registry:load_campaign_battle()
         return false
     end
 
-    local file = self:get_file(self.__main_file, "r+")
-    if file then
-        local t = loadstring(file:read("*a"))()
-        local this_campaign = t.campaigns[this_campaign_index]
-
+    -- `read_registry_file` runs first, so campaigns from an older registry file have already been moved into their own files
+    local this_campaign = self:read_campaign_file(this_campaign_index)
+    if this_campaign and is_table(this_campaign.saved_mods) then
         for mod_key, mod_data in pairs(this_campaign.saved_mods) do
             local mod_obj = mct:get_mod_by_key(mod_key)
             if mod_obj then
