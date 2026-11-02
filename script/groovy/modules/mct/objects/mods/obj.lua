@@ -847,7 +847,10 @@ end
 function mct_mod:get_github_link()
     if self._github_id == "" then return "" end
 
-    return "https://github.com/" .. self._github_id
+    local slashPosition = string.find(self._github_id, "/")
+    if slashPosition == nil then return "" end
+
+    return "https://steamcommunity.com/linkfilter/?u=https%3A%2F%2Fgithub.com%2F" .. string.sub(self._github_id, 1, slashPosition - 1) .. "%2F" .. string.sub(self._github_id, slashPosition + 1)
 end
 
 --- Grabs the title text. First checks for a loc-key `mct_[mct_mod_key]_title`, then checks to see if anything was set using @{mct_mod:set_title}. If not, "No title assigned" is returned.
