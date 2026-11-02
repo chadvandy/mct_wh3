@@ -662,9 +662,9 @@ function UI_Main:create_top_bar(w, h, xo, yo)
 
     self.top_bar = top_bar
     
-    self:create_profiles_button(buttons_holder)
-    self:create_help_button(buttons_holder)
-    self:create_save_button(buttons_holder)
+    -- self:create_profiles_button(buttons_holder)
+    -- self:create_help_button(buttons_holder)
+    -- self:create_save_button(buttons_holder)
 end
 
 -- edit currently_loaded text based on mct:get_mode_text
