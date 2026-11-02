@@ -54,6 +54,24 @@ local UI_Main = {
 
 local mct = get_mct()
 
+---@type MCT.UI.Spacing
+local spacing = GLib.LoadModule("spacing", this_path)
+
+--- The name MCT registers its ESC key callback under, while the panel is open.
+local ESCAPE_KEY_NAME = "mct_close_on_escape"
+
+--- Get the game manager that can steal the ESC key: `cm` in campaign, `bm` in battle. The main menu has none.
+---@return table?
+local function get_escape_key_manager()
+    return cm or bm
+end
+
+--- Stop the timers that watch option controls, before those controls are destroyed.
+local function stop_option_watchers()
+    mct:get_mct_option_class().ui_stop_text_input_watch()
+    mct:get_mct_option_class_subtype("slider").bar_clear_all()
+end
+
 -- --- TODO load these elsewhere!
 -- local ui_path = "script/vlib/mct/core/ui/"
 
@@ -342,6 +360,7 @@ function UI_Main:set_selected_mod(mod_obj, page)
 
         ---@type UIC
         local uic = self.right_panel
+        stop_option_watchers()
         uic:DestroyChildren()
     
         self:set_title(mod_obj)
@@ -473,6 +492,13 @@ function UI_Main:open_frame(provided_panel, is_pre_campaign)
     -- clear notifications + trigger any stashed popups
     self:trigger_stashed_popups()
 
+    -- ESC closes MCT like its X button, in campaign and battle where MCT is a popup. In the main menu, ESC already leaves the screen.
+    local key_manager = get_escape_key_manager()
+    if key_manager and not is_pre_campaign then
+        key_manager:release_escape_key_with_callback(ESCAPE_KEY_NAME)
+        key_manager:steal_escape_key_with_callback(ESCAPE_KEY_NAME, function() self:close_and_save() end)
+    end
+
     core:trigger_custom_event("MctPanelOpened", {["mct"] = mct, ["ui_obj"] = self})
 
 end) if not ok then logerr(msg) end
@@ -480,7 +506,14 @@ end
 
 
 function UI_Main:close_frame(already_dead)
+    stop_option_watchers()
     if not already_dead then delete_component(self.panel) end
+
+    -- give ESC back to the game, so it opens the pause menu again
+    local key_manager = get_escape_key_manager()
+    if key_manager then
+        key_manager:release_escape_key_with_callback(ESCAPE_KEY_NAME)
+    end
 
     --core:remove_listener("left_or_right_pressed")
     core:remove_listener("MctRowClicked")
@@ -864,6 +897,46 @@ function UI_Main:new_option_row_at_pos(option_obj, this_layout, w, h)
     return w,h
 end
 
+--- Get the spacing used to lay out the Settings page.
+---@return MCT.UI.Spacing
+function UI_Main:get_spacing()
+    return spacing
+end
+
+--- Create a thin parchment divider line, centered in its parent.
+---@param parent UIC The component to draw the divider in.
+---@param width number The width of the line.
+---@return UIC #The divider image.
+function UI_Main:create_divider_image(parent, width)
+    local div = core:get_or_create_component("divider", "ui/groovy/image", parent)
+    div:SetDockingPoint(5)
+    div:Resize(width, spacing.divider_h, false)
+    div:SetImagePath("ui/skins/default/parchment_divider_length.png", 0)
+    div:SetCurrentStateImageTiled(0, true)
+    div:SetCurrentStateImageMargins(0, 2, 0, 2, 0)
+
+    -- lock the size like the option rows, so a parent resize can't stretch the tiled image into a second line
+    div:SetCanResizeWidth(false) div:SetCanResizeHeight(false)
+
+    return div
+end
+
+--- Create an empty spacer of a fixed size, for padding inside lists and sections.
+---@param parent UIC The component to create the spacer in.
+---@param id string The spacer's id.
+---@param width number
+---@param height number
+---@return UIC #The spacer.
+function UI_Main:create_spacer(parent, id, width, height)
+    local spacer = core:get_or_create_component(id, "ui/campaign ui/script_dummy", parent)
+    spacer:Resize(width, height, false)
+
+    -- lock the size, so a parent resize can't stretch it
+    spacer:SetCanResizeWidth(false) spacer:SetCanResizeHeight(false)
+
+    return spacer
+end
+
 core:declare_lookup_listener("component_click_up", "ComponentLClickUp", function(context) return context.component end)
 
 ---comment
@@ -934,6 +1007,16 @@ function UI_Main:create_mct_button(parent, x, y)
     return mct_button
 end
 
+--- Save any changed settings, then close the panel. Used by the X button and the ESC key.
+function UI_Main:close_and_save()
+    -- check if MCT was finalized or no changes were done during the latest UI operation
+    if mct:get_registry():has_pending_changes() then
+        mct:finalize()
+    end
+
+    self:close_frame()
+end
+
 core:add_listener(
     "mct_close_button_pressed",
     "ComponentLClickUp",
@@ -941,14 +1024,7 @@ core:add_listener(
         return context.string == "button_mct_close" and uicomponent_descended_from(UIComponent(context.component), "mct_options")
     end,
     function(context)
-        -- check if MCT was finalized or no changes were done during the latest UI operation       
-        if mct:get_registry():has_pending_changes() then
-            -- if Settings.__settings_changed then
-                mct:finalize()
-            -- end
-        end
-        
-        UI_Main:close_frame()
+        UI_Main:close_and_save()
     end,
     true
 )

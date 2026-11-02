@@ -13,6 +13,21 @@ local Registry = mct:get_registry()
 
 local log,logf,err,errf = get_vlog("[mct]")
 
+--- `_control_dock_point` for a control that spans the row's content with no label, like dividers.
+local ROW_FULL = 5
+
+--- `_control_dock_point` for a control under the label, like radio buttons.
+local ROW_BELOW = 8
+
+--- Alignment names, mapped to the one each means. "center" is accepted as well as "centre".
+local ALIGNMENTS = {left = "left", centre = "centre", center = "centre", right = "right"}
+
+--- The listener that commits the watched text box when it's clicked out of. Only one text box is watched at a time.
+local TEXT_INPUT_RELEASED = "mct_text_input_released"
+
+--- The timer key for the watched text box, or nil when none is watched.
+local watched_text_input_key = nil
+
 ---@class MCT.Option
 local mct_option_defaults = {
     ---@type MCT.Mod The owning mod object.
@@ -78,8 +93,14 @@ local mct_option_defaults = {
     ---@type boolean Whether this option has its settings stored globally or within independent campaigns.
     _is_global = false,
 
-    _control_dock_point = 6, -- the dock point for the control
-    _control_dock_offset = {0, 0} -- the dock position for the control
+    ---@type (fun(value:any):boolean,string?)[] Tests every new selected setting must pass. See `add_validity_test`.
+    _validity_callbacks = {},
+
+    ---@type string? The error showing beside the icons. Set with `ui_set_error`.
+    _error_msg = nil,
+
+    ---@type number The row layout for `ui_layout_row`: 5 for a full-width control with no label, 8 for under the label, else beside it.
+    _control_dock_point = 6,
 }
 
 ---@class MCT.Option : Class
@@ -409,9 +430,10 @@ function mct_option:set_uic_visibility(visibility, keep_in_ui)
 
     for key, uic in pairs(uic_table) do
         if is_uicomponent(uic) then
-            -- the visibility of these two are determined elsewhere.
-            if key ~= "error_popup" and key ~= "border" then
-                uic:SetVisible(self:get_uic_visibility())
+            -- the row and border visibility are determined elsewhere. The error line is only shown by `ui_set_error`, but hides with the option.
+            local visible = self:get_uic_visibility()
+            if key ~= "row" and key ~= "border" and (key ~= "error_line" or not visible) then
+                uic:SetVisible(visible)
             end
         end
     end
@@ -625,13 +647,24 @@ function mct_option:set_selected_setting(val, is_from_popup)
         return
     end
 
-    logf("Changing option %s of type %q to val %s", self:get_key(), self:get_type(), tostring(val))
+    -- a failed validity test keeps the current value, and shows why beside the option's icons
+    local test = self:run_validity_tests(val)
+    self:ui_set_error(test)
+    if test ~= true then
+        self:ui_refresh()
+        return false
+    end
+
+    logf("Changing option %s of type %q to val %s", self:get_key(), self:get_type(), self:get_value_text(val))
 
     --- If we have a confirmation popup, abort the operation and go through that. 
     if not is_from_popup and self:test_confirmation_popup(val, self:get_selected_setting()) then
         return
     end
     
+    -- copy table settings, so the registry never shares one with the caller
+    if is_table(val) then val = table.copy(val) end
+
     Registry:set_changed_setting(self, val)
     
     self:ui_refresh()
@@ -649,6 +682,161 @@ function mct_option:set_selected_setting(val, is_from_popup)
         -- run the callback, passing the mct_option along as an arg
         self:process_callback()
     end]]
+end
+
+--- Add a test that every new value picked for this option must pass. A failed test keeps the current value and shows its message in red
+--- beside the option's icons.
+---@param callback fun(value:any):boolean,string? Takes the new value. Return true if it's valid, or false and a message explaining why not.
+---@usage    option:add_validity_test(
+---               function(value)
+---                     if value == "bloop" then
+---                         return false, "Bloop is unallowed."
+---                     else
+---                         return true
+---                     end
+---                end
+---            )
+function mct_option:add_validity_test(callback)
+    if not is_function(callback) then
+        err("add_validity_test() called on mct_option ["..self:get_key().."], but the callback provided is not a valid function!")
+        return false
+    end
+
+    self._validity_callbacks[#self._validity_callbacks+1] = callback
+end
+
+--- Get a setting as readable text, for logs and tooltips. Types with table settings or named values override this.
+---@param value any The setting.
+---@return string
+function mct_option:get_value_text(value)
+    return tostring(value)
+end
+
+--- Check an alignment name, logging an error if it isn't one.
+---@param alignment any The alignment name: "left", "centre", "center", or "right".
+---@param caller string The setter's name, for the error.
+---@return "left"|"centre"|"right"|false #The alignment, with "center" read as "centre", or false if it isn't valid.
+function mct_option:check_alignment(alignment, caller)
+    local name = ALIGNMENTS[alignment]
+    if not name then
+        err(caller.."() called for option ["..self:get_key().."], but the alignment ["..tostring(alignment).."] is not left, centre, or right! Returning false.")
+        return false
+    end
+
+    return name
+end
+
+--- Run every test added with `add_validity_test` against a value.
+---@param value any The value to test.
+---@return true|string #True if every test passed, or the first failed test's message.
+function mct_option:run_validity_tests(value)
+    for _, callback in ipairs(self._validity_callbacks) do
+        local valid, errmsg = callback(value)
+        if valid == false then
+            return errmsg or "This value isn't allowed."
+        end
+    end
+
+    return true
+end
+
+--- Show an error in red beside this option's icons, or hide it. Does nothing if the option isn't in the UI.
+---@param msg any The error to show. Anything that isn't a string, like nil or a passed test's `true`, hides it.
+function mct_option:ui_set_error(msg)
+    if not is_string(msg) then msg = nil end
+
+    -- skip repeats, so the text box watcher doesn't lay the row out again every tick
+    local line = self:get_uic_with_key("error_line")
+    if line and msg == self._error_msg then return end
+    self._error_msg = msg
+
+    if not msg then
+        if line then
+            line:SetVisible(false)
+            UIComponent(line:Parent()):Layout()
+        end
+        return
+    end
+
+    if not line then
+        local row = self:get_uic_with_key("row")
+        local text_uic = self:get_uic_with_key("text")
+        if not row or not text_uic then return end
+
+        -- added to the row's icon list, so it sits inside the row on the line under the label, right after whichever icons are showing
+        local icons_holder = find_uicomponent(text_uic, "icons_holder")
+        if not icons_holder then return end
+
+        line = core:get_or_create_component("error_line", "ui/groovy/text/fe_default", icons_holder)
+        line:SetCanResizeWidth(true) line:SetCanResizeHeight(true)
+        line:Resize(row:Width() * 0.6, 20)
+        line:SetCanResizeWidth(false) line:SetCanResizeHeight(false)
+        line:SetTextHAlign("left")
+        line:SetTextVAlign("centre")
+
+        self:set_uic_with_key("error_line", line, true)
+    end
+
+    line:SetStateText("[[col:red]]" .. msg .. "[[/col]]")
+    line:SetVisible(true)
+    UIComponent(line:Parent()):Layout()
+end
+
+--- Watch a text box while it's clicked into. Its text is tested whenever it changes, with any error shown beside the icons. Clicking
+--- anywhere else commits valid text, or puts the pending value back and keeps the error up.
+---@param text_input UIC The clicked text box.
+---@param test fun(text:string):true|string Tests the typed text. Returns true, or the error to show.
+---@param commit fun(text:string) Sets the option from valid typed text.
+function mct_option:ui_watch_text_input(text_input, test, commit)
+    mct_option.ui_stop_text_input_watch()
+
+    local callback_key = "mct_text_input_" .. self:get_mod_key() .. "_" .. self:get_key()
+    local last_text = nil
+    watched_text_input_key = callback_key
+
+    core:get_tm():repeat_real_callback(function()
+        if not is_uicomponent(text_input) then
+            mct_option.ui_stop_text_input_watch()
+            return
+        end
+
+        local text = text_input:GetStateText()
+        if text ~= last_text then
+            last_text = text
+            self:ui_set_error(test(text))
+        end
+    end, 50, callback_key)
+
+    core:add_listener(
+        TEXT_INPUT_RELEASED,
+        "ComponentLClickUp",
+        function(context)
+            return UIComponent(context.component) ~= text_input
+        end,
+        function()
+            mct_option.ui_stop_text_input_watch()
+
+            local text = text_input:GetStateText()
+            local valid = test(text)
+            if valid == true then
+                commit(text)
+            else
+                self:ui_select_value(self:get_selected_setting())
+                self:ui_set_error(valid)
+            end
+        end,
+        false
+    )
+end
+
+--- Stop watching the text box set with `ui_watch_text_input`, if any. Called before the panel closes or a page is redrawn.
+function mct_option.ui_stop_text_input_watch()
+    if watched_text_input_key then
+        core:get_tm():remove_real_callback(watched_text_input_key)
+        watched_text_input_key = nil
+    end
+
+    core:remove_listener(TEXT_INPUT_RELEASED)
 end
 
 ---- Manually set the x/y position for this option, within its section.
@@ -696,6 +884,12 @@ end
 
 function mct_option:is_radiobutton()
     return self:get_type() == "MCT.Option.RadioButton"
+end
+
+--- Whether this option holds a setting. Types without one, like dummies and actions, override this to return false.
+---@return boolean
+function mct_option:has_setting()
+    return true
 end
 
 --- Internal checker to see if the values passed through mct_option methods are valid.
@@ -801,6 +995,8 @@ function mct_option:ui_create_option_base(parent, w, h)
     dummy_option:SetProperty("mct_option", self:get_key())
     dummy_option:SetProperty("mct_mod", self:get_mod_key())
 
+    self:set_uic_with_key("row", dummy_option, true)
+
     --- Create the border if necessary
     local dummy_border = core:get_or_create_component("border", "ui/groovy/image", dummy_option)
     dummy_border:Resize(w, h)
@@ -837,42 +1033,11 @@ function mct_option:ui_create_option_base(parent, w, h)
 
     self:set_uic_with_key("text", option_text, true)
 
-    local n_w = new_option:Width()
-    local t_w = dummy_option:Width()
-    local oh = dummy_option:Height() * 0.95
-
-    if self._control_dock_point == 6 then
-        -- standard
-
-        -- resize the text so it takes up the space of the dummy column that is not used by the option
-        local ow = t_w - n_w - 35 -- -25 is for some spacing! -15 for the offset, -10 for spacing between the option to the right
-        
-        option_text:Resize(ow, oh)
-        option_text:SetTextVAlign("centre")
-        option_text:SetTextHAlign("left")
-        option_text:SetTextXOffset(5, 0)
-
-        option_text:ResizeTextResizingComponentToInitialSize(ow, oh)
-
-        option_text:SetStateText(self:get_text())
-    elseif self._control_dock_point == 8 then
-        -- radio buttons, for now.
-
-        local ow, oh = t_w * 0.4, oh/2
-        option_text:Resize(ow, oh)
-        option_text:SetTextVAlign("centre")
-        option_text:SetTextHAlign("left")
-        option_text:SetTextXOffset(5, 0)
-
-        option_text:ResizeTextResizingComponentToInitialSize(ow, oh)
-        option_text:SetStateText(self:get_text())
-
-        option_text:SetDockingPoint(1)
-        option_text:SetDockOffset(15, 0)
-    end
-
-    new_option:SetDockingPoint(self._control_dock_point)
-    new_option:SetDockOffset(self._control_dock_offset[1], self._control_dock_offset[2])
+    -- the label's size and the control's position are set by `ui_layout_row`, once the icons exist
+    option_text:SetTextVAlign("centre")
+    option_text:SetTextHAlign("left")
+    option_text:SetTextXOffset(0, 0)
+    option_text:SetStateText(self:get_text())
 
     --- TODO absolutely don't handle this here
     -- read if the option is read-only in campaign (and that we're in campaign)
@@ -917,7 +1082,7 @@ function mct_option:ui_create_option_base(parent, w, h)
     end
 
     --- if this is a global option, show the global icon
-    if self:get_type() ~= "MCT.Option.Action" and self:get_type() ~= "MCT.Option.Dummy" then
+    if self:has_setting() then
         if self:is_global() then
             self:set_uic_with_key(
                 "button_global",
@@ -975,17 +1140,7 @@ function mct_option:ui_create_option_base(parent, w, h)
     if not is_nil(self:get_default_value(true)) then
         -- get the localised text associated with the default value, if it's a dropdown or radio button
         local default_value = self:get_default_value(true)
-        local default_value_text = tostring(default_value)
-
-        if self:is_dropdown() then
-            ---@cast self MCT.Option.Dropdown
-            local value = self:get_option(default_value)
-            default_value_text = value.text
-        elseif self:is_radiobutton() then
-            ---@cast self MCT.Option.RadioButton
-            local option = self:get_option(default_value)
-            default_value_text = option.text
-        end
+        local default_value_text = self:get_value_text(default_value)
 
         local test = common.get_localised_string(default_value_text)
         if test ~= "" then
@@ -1017,12 +1172,103 @@ function mct_option:ui_create_option_base(parent, w, h)
     )
 
     
-    if self._control_dock_point == 8 then
-        icon_holder:SetDockingPoint(1)
-        icon_holder:SetDockOffset(option_text:Width() + 10, option_text:Height() / 2 - icon_holder:Height() / 2) -- will prolly look bad for now.
-    end
+    self:ui_layout_row(dummy_option, option_text, new_option, icon_holder)
 
     self:ui_refresh()
+end
+
+--- How tall the first line of this option's control is. The label line is at least this tall, and the control centres on it.
+--- Types whose control stacks several lines override this.
+---@param control UIC The control returned by `ui_create_option`.
+---@return number
+function mct_option:ui_get_control_line_height(control)
+    return control:Height()
+end
+
+--- The space above and below this row's content. Types that sit closer to their neighbours override this.
+---@return number
+function mct_option:ui_get_padding_y()
+    return mct:get_ui():get_spacing().row_pad_y
+end
+
+--- The width between a row's side padding, where its label and control go.
+---@param row UIC The option row.
+---@return number
+function mct_option:ui_get_content_width(row)
+    return row:Width() - mct:get_ui():get_spacing().inset_x * 2
+end
+
+--- Size and place a row's label, icons, and control from the UI spacing table, then fit the row's height to them.
+--- Every row gets the same padding above and below its content, so the gaps between rows match.
+---@param row UIC The option row.
+---@param label UIC The option's label.
+---@param control UIC The control returned by `ui_create_option`.
+---@param icons UIC The holder for the icons under the label.
+function mct_option:ui_layout_row(row, label, control, icons)
+    local spacing = mct:get_ui():get_spacing()
+    local row_w = row:Width()
+    local content_w = self:ui_get_content_width(row)
+    local pad = self:ui_get_padding_y()
+    local dock = self._control_dock_point
+
+    -- a control with no label, like a divider, only gets its own padding around it. An empty label would show "No text assigned".
+    if dock == ROW_FULL then
+        label:SetStateText("")
+        -- its icons would float over the control, so they're hidden. A type can show its tooltip on the control instead.
+        icons:SetVisible(false)
+
+        row:SetCanResizeHeight(true)
+        row:Resize(row_w, pad * 2 + control:Height(), false)
+        row:SetCanResizeHeight(false)
+
+        control:SetDockingPoint(5)
+        control:SetDockOffset(0, 0)
+        return
+    end
+
+    -- controls under the label, like radio buttons, leave room beside the label for its icons
+    local label_w = dock == ROW_BELOW and content_w * 0.6 or content_w - control:Width() - spacing.label_gap
+    label:SetCanResizeWidth(true) label:SetCanResizeHeight(true)
+    label:Resize(label_w, label:Height())
+
+    local text_w, text_h = label:TextDimensionsForText(self:get_text())
+    local line_h = math.max(spacing.label_line_h, text_h)
+    local control_line_h = self:ui_get_control_line_height(control)
+    if dock ~= ROW_BELOW then
+        line_h = math.max(line_h, control_line_h)
+    end
+
+    label:Resize(label_w, line_h)
+    label:ResizeTextResizingComponentToInitialSize(label_w, line_h)
+    label:SetCanResizeWidth(false) label:SetCanResizeHeight(false)
+
+    local control_x, control_y, bottom
+    if dock == ROW_BELOW then
+        control_x, control_y = spacing.inset_x, pad + line_h + spacing.list_gap
+        bottom = control_y + control:Height()
+    else
+        local has_icons = self:has_setting() or self:get_tooltip_text() ~= ""
+        control_x, control_y = -spacing.inset_x, pad + (line_h - control_line_h) / 2
+        bottom = math.max(pad + line_h + (has_icons and spacing.icons_gap + spacing.icons_h or 0), control_y + control:Height())
+    end
+
+    -- resize before docking, so everything docks against the final height
+    row:SetCanResizeHeight(true)
+    row:Resize(row_w, bottom + pad, false)
+    row:SetCanResizeHeight(false)
+
+    label:SetDockingPoint(1)
+    label:SetDockOffset(spacing.inset_x, pad)
+
+    control:SetDockingPoint(dock == ROW_BELOW and 1 or 3)
+    control:SetDockOffset(control_x, control_y)
+
+    icons:SetDockingPoint(1)
+    if dock == ROW_BELOW then
+        icons:SetDockOffset(math.min(text_w, label_w) + 10, (line_h - spacing.icons_h) / 2)
+    else
+        icons:SetDockOffset(spacing.icons_indent, line_h + spacing.icons_gap)
+    end
 end
 
 --- set the state, value, visibility, and actions (ie. revert to defaults)
@@ -1045,7 +1291,7 @@ function mct_option:ui_refresh()
         --- only set visible if the selected setting is different than default AND we're not locked
         local vis =  false
         if not self:is_locked() then
-            if setting ~= self:get_default_value(true) then
+            if not mct:values_equal(setting, self:get_default_value(true)) then
                 vis = true
             end
         end
@@ -1118,6 +1364,9 @@ function mct_option:set_finalized_setting(val, is_first_load)
         end
     end
 
+    -- copy table settings, so the finalized setting never shares one with the selected setting
+    if is_table(val) then val = table.copy(val) end
+
     self._finalized_setting = val
 
     -- trigger an event to listen for externally (skip if it's first load)
@@ -1130,6 +1379,8 @@ end
 ---@param val any Set the default setting as the passed value, tested with @{mct_option:is_val_valid_for_type}
 function mct_option:set_default_value(val)
     if self:is_val_valid_for_type(val) then
+        -- copy table settings, so changing the caller's table later doesn't change the default
+        if is_table(val) then val = table.copy(val) end
         self._default_setting = val
     end
 

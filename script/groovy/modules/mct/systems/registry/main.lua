@@ -226,7 +226,7 @@ function Registry:port_forward()
                 for option_key, value in pairs(mod_data) do
                     local option_obj = mod_obj:get_option_by_key(option_key)
                     if option_obj then
-                        if option_obj:get_default_value() ~= value then
+                        if not mct:values_equal(option_obj:get_default_value(), value) then
                             new_profile:set_saved_value(mod_key, option_key, value)
                         end
                     end
@@ -302,10 +302,10 @@ function Registry:set_changed_setting(option_obj, new_value, is_popup_open)
 
     local old = option_obj:get_finalized_setting()
 
-    GLib.Log("Setting changed setting %s.%s to %s; former is %s", mod_key, option_key, tostring(new_value), tostring(old))
+    GLib.Log("Setting changed setting %s.%s to %s; former is %s", mod_key, option_key, option_obj:get_value_text(new_value), option_obj:get_value_text(old))
 
     -- if the new value is the finalized setting, remove it, UNLESS the popup is open
-    if old == new_value and not is_popup_open then
+    if mct:values_equal(old, new_value) and not is_popup_open then
         self.__changed_settings[mod_key][option_key] = nil
         -- check to see if the mod_key obj needs to be removed too
         if self.__changed_settings[mod_key] and next(self.__changed_settings[mod_key]) == nil then
@@ -315,8 +315,8 @@ function Registry:set_changed_setting(option_obj, new_value, is_popup_open)
         self.__changed_settings[mod_key][option_key]["old_value"] = old
         self.__changed_settings[mod_key][option_key]["new_value"] = new_value
 
-        GLib.Log("%s.%s old = %s", mod_key, option_key, tostring(old))
-        GLib.Log("%s.%s new = %s", mod_key, option_key, tostring(new_value))
+        GLib.Log("%s.%s old = %s", mod_key, option_key, option_obj:get_value_text(old))
+        GLib.Log("%s.%s new = %s", mod_key, option_key, option_obj:get_value_text(new_value))
     end
 end
 

@@ -70,6 +70,14 @@ function Dropdown:get_option(key)
     return nil
 end
 
+--- Show a dropdown value as its text, for logs and the revert-to-defaults tooltip.
+---@param value any The dropdown value's key.
+---@return string
+function Dropdown:get_value_text(value)
+    local option = self:get_option(value)
+    return option and option.text or Super.get_value_text(self, value)
+end
+
 --- TODO use a Cco call instead somehow?
 --- Select a value within the UI; ie., change from the first dropdown value to the second.
 function Dropdown:ui_select_value(val)
@@ -101,8 +109,33 @@ function Dropdown:ui_select_value(val)
 
     GLib.Log("Trying to set the UI value of dropdown %s to %s", self:get_key(), val)
 
+    -- entries come from the layout at a fixed width, narrower than the resized dropdown. Stretch them so the highlight spans the list.
+    -- The list keeps room for its scrollbar, so when every entry fits without scrolling, it's widened to the popup's inner width too.
+    local listview = find_uicomponent(popup_menu, "listview")
+    local list_clip = find_uicomponent(listview, "list_clip")
+    local list_w = list_clip:Width()
+
+    -- only the visible entries count. The list also holds a hidden template entry.
+    local entries_h = 0
     for i = 0, popup_list:ChildCount() - 1 do
         local child = UIComponent(popup_list:Find(i))
+        if child:Visible() then entries_h = entries_h + child:Height() end
+    end
+
+    if entries_h <= list_clip:Height() then
+        list_w = listview:Width() - 2
+        for _, uic in ipairs({list_clip, popup_list}) do
+            uic:SetCanResizeWidth(true)
+            uic:Resize(list_w, uic:Height(), false)
+        end
+    end
+
+    for i = 0, popup_list:ChildCount() - 1 do
+        local child = UIComponent(popup_list:Find(i))
+
+        child:SetCanResizeWidth(true)
+        child:Resize(list_w - 4, child:Height())
+
         local table_node = child:GetContextObject("CcoScriptTableNode")
 
         if table_node then

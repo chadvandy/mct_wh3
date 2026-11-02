@@ -34,6 +34,12 @@ end
 
 function Action:check_validity(val) return is_nil(val) end
 
+--- An action holds no setting.
+---@return boolean
+function Action:has_setting()
+    return false
+end
+
 --- Set the default value. `nil`.
 function Action:get_fallback_value()
     return nil

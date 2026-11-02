@@ -64,6 +64,7 @@
 					textxoffset="0.00,0.00"
 					textyoffset="0.00,0.00"
 					texthbehaviour="Slip by character"
+					font_m_font_name="georgia_italic"
 					font_m_size="12"
 					font_m_colour="#FFF8D7FF"
 					font_m_leading="1"

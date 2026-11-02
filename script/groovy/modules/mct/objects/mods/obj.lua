@@ -649,7 +649,7 @@ function mct_mod:revert_to_defaults()
         local current_val = option_obj:get_selected_setting()
         local default_val = option_obj:get_default_value(true)
 
-        if not is_nil(default_val) and current_val ~= default_val then
+        if not is_nil(default_val) and not mct:values_equal(current_val, default_val) then
             option_obj:set_selected_setting(default_val)
             --option_obj:ui_select_value(default_val)
         else
@@ -666,7 +666,7 @@ function mct_mod:are_any_settings_not_default()
         local current_val = option_obj:get_selected_setting()
         local default_val = option_obj:get_default_value()
 
-        if current_val ~= default_val then
+        if not mct:values_equal(current_val, default_val) then
             return true
         end
     end
@@ -740,7 +740,7 @@ function mct_mod:load_finalized_settings()
 
         -- only trigger the option-changed event if it's actually changing setting
         local selected = option:get_selected_setting()
-        if option:get_finalized_setting() ~= selected then
+        if not mct:values_equal(option:get_finalized_setting(), selected) then
             option:set_finalized_setting(selected)
         end
 
@@ -929,8 +929,13 @@ end
 ---@overload fun(self:MCT.Mod, option_key:string, option_type:"dropdown"):MCT.Option.Dropdown
 ---@overload fun(self:MCT.Mod, option_key:string, option_type:"dropdown_game_object"):MCT.Option.SpecialDropdown
 ---@overload fun(self:MCT.Mod, option_key:string, option_type:"slider"):MCT.Option.Slider
+---@overload fun(self:MCT.Mod, option_key:string, option_type:"range_slider"):MCT.Option.RangeSlider
 ---@overload fun(self:MCT.Mod, option_key:string, option_type:"text_input"):MCT.Option.TextInput
 ---@overload fun(self:MCT.Mod, option_key:string, option_type:"dummy"):MCT.Option.Dummy
+---@overload fun(self:MCT.Mod, option_key:string, option_type:"divider"):MCT.Option.Divider
+---@overload fun(self:MCT.Mod, option_key:string, option_type:"text_list"):MCT.Option.TextList
+---@overload fun(self:MCT.Mod, option_key:string, option_type:"text"):MCT.Option.Text
+---@overload fun(self:MCT.Mod, option_key:string, option_type:"image"):MCT.Option.Image
 ---@overload fun(self:MCT.Mod, option_key:string, option_type:"radio_button"):MCT.Option.Dummy
 ---@param option_key string The unique identifier for the new mct_option.
 ---@param option_type MCT.OptionType The type for the new mct_option.
@@ -1164,7 +1169,6 @@ function mct_mod:create_row(parent)
 
     local txt_uic = find_uicomponent(row, "dy_title")
 
-    txt_uic:Resize(row:Width() - 40, row:Height() * 0.9)
     txt_uic:SetTextXOffset(5, 5)
     txt_uic:SetTextYOffset(0, 0)
 
@@ -1205,6 +1209,9 @@ function mct_mod:create_row(parent)
     button_more_options:SetDockingPoint(6)
     button_more_options:SetDockOffset(-8, 0)
     button_more_options:SetTooltipText("More Options", true)
+
+    -- the title starts a little bit in. Stop it before the "..." button so long titles wrap instead of running under it.
+    txt_uic:Resize(row:Width() - 37 - button_more_options:Width() - 16, row:Height() * 0.9)
 
     if self:is_disabled() then
         row:SetState("inactive")

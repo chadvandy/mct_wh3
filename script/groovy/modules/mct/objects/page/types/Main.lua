@@ -108,13 +108,14 @@ function Main:populate_sidebar()
                 common.call_context_command("CcoScriptObject", "Mct"..key:gsub("^%l", string.upper).."Link", "OpenOverlayToUrl(StringValue, false)")
             end
 
-            local addr = link_button:Address()
-
+            -- match the click by id, not address. The page is destroyed when switching away, and a new component can reuse the
+            -- old button's address, so a stale listener would open this link from an unrelated click. Replace it on each visit too.
+            core:remove_listener(key.."_button_clicked")
             core:add_listener(
                 key.."_button_clicked",
                 "ComponentLClickUp",
                 function(context)
-                    return context.component == addr
+                    return context.string == "button_"..key and uicomponent_descended_from(UIComponent(context.component), "buttons_holder")
                 end,
                 function()
                     open()
@@ -257,13 +258,13 @@ function Main:add_tab(key, title, tooltip, populate)
     local tx = find_uicomponent(tab, "tx")
     tx:SetStateText(title)
 
-    local addr = tab:Address()
-
+    -- match by id, not address, for the same reason as the link buttons. Replace it on each visit so only this page's tab responds.
+    core:remove_listener(key.."_tab_clicked")
     core:add_listener(
         key.."_tab_clicked",
         "ComponentLClickUp",
         function(context)
-            return context.component == addr
+            return context.string == "tab_"..key and uicomponent_descended_from(UIComponent(context.component), "tabs")
         end,
         function()
             self:switch_tab(key)

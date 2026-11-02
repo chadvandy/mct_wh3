@@ -1,4 +1,4 @@
----@alias MCT.OptionType 'slider'|'dropdown'|'checkbox'|'text_input'
+---@alias MCT.OptionType 'slider'|'dropdown'|'checkbox'|'text_input'|'divider'|'text_list'|'range_slider'|'text'|'image'
 ---@alias MCT.System {_Types : {}, _Object : {}, _UI : {}, }
 
 ---@alias MCT.SelectedMod {[1]: MCT.Mod, [2]: MCT.Page}
@@ -255,8 +255,13 @@ end
 ---@overload fun(key:"checkbox"):MCT.Option.Checkbox
 ---@overload fun(key:"text_input"):MCT.Option.TextInput
 ---@overload fun(key:"slider"):MCT.Option.Slider
+---@overload fun(key:"range_slider"):MCT.Option.RangeSlider
 ---@overload fun(key:"dropdown"):MCT.Option.Dropdown
 ---@overload fun(key:"dummy"):MCT.Option.Dummy
+---@overload fun(key:"divider"):MCT.Option.Divider
+---@overload fun(key:"text_list"):MCT.Option.TextList
+---@overload fun(key:"text"):MCT.Option.Text
+---@overload fun(key:"image"):MCT.Option.Image
 ---@param key string
 ---@return MCT.Option?
 function mct:get_option_type(key)
@@ -628,6 +633,26 @@ end
 function mct:is_mct_section(obj)
     return is_table(obj) and obj.class
     and obj:instanceOf(mct:get_mct_section_class())
+end
+
+--- Compare two option settings. Table settings, like a range slider's `{low, high}`, are equal when every field is equal.
+---@param a any
+---@param b any
+---@return boolean
+function mct:values_equal(a, b)
+    if not is_table(a) or not is_table(b) then
+        return a == b
+    end
+
+    for k, v in pairs(a) do
+        if b[k] ~= v then return false end
+    end
+
+    for k in pairs(b) do
+        if a[k] == nil then return false end
+    end
+
+    return true
 end
 
 --- Type-checker for @{mct_option} types.

@@ -49,6 +49,9 @@ local mct_section_defaults = {
     ---@type MCT.Page.Settings TODO link sections to pages
     _page = nil,
 
+    ---@type number? The Settings page column this section is pinned to. Nil lets the page place it.
+    _column = nil,
+
     ---@type boolean Whether this section can be collapsed
     _is_collapsible = false,
 
@@ -103,6 +106,25 @@ end
 ---@return MCT.Page.Settings
 function mct_section:get_page()
     return self._page
+end
+
+--- Pin this section to a column on its Settings page. Unpinned sections are split evenly across all columns, ignoring the pinned ones.
+---@param column_num number? The column, from 1 (left) to the page's column count. Pass nil to unpin.
+---@return boolean #False if the column number was invalid.
+function mct_section:set_column(column_num)
+    if not is_nil(column_num) and (not is_number(column_num) or column_num < 1 or column_num % 1 ~= 0) then
+        err("set_column() called for section ["..self:get_key().."], but the column provided was not a whole number of 1 or more! Returning false.")
+        return false
+    end
+
+    self._column = column_num
+    return true
+end
+
+--- Get the column this section is pinned to.
+---@return number? #The column number, or nil if the page places this section.
+function mct_section:get_column()
+    return self._column
 end
 
 --- Set an option key at a specific index, for the @{mct_section:get_ordered_options} function.
@@ -264,6 +286,12 @@ function mct_section:ui_set_collapsed(event_free)
     local desc = find_uicomponent(holder, "description")
     if desc then desc:SetVisible(is_open) end
 
+    local header_gap = find_uicomponent(holder, "header_gap")
+    if header_gap then header_gap:SetVisible(is_open) end
+
+    local collapsed_pad = find_uicomponent(holder, "collapsed_pad")
+    if collapsed_pad then collapsed_pad:SetVisible(not is_open) end
+
     -- also change the state of the UI header
     if is_open then
         header:SetState("selected")
@@ -357,7 +385,12 @@ function mct_section:populate(this_column, expected_width, expected_height)
         this_layout = "ui/vandy_lib/text/paragraph_header"
     end
     
-    local section_header = core:get_or_create_component("section_header", this_layout, section_holder)
+    local spacing = mct:get_ui():get_spacing()
+
+    -- the column's list puts every child at its left edge, so the header sits centered in a full-width holder to get equal side padding
+    local header_holder = mct:get_ui():create_spacer(section_holder, "section_header_holder", expected_width, spacing.header_h)
+
+    local section_header = core:get_or_create_component("section_header", this_layout, header_holder)
     self._header = section_header
 
     local h = 0
@@ -365,13 +398,13 @@ function mct_section:populate(this_column, expected_width, expected_height)
     -- set text & width and shit
     section_header:SetCanResizeWidth(true)
     section_header:SetCanResizeHeight(true)
-    section_header:Resize(expected_width, 34, false)
+    section_header:Resize(expected_width - spacing.inset_x * 2, spacing.header_h, false)
     section_header:SetCanResizeWidth(false)
     section_header:SetCanResizeHeight(false)
 
     h = h + section_header:Height()
     
-    section_header:SetDockingPoint(2)
+    section_header:SetDockingPoint(5)
     section_header:SetState("selected")
     -- section_header:SetCanResizeWidth(false)
 
@@ -386,6 +419,11 @@ function mct_section:populate(this_column, expected_width, expected_height)
     local dy_title = find_uicomponent(section_header, "dy_title") or section_header
     dy_title:SetStateText(text)
 
+    if can_collapse then
+        -- the row_header's expand/collapse icon is docked at x=6 and is 25 wide, so start the title past it
+        dy_title:SetDockOffset(40, 0)
+    end
+
     if tt_text ~= "" then
         section_header:SetTooltipText(tt_text, true)
     end
@@ -399,10 +437,14 @@ function mct_section:populate(this_column, expected_width, expected_height)
         dy_desc:SetTextHAlign("centre")
         dy_desc:SetTextVAlign("top")
 
-        dy_desc:Resize(expected_width * 0.9, dy_desc:Height())
+        -- full width with the side padding as text offsets, so the text centres on the header. The top offset is the gap under the header.
+        dy_desc:Resize(expected_width, dy_desc:Height())
+        dy_desc:SetTextXOffset(spacing.inset_x, spacing.inset_x)
+        dy_desc:SetTextYOffset(spacing.desc_gap, 0)
         dy_desc:SetCanResizeWidth(false)
         
         local tw,th = dy_desc:TextDimensionsForText(desc)
+        th = th + spacing.desc_gap
         dy_desc:ResizeTextResizingComponentToInitialSize(dy_desc:Width(), th)
         dy_desc:Resize(dy_desc:Width(), th)
         dy_desc:SetStateText(desc)
@@ -410,6 +452,9 @@ function mct_section:populate(this_column, expected_width, expected_height)
 
         h = h + th
     end
+
+    -- space between the header block and the first row. Hidden with the rows when the section collapses.
+    mct:get_ui():create_spacer(section_holder, "header_gap", expected_width, spacing.header_gap)
 
     -- lastly, create all the rows and options within
     --local num_remaining_options = 0`
@@ -427,6 +472,10 @@ function mct_section:populate(this_column, expected_width, expected_height)
         local option_obj = mod:get_option_by_key(option_key)
         get_mct():get_ui():new_option_row_at_pos(option_obj, section_holder, expected_width, expected_height)
     end
+
+    -- a collapsed section ends at its header, which has no padding under it like the last row does. This stands in for that padding,
+    -- so the divider to the next section stays evenly spaced. Shown only while collapsed.
+    mct:get_ui():create_spacer(section_holder, "collapsed_pad", expected_width, spacing.row_pad_y)
 
 
     --- Toggles the collapsed state to what it should be 

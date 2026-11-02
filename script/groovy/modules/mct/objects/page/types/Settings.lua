@@ -143,9 +143,60 @@ function SettingsPage:sort_sections()
     return self:_section_sort_order_function()
 end
 
+--- Split the sorted sections into this page's columns. Pinned sections go to their column, clamped to the column count. The rest are split
+--- evenly by count in sort order, and empty sections still count so existing layouts keep their split.
+---@param sections MCT.Section[] The sorted sections on this page.
+---@return MCT.Section[][] #The sections to draw in each column, in sort order. Sections without options are left out.
+function SettingsPage:assign_columns(sections)
+    local num_unpinned = 0
+    for _, section_obj in ipairs(sections) do
+        if not section_obj:get_column() then num_unpinned = num_unpinned + 1 end
+    end
+
+    local per_column = math.ceil(num_unpinned / self.num_columns)
+
+    local columns = {}
+    for i = 1, self.num_columns do columns[i] = {} end
+
+    local unpinned_index = 0
+    for _, section_obj in ipairs(sections) do
+        local column_num = section_obj:get_column()
+        if column_num then
+            if column_num > self.num_columns then
+                GLib.Log("Section %s is pinned to column %d, but this page only has %d columns. Using the last column.", section_obj:get_key(), column_num, self.num_columns)
+                column_num = self.num_columns
+            end
+        else
+            unpinned_index = unpinned_index + 1
+            column_num = math.ceil(unpinned_index / per_column)
+        end
+
+        if next(section_obj:get_options()) ~= nil then
+            local column_sections = columns[column_num]
+            column_sections[#column_sections+1] = section_obj
+        end
+    end
+
+    return columns
+end
+
+--- The width for rows in a column. Rows stop at the column's scrollbar, so their content keeps the same inset on the right as on the left.
+---@param column UIC The column's list view.
+---@return number
+function SettingsPage:get_row_width(column)
+    local scrollbar = find_uicomponent(column, "vslider")
+    if not scrollbar then return column:Width() end
+
+    -- the scrollbar docks to the right edge, pulled in by its dock offset
+    local offset_x = scrollbar:GetDockOffset()
+    return column:Width() - scrollbar:Width() + offset_x
+end
+
 ---@param panel UIC
 function SettingsPage:populate(panel)
     local sections = self:sort_sections()
+    local ui = get_mct():get_ui()
+    local spacing = ui:get_spacing()
 
     --- TODO do the "pull into page" on the MCT.Mod level - grab any orphaned sections and toss them into main?
     --- TODO this should pull all sections that don't have a page already; right now this will pull all sections everywhere
@@ -206,93 +257,36 @@ function SettingsPage:populate(panel)
         GLib.Log("Docking point for column %d is %d", i, docking_point)
 
         column:SetDockingPoint(docking_point)
+
+        -- top padding, so the first section isn't flush against the page title
+        ui:create_spacer(column_box, "padding_top", column:Width(), spacing.column_pad_top)
     end
-
-    --- TODO cleanly split the sections between the columns
-    --- TODO modder ability to set sections to columns (?)
-    
-    --- number of sections per column
-    local per_column = math.ceil(#sections / self.num_columns)
-
-    -- ---@type table<number, number>
-    -- local column_h = {}
-
-    -- for i = 1, self.num_columns do column_h[i] = 0 end
 
     local div_num = 0
 
-    for i, section_obj in ipairs(sections) do
-        local section_key = section_obj:get_key()
+    -- equal space above and below each divider between sections. The last row above already brings its own bottom padding.
+    local div_above = math.max(0, spacing.section_gap - spacing.row_pad_y)
 
-        local column_num = 1
-        local is_last_in_column = false
-
-        if self.num_columns == 3 then
-            if i <= per_column then
-                column_num = 1
-
-                if i == per_column then
-                    is_last_in_column = true
-                end
-            elseif i > per_column and i <= (per_column * 2) then
-                column_num = 2
-
-                if i == per_column * 2 then
-                    is_last_in_column = true
-                end
-            else
-                column_num = 3
-                if i == #sections then
-                    is_last_in_column = true
-                end
-            end
-        elseif self.num_columns == 2 then
-            if i <= per_column then
-                column_num = 1
-
-                if i == per_column then
-                    is_last_in_column = true
-                end
-            else
-                column_num = 2
-
-                if i == #sections then
-                    is_last_in_column = true
-                end
-            end
-        elseif self.num_columns == 1 then
-            column_num = 1
-
-            if i == #sections then
-                is_last_in_column = true
-            end
-        end
-
-        GLib.Log("Assigning section %s to column %d", section_key, column_num)
-
+    for column_num, column_sections in ipairs(self:assign_columns(sections)) do
         local column = find_uicomponent(panel, "settings_column_"..column_num)
         local box = find_uicomponent(column, "list_clip", "list_box")
+        local row_w = self:get_row_width(column)
 
-        if not section_obj or section_obj._options == nil or next(section_obj._options) == nil then
-            -- skip
-        else
-            section_obj:populate(box, column:Width() * 0.95, column:Height() * 0.12)
+        for i, section_obj in ipairs(column_sections) do
+            GLib.Log("Assigning section %s to column %d", section_obj:get_key(), column_num)
 
-            if not is_last_in_column then
+            -- rows span the column up to its scrollbar and inset their own content, since the column's list puts every child at its left edge
+            section_obj:populate(box, row_w, column:Height() * 0.12)
+
+            if i < #column_sections then
                 -- create a horizontal divider!
                 div_num = div_num + 1
-                local div_holder = core:get_or_create_component("divider_holder_"..div_num, "ui/campaign ui/script_dummy", box)
-                div_holder:Resize(box:Width(), 13)
 
-                
-                local div = core:get_or_create_component("divider", "ui/groovy/image", div_holder)
-                div:SetDockingPoint(5)
-                div:Resize(div_holder:Width() - 10, 13)
-                div:SetImagePath("ui/skins/default/parchment_divider_length.png", 0)
-                div:SetCurrentStateImageTiled(0, true)
-                div:SetCurrentStateImageMargins(0, 2, 0, 2, 0)
+                local div_holder = ui:create_spacer(box, "divider_holder_"..div_num, row_w, div_above + spacing.divider_h + spacing.section_gap)
+                local div = ui:create_divider_image(div_holder, row_w - spacing.inset_x * 2)
+                div:SetDockingPoint(2)
+                div:SetDockOffset(0, div_above)
             end
-            -- column_h[column_num] = column_h[column_num] + h
         end
     end
 
@@ -303,11 +297,13 @@ function SettingsPage:populate(panel)
             local clip = find_uicomponent(column, "list_clip")
             local box = find_uicomponent(clip, "list_box")
 
+            ui:create_spacer(box, "padding_bottom", column:Width(), spacing.column_pad_bottom)
+
+            -- don't resize children. They're already sized for the column, and scaling them up from the template size stretches the dividers.
+            clip:Resize(column:Width(), column:Height(), false)
+            box:Resize(column:Width(), column:Height(), false)
+
             box:Layout()
-
-            clip:Resize(column:Width(), column:Height())
-            box:Resize(column:Width(), column:Height())
-
         end
     end
 

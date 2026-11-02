@@ -38,6 +38,12 @@ function Dummy:get_fallback_value()
     return nil
 end
 
+--- A dummy holds no setting.
+---@return boolean
+function Dummy:has_setting()
+    return false
+end
+
 --- Does nothing.
 function Dummy:ui_select_value(val)
     -- do nothing
