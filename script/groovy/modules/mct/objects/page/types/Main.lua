@@ -229,6 +229,33 @@ function Main:populate_main_view()
         )
     end
 
+    if mod_obj:get_patch_notes() ~= "" then
+        self:add_tab(
+            "patch_notes", 
+            "Patch Notes", 
+            "View the mod's patch notes",
+            function(uic)
+                local list = core:get_or_create_component("list_view", "ui/groovy/layouts/listview", uic)
+                list:Resize(uic:Width(), uic:Height())
+                list:SetDockingPoint(2)
+
+                local list_box = find_uicomponent(list, "list_clip", "list_box")
+                local txt = core:get_or_create_component("patch_notes_text", "ui/groovy/text/fe_default", list_box)
+
+                txt:Resize(uic:Width() - 10, uic:Height() - 10)
+
+                txt:SetDockingPoint(2)
+                txt:SetTextXOffset(5, 5)
+                txt:SetTextYOffset(5, 5)
+                txt:SetStateText(mod_obj:get_patch_notes())
+                txt:SetTextVAlign("top")
+
+                local tw, th = txt:TextDimensions()
+                txt:Resize(tw, th)
+            end
+        )
+    end
+
     -- If the mod obj has a changelog, add a changelog tab.
     -- if mod_obj:get_changelog() ~= "" then
     --     create_tab("changelog", "Changelog", "View the mod's changelog.")

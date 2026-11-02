@@ -12,6 +12,9 @@ local log,logf,err,errf = get_vlog("[mct]")
 local mct_mod_defaults = {
     ---@type string The key for this mod object.
     _key = "",
+    
+    ---@type string the cached patchnotes of this mod
+    _patch_notes = nil,
 
     ---@type table The patches created for this mod - the various patches and the relative dates and info. Highest index is the most recent, first index is the first one made.
     _patches = {},
@@ -241,6 +244,27 @@ end
 ---@return number
 function mct_mod:get_version_number()
     return self._version[1]
+end
+
+---@return string
+function mct_mod:get_patch_notes()
+    if nil ~= self._patch_notes then
+        return self._patch_notes;
+    end;
+    self._patch_notes = "";
+    local parts = {};
+    for i = self._version[1], 1, -1 do
+        local version_text = common.get_localised_string("mct_patch_notes_"..self:get_key().."_"..i.."_version")
+        local notes = common.get_localised_string("mct_patch_notes_"..self:get_key().."_"..i.."_notes")
+        if version_text == "" then
+            version_text = "i"..i
+        end;
+        if notes ~= "" then
+            parts[#parts + 1] = version_text.."\n"..notes
+        end;
+    end;
+    self._patch_notes = table.concat(parts, "\n\n")
+    return self._patch_notes;
 end
 
 function mct_mod:set_main_image(path, w, h)
